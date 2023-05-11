@@ -20,10 +20,6 @@ kotlin {
             commonWebpackConfig {
                 cssSupport.enabled = true
             }
-            webpackTask {
-                output.libraryTarget = "commonjs2"
-
-            }
         }
     }
 }
