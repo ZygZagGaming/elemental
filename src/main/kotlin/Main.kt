@@ -43,7 +43,7 @@ fun loadGame() {
             val (backendId, reaction) = entry
             DynamicHTMLManager.setVariable("special-reaction-$i-title", reaction.name)
             DynamicHTMLManager.setVariable("special-reaction-$i-description", reaction.toString())
-            DynamicHTMLManager.setVariable("special-reaction-$i-effects", reaction.stringEffects)
+            DynamicHTMLManager.setVariable("special-reaction-$i-effects", reaction.stringEffects(reaction.nTimesUsed + 1))
             DynamicHTMLManager.idSetClassPresence("special-reaction-option-$i", "disabled", !gameState.canDoReaction(reaction) && !reaction.hasBeenUsed)
             DynamicHTMLManager.idSetClassPresence("special-reaction-option-$i", "active", reaction.hasBeenUsed)
             DynamicHTMLManager.idSetDataVariable("special-reaction-option-$i", "backendReactionId", backendId)
@@ -60,7 +60,9 @@ fun loadGame() {
         onwheel = { evt ->
             val rows = ceil(container1.children.length / 3.0)
             val maxScrollAmount = container1.children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px margin + 3px border on both sides*/ - container1.clientHeight
-            reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY), maxScrollAmount.toDouble())
+            reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY),
+                maxScrollAmount
+            )
             children.iterator().forEach { it.style.top = (-reactionListScrollAmount).px }
 
             Unit // not kotlin begging me for a return
@@ -214,9 +216,8 @@ open class AutomationTicker(var rateHertz: Double, var effects: () -> Unit) {
 
 data class GameState(
     var hoveredReaction: Reaction = NullReaction,
-    val elementAmounts: MutableElementStack = defaultMutableStack,
-    var timeSpent: Double = 0.0,
-    var elementCaps: Map<ElementType, Double> = defaultCaps.toMap()
+    val elementAmounts: MutableDefaultedMap<ElementType, Double> = defaultMutableStack.toMutableDefaultedMap(0.0),
+    var timeSpent: Double = 0.0
 ) {
     var incoming = defaultMutableStack
     var lastAmounts = elementAmounts
@@ -230,32 +231,34 @@ data class GameState(
     }
 
     fun tick(dt: Double) {
-        lastAmounts = elementAmounts.copy()
+        lastAmounts = elementAmounts.copy().toMutableDefaultedMap(0.0)
         lastReaction = hoveredReaction
         timeSpent += dt
 
         automationTickers.values.forEach { it.tick(dt) }
 
-        elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat]!! * 0.1 * dt * Options.gameSpeed))
-        for ((key, value) in incoming) elementAmounts[key] = min(elementCaps[key]!!, max(0.0, elementAmounts[key]?.plus(value) ?: 0.0))
+        elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat] * 0.1 * dt * Options.gameSpeed))
+        for ((key, value) in incoming) elementAmounts[key] = min(Stats.functionalElementCaps[key], max(0.0,
+            elementAmounts[key].plus(value)
+        ))
         incoming = defaultMutableStack
     }
 
     fun canDoReaction(reaction: Reaction) =
         ((reaction !is NullReaction)
-                && reaction.inputs.all { (k, v) -> v <= (elementAmounts[k] ?: 0.0) }
-                && reaction.outputs.none { (k, v) -> v + (elementAmounts[k] ?: 0.0) > (elementCaps[k] ?: 0.0) })
+                && reaction.inputs.all { (k, v) -> v <= elementAmounts[k] }
+                && reaction.multipliedOutputs.none { (k, v) -> v + elementAmounts[k] > Stats.functionalElementCaps[k] })
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
             elementAmounts.deduct(reaction.inputs)
-            incoming.add(reaction.outputs)
+            incoming.add(reaction.multipliedOutputs)
             if (reaction is SpecialReaction) reaction.execute()
         }
     }
 }
 
-fun MutableElementStack.copy(): MutableElementStack = toMutableMap()
+fun MutableElementStack.copy(): MutableElementStack = toMutableMap().toMutableDefaultedMap(defaultValue)
 
 fun MutableElementStack.deduct(other: ElementStack) {
     for ((key, value) in other) this[key] = this[key]?.minus(value) ?: 0.0
@@ -265,8 +268,8 @@ fun MutableElementStack.add(other: ElementStack) {
     for ((key, value) in other) this[key] = this[key]?.plus(value) ?: 0.0
 }
 
-val defaultStack get() = elements.values.associateWith { 0.0 }
-val defaultMutableStack get() = defaultStack.toMutableMap()
+val defaultStack get() = elements.values.associateWith { 0.0 }.toDefaultedMap(0.0)
+val defaultMutableStack get() = defaultStack.toMutableMap().toMutableDefaultedMap(0.0)
 
 typealias Ticker = (Double) -> Unit
 
@@ -342,7 +345,7 @@ fun visuals(gameState: GameState) {
             val k = 0.5
             val angle = graphicalHeatAmount * 2 * PI
             val strokeWidth = 10.0
-            if (gameState.elementAmounts[Elements.heat]!! <= 1e-6) {
+            if (gameState.elementAmounts[Elements.heat] <= 1e-6) {
                 lineWidth = strokeWidth
                 beginPath()
                 strokeStyle = "#cccccc"
@@ -370,7 +373,7 @@ fun visuals(gameState: GameState) {
             val reaction = gameState.hoveredReaction
             val canDoReaction = gameState.canDoReaction(reaction)
             for ((element, _) in reaction.inputs) {
-                if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat)) {
+                if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat) && reaction.inputs[element] != 0.0) {
                     lineWidth = 10.0
                     val relative = getAlchemyElementPos(element.symbol) * radius
                     if (canDoReaction) {
@@ -393,7 +396,7 @@ fun visuals(gameState: GameState) {
             }
 
             for ((element, _) in reaction.outputs) {
-                if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat)) {
+                if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat) && reaction.inputs[element] != 0.0) {
                     lineWidth = 10.0
                     val relative = getAlchemyElementPos(element.symbol) * radius
                     if (canDoReaction) {
@@ -440,7 +443,7 @@ fun CanvasRenderingContext2D.gradientLine(posA: Vec2, posB: Vec2, r: Int, g: Int
 
 }
 
-val graphicalHeatAmount get() = (gameState.elementAmounts[Elements.heat] ?: 0.0) / (gameState.elementCaps[Elements.heat] ?: 0.0)
+val graphicalHeatAmount get() = gameState.elementAmounts[Elements.heat] / Stats.functionalElementCaps[Elements.heat]
 
 fun CanvasRenderingContext2D.gradientLineColorBar(posA: Vec2, posB: Vec2, r: Int, g: Int, b: Int, a: Double, width: Double, colorBarPosition: Double, colorBarWidth: Double, colorBarOpacity: Double) {
     val len = (posA - posB).magnitude
@@ -481,29 +484,51 @@ fun CanvasRenderingContext2D.moveTo(vec2: Vec2) {
 }
 
 data class ElementType(val name: String, val symbol: Char) {
-    fun withCount(n: Double): ElementStack = mapOf(this to n)
+    fun withCount(n: Double): ElementStack = mapOf(this to n).toDefaultedMap(0.0)
 }
 
-typealias ElementStack = Map<ElementType, Double>
-typealias MutableElementStack = MutableMap<ElementType, Double>
-open class Reaction(val name: String, var inputs: ElementStack, var outputs: ElementStack) {
+typealias ElementStack = DefaultedMap<ElementType, Double>
+typealias MutableElementStack = MutableDefaultedMap<ElementType, Double>
+open class Reaction(val name: String) {
+    open var inputs: ElementStack = defaultStack.toDefaultedMap(0.0)
+    open var outputs: ElementStack = defaultStack.toDefaultedMap(0.0)
+    val multipliedOutputs get() = outputs.entries.associate { (k, v) -> k to v * Stats.elementMultipliers[k] }.toDefaultedMap(0.0)
+
+    companion object {
+        operator fun invoke(name: String, inputs: ElementStack, outputs: ElementStack) = object : Reaction(name) {
+            override var inputs: ElementStack = inputs
+            override var outputs: ElementStack = outputs
+        }
+    }
+
     override fun toString(): String {
         if (this is NullReaction) return "-"
-        return "${inputs.format()} ⇒ ${outputs.format()}"
+        return "${inputs.format()} ⇒ ${multipliedOutputs.format()}"
     }
 }
 
-class SpecialReaction(name: String, inputs: ElementStack, outputs: ElementStack = mapOf(), val effects: () -> Unit = { }, val stringEffects: String = ""): Reaction(name, inputs, outputs) {
+class SpecialReaction(name: String, val inputsSupplier: (Int) -> ElementStack, val outputsSupplier: (Int) -> ElementStack = { defaultStack }, val effects: (Int) -> Unit = { }, val stringEffects: (Int) -> String = { "" }, val usageCap: Int = 1): Reaction(name) {
+    override var inputs: ElementStack
+        get() = inputsSupplier(nTimesUsed + 1)
+        set(_) {}
+    override var outputs: ElementStack
+        get() = outputsSupplier(nTimesUsed + 1)
+        set(_) {}
     var hasBeenUsed = false
+    var nTimesUsed = 0
     fun execute() {
-        effects()
-        hasBeenUsed = true
+        nTimesUsed++
+        effects(nTimesUsed)
+        if (nTimesUsed == usageCap) hasBeenUsed = true
     }
 }
 
-fun ElementStack.format(): String = map { (k, v) -> "${if (v == 1.0) "" else v}${k.symbol}" }.joinToString(" + ")
+fun ElementStack.format(): String = map { (k, v) -> "${if (v == 1.0) "" else (v * 10).roundToInt() / 10.0}${k.symbol}" }.joinToString(" + ")
 
-object NullReaction: Reaction("", emptyMap(), emptyMap())
+object NullReaction: Reaction("") {
+    override var inputs: ElementStack = defaultStack
+    override var outputs: ElementStack = defaultStack
+}
 
 val Int.px get() = "${this}px"
 val Double.px get() = "${roundToInt()}px"
