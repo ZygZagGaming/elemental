@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
+
+body {
+    background-color: black;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    font-family: 'Noto Sans', sans-serif;
+    cursor: default;
+}
+
+.alchemy-container {
+    width: 500px;
+    height: 500px;
+    position: relative;
+    margin: 0;
+}
+
+.alchemy-visuals {
+    width: 500px;
+    height: 500px;
+}
+
+.alchemy-element {
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+    position: absolute;
+    display: block;
+    align-items: center;
+}
+
+.alchemy-element-text {
+    text-align: center;
+    font-size: 24px;
+    top: 0;
+}
+
+.alchemy-element-amount {
+    text-align: center;
+    font-size: 15px;
+    bottom: 0;
+}
+
+.reaction-button {
+    width: 500px;
+    height: 200px;
+    border-radius: 75px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+    font-size: 50px;
+    position: absolute;
+    top: 500px;
+    left: 0;
+}
+
+.grey-bkg-style {
+    border-width: 3px;
+    border-color: white;
+    border-style: solid;
+    background-color: #909090;
+    color: black;
+    transition: 0.15s;
+    cursor: pointer;
+}
+
+.grey-bkg-style:hover {
+    background-color: #303030;
+    color: white;
+    border-color: grey;
+}
+
+.grey-bkg-style.disabled {
+    background-color: #606060;
+    color: grey;
+    border-color: grey;
+    cursor: not-allowed;
+}
+
+.grey-bkg-style.active {
+    background-color: #101010;
+    color: white;
+    border-color: white;
+}
+
+.reaction-container {
+    display: flex;
+    position: absolute;
+    top: 75px;
+    width: 638px;
+    height: 200px;
+    gap: 10px;
+    margin-top: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+#reaction-container {
+    left: 525px;
+}
+
+#special-reaction-container {
+    left: 1193px;
+}
+
+.reaction-option {
+/*
+    display: flex;
+    flex-direction: column;*/
+    width: 200px;
+    height: 125px;
+    border-radius: 35px;
+}
+
+.no-highlight {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
+.reaction-option-title {
+    text-align: center;
+    top: 10px;
+    font-size: 20px;
+    width: 100%;
+    position: relative;
+}
+
+.reaction-option-description {
+    text-align: center;
+    font-size: 15px;
+    width: 100%;
+    position: relative;
+}
+
+.reaction-option-description-container {
+    margin: 10px;
+    bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    top: 0px;
+    position: relative;
+    height: 70px;
+    justify-content: center;
+}
+
+.reaction-option-effects {
+    /*height: 60px;*/
+}
+
+.hidden {
+    display: none;
+}
+
+#reaction-container-title {
+    left: 525px;
+}
+
+.reaction-container-title {
+    color: white;
+    text-align: center;
+    font-size: 50px;
+    position: absolute;
+    margin: 0;
+    width: 638px;
+    height: 75px;
+    top: 10px;
+}
+
+#special-container-title {
+    left: 1193px;
+}
+
+#special-reaction-container > .reaction-option > .reaction-option-title {
+    font-size: 20px;
+}
+
+#special-reaction-container > .reaction-option .active {
+    cursor: pointer;
+}
+

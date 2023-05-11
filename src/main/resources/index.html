@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="styles.css">
+        <title>Elemental</title>
+        <script src="elemental.js"></script>
+    </head>
+    <body onload="elemental.load()">
+        <div class="alchemy-container">
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-0" data-element="ϟ"><div class="alchemy-element-text">ϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-ϟ-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-1" data-element="a"><div class="alchemy-element-text">a</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-a-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-2" data-element="b"><div class="alchemy-element-text">b</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-b-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-3" data-element="c"><div class="alchemy-element-text">c</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-c-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-4" data-element="d"><div class="alchemy-element-text">d</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-d-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-5" data-element="e"><div class="alchemy-element-text">e</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-e-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-6" data-element="f"><div class="alchemy-element-text">f</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-f-amount"></div></div>
+            <div class="alchemy-element grey-bkg-style" id="alchemy-element-7" data-element="g"><div class="alchemy-element-text">g</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-g-amount"></div></div>
+            <canvas class="alchemy-visuals" width="500" height="500"></canvas>
+        </div>
+        <div id="reaction-container-title" class="reaction-container-title">
+            Reactions
+        </div>
+        <div class="reaction-container" id="reaction-container" data-offset="0" data-selected="-1">
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-0" data-reaction-id="0">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-0-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-0-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-1" data-reaction-id="1">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-1-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-1-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-2" data-reaction-id="2">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-2-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-2-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-3" data-reaction-id="3">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-3-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-3-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-4" data-reaction-id="4">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-4-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-4-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-5" data-reaction-id="5">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-5-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-5-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-6" data-reaction-id="6">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-6-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-6-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-7" data-reaction-id="7">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-7-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-7-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-8" data-reaction-id="8">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-8-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-8-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-9" data-reaction-id="9">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-9-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-9-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-10" data-reaction-id="10">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-10-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-10-description"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-11" data-reaction-id="11">
+                <div class="reaction-option-title dynamic" data-dynamic-id="reaction-11-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="reaction-11-description"></div>
+                </div>
+            </div>
+        </div>
+        <div id="special-container-title" class="reaction-container-title">
+            Special Reactions
+        </div>
+        <div class="reaction-container" id="special-reaction-container" data-offset="0">
+            <div class="reaction-option no-highlight grey-bkg-style" id="special-reaction-option-0" data-reaction-id="0">
+                <div class="reaction-option-title dynamic" data-dynamic-id="special-reaction-0-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="special-reaction-0-description"></div>
+                    <div class="reaction-option-description reaction-option-effects dynamic" data-dynamic-id="special-reaction-0-effects"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="special-reaction-option-1" data-reaction-id="1">
+                <div class="reaction-option-title dynamic" data-dynamic-id="special-reaction-1-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="special-reaction-1-description"></div>
+                    <div class="reaction-option-description reaction-option-effects dynamic" data-dynamic-id="special-reaction-1-effects"></div>
+                </div>
+            </div>
+            <div class="reaction-option no-highlight grey-bkg-style" id="special-reaction-option-2" data-reaction-id="2">
+                <div class="reaction-option-title dynamic" data-dynamic-id="special-reaction-2-title"></div>
+                <div class="reaction-option-description-container">
+                    <div class="reaction-option-description dynamic" data-dynamic-id="special-reaction-2-description"></div>
+                    <div class="reaction-option-description reaction-option-effects dynamic" data-dynamic-id="special-reaction-2-effects"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
