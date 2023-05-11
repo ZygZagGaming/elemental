@@ -29,7 +29,7 @@ fun loadGame() {
     GameTimer.registerTicker(gameState::tick)
     GameTimer.registerTicker {
         for ((symbol, element) in elements)
-            DynamicHTMLManager.setVariable("element-$symbol-amount", "${gameState.elementAmounts[element] ?: 0}")
+            DynamicHTMLManager.setVariable("element-$symbol-amount", "${gameState.elementAmounts[element]}")
 
         for ((i, entry) in NormalReactions.map.entries.withIndex()) {
             val (backendId, reaction) = entry
@@ -93,7 +93,9 @@ fun loadGame() {
         onwheel = { evt ->
             val rows = ceil(children.length / 3.0)
             val maxScrollAmount = children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px margin + 3px border on both sides*/ - container2.clientHeight
-            reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY), maxScrollAmount.toDouble())
+            reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY),
+                maxScrollAmount
+            )
             children.iterator().forEach { it.style.top = (-reactionListScrollAmount).px }
 
             Unit // not kotlin begging me for a return
@@ -261,11 +263,11 @@ data class GameState(
 fun MutableElementStack.copy(): MutableElementStack = toMutableMap().toMutableDefaultedMap(defaultValue)
 
 fun MutableElementStack.deduct(other: ElementStack) {
-    for ((key, value) in other) this[key] = this[key]?.minus(value) ?: 0.0
+    for ((key, value) in other) this[key] = this[key].minus(value)
 }
 
 fun MutableElementStack.add(other: ElementStack) {
-    for ((key, value) in other) this[key] = this[key]?.plus(value) ?: 0.0
+    for ((key, value) in other) this[key] = this[key].plus(value)
 }
 
 val defaultStack get() = elements.values.associateWith { 0.0 }.toDefaultedMap(0.0)
@@ -396,7 +398,7 @@ fun visuals(gameState: GameState) {
             }
 
             for ((element, _) in reaction.outputs) {
-                if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat) && reaction.inputs[element] != 0.0) {
+                if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat) && reaction.outputs[element] != 0.0) {
                     lineWidth = 10.0
                     val relative = getAlchemyElementPos(element.symbol) * radius
                     if (canDoReaction) {
@@ -523,7 +525,7 @@ class SpecialReaction(name: String, val inputsSupplier: (Int) -> ElementStack, v
     }
 }
 
-fun ElementStack.format(): String = map { (k, v) -> "${if (v == 1.0) "" else (v * 10).roundToInt() / 10.0}${k.symbol}" }.joinToString(" + ")
+fun ElementStack.format(): String = filter { (k, v) -> v != 0.0 }.map { (k, v) -> "${if (v == 1.0) "" else (v * 10).roundToInt() / 10.0}${k.symbol}" }.joinToString(" + ")
 
 object NullReaction: Reaction("") {
     override var inputs: ElementStack = defaultStack

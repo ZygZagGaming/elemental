@@ -116,7 +116,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 Stats.elementCapMultipliers[Elements.heat] += 0.2
             },
             stringEffects = {
-                "\"${Elements.heat.symbol}\" cap x${1 + (it - 1) * 0.2} → x${1 + it * 0.2}"
+                "Heat cap x${1 + (it - 1) * 0.2} → x${1 + it * 0.2}"
             },
             usageCap = 100
         )
@@ -126,7 +126,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heat Sink",
             {
                 elementStackOf(
-                    Elements.d to 20.0 + 2.0 * it
+                    Elements.d to 18.0 + 2.0 * it
                 )
             },
             effects = {
@@ -134,7 +134,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 Unit
             },
             stringEffects = {
-                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${8 + 2 * it} → ${10 + 2 * it}"
+                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${6 + 2 * it} → ${8 + 2 * it}"
             },
             usageCap = 100
         )
@@ -314,6 +314,6 @@ fun Double.roundToOneDecimalPlace() = (this * 10).roundToInt() / 10.0
 fun <K, V> defaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mapOf(*values).toDefaultedMap(defaultValue)
 fun elementStackOf(vararg values: Pair<ElementType, Double>, defaultValue: Double = 0.0): ElementStack = defaultedMapOf(defaultValue, *values)
 
-operator fun ElementStack.plus(other: ElementStack): ElementStack = entries.associate { (k, v) -> k to (v * other[k]) }.toDefaultedMap(0.0)
+operator fun ElementStack.plus(other: ElementStack): ElementStack = entries.associate { (k, v) -> k to (v + other[k]) }.toDefaultedMap(0.0)
 
 fun Map<ElementType, Double>.toElementStack(): ElementStack = toDefaultedMap(0.0)
