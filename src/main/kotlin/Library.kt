@@ -56,7 +56,7 @@ object SpecialReactions: Library<SpecialReaction>() {
     )
     val massiveClock = register("massive_clock",
         SpecialReaction(
-            "Massive Clock",
+            "Unnamed Upgrade",
             mapOf(
                 Elements.d to 4.0
             ),

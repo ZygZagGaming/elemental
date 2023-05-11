@@ -9,7 +9,7 @@ import kotlin.math.*
 
 fun main() {
     console.log("Hello, black men twerking")
-    val load = { load() }
+    //val load = { load() }
 }
 
 lateinit var gameState: GameState
@@ -17,8 +17,10 @@ lateinit var gameState: GameState
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
 
+@OptIn(ExperimentalJsExport::class)
 @Suppress("RedundantUnitExpression")
-fun load() {
+@JsExport
+fun loadGame() {
     doCircleShit()
 
     gameState = GameState()

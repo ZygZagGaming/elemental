@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.7.10"
+    kotlin("js") version "1.8.20"
 }
 
 group = "com.zygzag"
@@ -14,11 +14,14 @@ dependencies {
 }
 
 kotlin {
-    js(LEGACY) {
+    js(IR) {
         binaries.executable()
         browser {
             commonWebpackConfig {
-                cssSupport.enabled = true
+                cssSupport {
+                    enabled.set(true)
+                }
+                output?.libraryTarget = "umd"
             }
         }
     }
