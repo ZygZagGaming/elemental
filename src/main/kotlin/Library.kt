@@ -115,7 +115,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 Stats.elementCapMultipliers[Elements.heat] += 0.2
             },
             stringEffects = {
-                "Heat cap x${1 + (it - 1) * 0.2} → x${1 + it * 0.2}"
+                "Heat cap x${(1 + (it - 1) * 0.2).roundToOneDecimalPlace()} → x${(1 + it * 0.2).roundToOneDecimalPlace()}"
             },
             usageCap = 100
         )
