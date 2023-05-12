@@ -1,6 +1,5 @@
 @file:Suppress("unused")
 
-import org.w3c.dom.ElementContentEditable
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -52,7 +51,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Clockwork",
             {
                 elementStackOf(
-                    Elements.a to 60.0 + 100.0 * it
+                    Elements.a to 60.0 + 60.0 * it
                 )
             },
             effects = {
@@ -74,22 +73,22 @@ object SpecialReactions: Library<SpecialReaction>() {
             },
             effects = {
                 GameTimer.registerTicker { dt ->
-                    val multiplier = 0.1 * it
+                    val multiplier = 0.2 * it
                     val catalysts = dt * Options.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst]
                     gameState.incoming += elementStackOf(Elements.catalyst to floor(catalysts))
                     Stats.partialElements[Elements.catalyst] = catalysts.mod(1f)
                 }
             },
             stringEffects = {
-                val multiplier = 0.1 * it
-                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.1).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second"
+                val multiplier = 0.2 * it
+                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.2).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second"
             },
             usageCap = 100
         )
     )
-    val prestigious = register("prestigious",
+    val heatingUp = register("heating_up",
         SpecialReaction(
-            "Prestigious",
+            "Heating Up",
             {
                 elementStackOf(
                     Elements.b to 1000.0 + if (it > 5) 200.0 * (it - 5) else 0.0
@@ -126,7 +125,8 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heat Sink",
             {
                 elementStackOf(
-                    Elements.d to 18.0 + 2.0 * it
+                    Elements.d to 4.0 + 2.0 * it,
+                    Elements.heat to 8.0 + 2.0 * it
                 )
             },
             effects = {
@@ -193,18 +193,18 @@ object NormalReactions: Library<Reaction>() {
             )
         )
     )
-    val cataClysm = register("cataclysm",
-        Reaction(
-            "CataClysm",
-            elementStackOf(
-                Elements.c to 4.0,
-            ),
-            elementStackOf(
-                Elements.catalyst to 40.0,
-                Elements.heat to 9.0
-            )
-        )
-    )
+//    val cataClysm = register("cataclysm",
+//        Reaction(
+//            "CataClysm",
+//            elementStackOf(
+//                Elements.c to 4.0,
+//            ),
+//            elementStackOf(
+//                Elements.catalyst to 40.0,
+//                Elements.heat to 9.0
+//            )
+//        )
+//    )
     val dscent = register("dscent",
         Reaction(
             "Dscent",
@@ -212,7 +212,7 @@ object NormalReactions: Library<Reaction>() {
                 Elements.a to 120.0,
             ),
             elementStackOf(
-                Elements.d to 1.0
+                Elements.d to 2.0
             )
         )
     )
@@ -220,10 +220,10 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "Over 900",
             elementStackOf(
-                Elements.b to 901.0,
+                Elements.b to 950.0,
             ),
             elementStackOf(
-                Elements.d to 2.0
+                Elements.d to 3.0
             )
         )
     )
