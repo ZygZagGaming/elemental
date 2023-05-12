@@ -48,6 +48,8 @@ fun loadGame() {
             DynamicHTMLManager.idSetClassPresence("special-reaction-option-$i", "active", reaction.hasBeenUsed)
             DynamicHTMLManager.idSetDataVariable("special-reaction-option-$i", "backendReactionId", backendId)
         }
+
+        doCircleShit()
     }
     GameTimer.registerTicker {
         DynamicHTMLManager.tick()
@@ -315,6 +317,8 @@ fun doCircleShit() {
     }
 }
 
+val vw get() = document.documentElement!!.clientWidth / 100.0
+
 fun visuals(gameState: GameState) {
     val alchemyContainers = document.getElementsByClassName("alchemy-container")
     for (alchemyContainer in alchemyContainers) {
@@ -325,13 +329,16 @@ fun visuals(gameState: GameState) {
         val portion = 2 * PI / n
         val visuals = elements.toList().last() as HTMLCanvasElement
         val middle = Vec2(half, half)
+        val size = 30.0 * vw
+        visuals.width = size.roundToInt()
+        visuals.height = size.roundToInt()
         val context = (visuals.getContext("2d") as CanvasRenderingContext2D).apply {
             strokeStyle = "#000000"
             beginPath()
             moveTo(0.0, 0.0)
-            lineTo(500.0, 0.0)
-            lineTo(500.0, 500.0)
-            lineTo(0.0, 500.0)
+            lineTo(size, 0.0)
+            lineTo(size, size)
+            lineTo(0.0, size)
             fill()
 
             strokeStyle = "#ffffff"
@@ -525,7 +532,13 @@ class SpecialReaction(name: String, val inputsSupplier: (Int) -> ElementStack, v
     }
 }
 
-fun ElementStack.format(): String = filter { (k, v) -> v != 0.0 }.map { (k, v) -> "${if (v == 1.0) "" else (v * 10).roundToInt() / 10.0}${k.symbol}" }.joinToString(" + ")
+fun Double.toString1DecPlace(): String {
+    if (abs(this % 1.0) <= 1e-7) return toString().split('.')[0]
+    val str = (this * 10).toString()
+    return str.substring(0 until str.length - 1) + '.' + str.last()
+}
+
+fun ElementStack.format(): String = filter { (k, v) -> v != 0.0 }.map { (k, v) -> "${if (v == 1.0) "" else v.toString1DecPlace()}${k.symbol}" }.joinToString(" + ")
 
 object NullReaction: Reaction("") {
     override var inputs: ElementStack = defaultStack

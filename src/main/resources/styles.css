@@ -11,20 +11,20 @@ body {
 }
 
 .alchemy-container {
-    width: 500px;
-    height: 500px;
+    width: 30vw;
+    height: 30vw;
     position: relative;
     margin: 0;
 }
 
 .alchemy-visuals {
-    width: 500px;
-    height: 500px;
+    width: 30vw;
+    height: 30vw;
 }
 
 .alchemy-element {
-    width: 60px;
-    height: 60px;
+    width: 3vw;
+    height: 3vw;
     border-radius: 100%;
     position: absolute;
     display: block;
@@ -91,21 +91,22 @@ body {
     display: flex;
     position: absolute;
     top: 75px;
-    width: 638px;
+    width: 35vw;
     height: 200px;
     gap: 10px;
     margin-top: 10px;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
+    justify-content: center;
 }
 
 #reaction-container {
-    left: 525px;
+    left: 30vw;
 }
 
 #special-reaction-container {
-    left: 1193px;
+    left: 65vw;
 }
 
 .reaction-option {
@@ -158,7 +159,7 @@ body {
 }
 
 #reaction-container-title {
-    left: 525px;
+    left: 30vw;
 }
 
 .reaction-container-title {
@@ -167,13 +168,13 @@ body {
     font-size: 50px;
     position: absolute;
     margin: 0;
-    width: 638px;
+    width: 35vw;
     height: 75px;
     top: 10px;
 }
 
 #special-container-title {
-    left: 1193px;
+    left: 65vw;
 }
 
 #special-reaction-container > .reaction-option > .reaction-option-title {
