@@ -39,6 +39,11 @@ object SpecialReactions: Library<SpecialReaction>() {
                     Elements.b to 40.0
                 )
             },
+            {
+                elementStackOf(
+                    Elements.heat to 6.0
+                )
+            },
             effects = {
                 Options.gameSpeed = 1.0
             },
@@ -92,7 +97,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heating Up",
             {
                 elementStackOf(
-                    Elements.b to 1000.0 + if (it > 5) 200.0 * (it - 5) else 0.0
+                    Elements.b to 1000.0 + if (it <= 5) 0.0 else if (it <= 10) 200.0 * (it - 5) else 200.0 * (it - 5) * (it - 10)
                 )
             },
             effects = {
@@ -146,18 +151,19 @@ object SpecialReactions: Library<SpecialReaction>() {
             {
                 elementStackOf(
                     Elements.e to 2.0.pow(it),
-                    Elements.b to 500.0 * 2.0.pow(it)
+                    Elements.b to 250.0 * 4.0.pow(it)
                 )
             },
             effects = {
                 val multiplier = it.squared()
                 GameTimer.registerNamedTicker("double_b_cap") {
-                    Stats.elementCapMultipliers[Elements.b] = gameState.elementAmounts[Elements.e] * multiplier
+                    Stats.elementCapMultipliers[Elements.b] = (gameState.elementAmounts[Elements.e] + 1) * multiplier
                 }
                 Unit
             },
             stringEffects = {
-                "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count x${(it - 1).squared()} → x${it.squared()}"
+                if (it == 1) "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1)"
+                else "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1) x${(it - 1).squared()} → x${it.squared()}"
             },
             usageCap = 100
         )
@@ -231,17 +237,17 @@ object NormalReactions: Library<Reaction>() {
 //            )
 //        )
 //    )
-    val dscent = register("dscent",
-        Reaction(
-            "Dscent",
-            elementStackOf(
-                Elements.a to 120.0,
-            ),
-            elementStackOf(
-                Elements.d to 2.0
-            )
-        )
-    )
+//    val dscent = register("dscent",
+//        Reaction(
+//            "Dscent",
+//            elementStackOf(
+//                Elements.a to 120.0,
+//            ),
+//            elementStackOf(
+//                Elements.d to 2.0
+//            )
+//        )
+//    )
     val over900 = register("over900",
         Reaction(
             "Over 900",
@@ -258,6 +264,7 @@ object NormalReactions: Library<Reaction>() {
             "Exotherm",
             elementStackOf(
                 Elements.c to 20.0,
+                Elements.catalyst to 1000.0
             ),
             elementStackOf(
                 Elements.e to 1.0,

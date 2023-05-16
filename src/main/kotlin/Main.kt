@@ -256,7 +256,7 @@ data class GameState(
     fun canDoReaction(reaction: Reaction) =
         ((reaction !is NullReaction)
                 && reaction.inputs.all { (k, v) -> v <= elementAmounts[k] }
-                && reaction.multipliedOutputs.none { (k, v) -> v + elementAmounts[k] > Stats.functionalElementCaps[k] })
+                && reaction.multipliedOutputs.none { (k, v) -> v + elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementCaps[k] })
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
