@@ -135,13 +135,18 @@ object GameTimer {
     fun timeMillis() = date.getTime()
     fun timeSex() = timeMillis() / 1000.0
     private val tickers = mutableListOf<Ticker>()
+    private val namedTickers = mutableMapOf<String, Ticker>()
     fun registerTicker(ticker: Ticker) {
         tickers += ticker
+    }
+    fun registerNamedTicker(name: String, ticker: Ticker) {
+        namedTickers[name] = ticker
     }
     var lastTick = timeSex()
     fun tick() {
         val dt = timeSex() - lastTick
         for (ticker in tickers) ticker(dt)
+        for ((_, ticker) in namedTickers) ticker(dt)
 
         window.setTimeout({ tick() }, 1)
         lastTick = timeSex()
@@ -317,8 +322,6 @@ fun doCircleShit() {
     }
 }
 
-val vw get() = document.documentElement!!.clientWidth / 100.0
-
 fun visuals(gameState: GameState) {
     val alchemyContainers = document.getElementsByClassName("alchemy-container")
     for (alchemyContainer in alchemyContainers) {
@@ -329,9 +332,10 @@ fun visuals(gameState: GameState) {
         val portion = 2 * PI / n
         val visuals = elements.toList().last() as HTMLCanvasElement
         val middle = Vec2(half, half)
-        val size = 30.0 * vw
+        val size = vw(30.0)
         visuals.width = size.roundToInt()
         visuals.height = size.roundToInt()
+        val elementRadius = vw(1.5)
         val context = (visuals.getContext("2d") as CanvasRenderingContext2D).apply {
             strokeStyle = "#000000"
             beginPath()
@@ -353,29 +357,29 @@ fun visuals(gameState: GameState) {
 
             val k = 0.5
             val angle = graphicalHeatAmount * 2 * PI
-            val strokeWidth = 10.0
+            val strokeWidth = vw(0.75)
             if (gameState.elementAmounts[Elements.heat] <= 1e-6) {
                 lineWidth = strokeWidth
                 beginPath()
                 strokeStyle = "#cccccc"
-                arc(half, half, 30.0 + strokeWidth / 2, 0.0, 2 * PI)
+                arc(half, half, elementRadius + strokeWidth / 2, 0.0, 2 * PI)
                 stroke()
             } else {
                 val big = graphicalHeatAmount > 0.75
                 lineWidth = strokeWidth * (if (big) 3.0 / 2 else 1.0)
                 beginPath()
-                strokeStyle = if (big) createRadialGradient(half, half, 30.0, half, half, 30.0 + strokeWidth * 3 / 2).apply {
+                strokeStyle = if (big) createRadialGradient(half, half, elementRadius, half, half, elementRadius + strokeWidth * 3 / 2).apply {
                     addColorStop(0.0, "rgba(255, 0, 0, 1)")
                     addColorStop(0.66, "rgba(255, 0, 0, 1)")
                     addColorStop(1.0, "rgba(255, 0, 0, 0)")
                 } else "#ff0000"
-                arc(half, half, 30.0 + strokeWidth * (if (big) 2 else 1) / 2, k * PI, k * PI + angle)
+                arc(half, half, elementRadius + strokeWidth * (if (big) 2 else 1) / 2, k * PI, k * PI + angle)
                 stroke()
 
                 lineWidth = strokeWidth
                 beginPath()
                 strokeStyle = "#cccccc"
-                arc(half, half, 30.0 + strokeWidth / 2, k * PI + angle, (k + 2) * PI)
+                arc(half, half, elementRadius + strokeWidth / 2, k * PI + angle, (k + 2) * PI)
                 stroke()
             }
 

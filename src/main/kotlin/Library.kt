@@ -1,7 +1,8 @@
 @file:Suppress("unused")
 
-import kotlin.math.floor
-import kotlin.math.roundToInt
+import kotlinx.browser.document
+import kotlinx.browser.window
+import kotlin.math.*
 
 val elements = listOf(
     ElementType("Catalyst", Symbols.catalyst),
@@ -139,7 +140,32 @@ object SpecialReactions: Library<SpecialReaction>() {
             usageCap = 100
         )
     )
+    val doubleBCap = register("double_b_cap",
+        SpecialReaction(
+            "ExponEntial",
+            {
+                elementStackOf(
+                    Elements.e to 2.0.pow(it),
+                    Elements.b to 500.0 * 2.0.pow(it)
+                )
+            },
+            effects = {
+                val multiplier = it.squared()
+                GameTimer.registerNamedTicker("double_b_cap") {
+                    Stats.elementCapMultipliers[Elements.b] = gameState.elementAmounts[Elements.e] * multiplier
+                }
+                Unit
+            },
+            stringEffects = {
+                "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count x${(it - 1).squared()} → x${it.squared()}"
+            },
+            usageCap = 100
+        )
+    )
 }
+
+fun Double.squared() = this * this
+fun Int.squared() = this * this
 
 object NormalReactions: Library<Reaction>() {
     val aToB = register("a_to_b",
@@ -224,6 +250,18 @@ object NormalReactions: Library<Reaction>() {
             ),
             elementStackOf(
                 Elements.d to 3.0
+            )
+        )
+    )
+    val exotherm = register("exotherm",
+        Reaction(
+            "Exotherm",
+            elementStackOf(
+                Elements.c to 20.0,
+            ),
+            elementStackOf(
+                Elements.e to 1.0,
+                Elements.heat to 20.0
             )
         )
     )
@@ -317,3 +355,21 @@ fun elementStackOf(vararg values: Pair<ElementType, Double>, defaultValue: Doubl
 operator fun ElementStack.plus(other: ElementStack): ElementStack = entries.associate { (k, v) -> k to (v + other[k]) }.toDefaultedMap(0.0)
 
 fun Map<ElementType, Double>.toElementStack(): ElementStack = toDefaultedMap(0.0)
+
+fun vh(percent: Double): Double {
+    val h = max(document.documentElement!!.clientHeight, window.innerHeight)
+    return (percent * h) / 100.0
+}
+
+fun vw(percent: Double): Double {
+    val w = max(document.documentElement!!.clientWidth, window.innerWidth)
+    return (percent * w) / 100.0
+}
+
+fun vmin(percent: Double): Double {
+    return min(vh(percent), vw(percent));
+}
+
+fun vmax(percent: Double): Double {
+    return max(vh(percent), vw(percent));
+}

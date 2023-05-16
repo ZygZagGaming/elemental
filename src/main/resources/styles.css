@@ -33,20 +33,20 @@ body {
 
 .alchemy-element-text {
     text-align: center;
-    font-size: 24px;
+    font-size: 1.25vw;
     top: 0;
 }
 
 .alchemy-element-amount {
     text-align: center;
-    font-size: 15px;
+    font-size: 0.75vw;
     bottom: 0;
 }
 
 .reaction-button {
     width: 500px;
     height: 200px;
-    border-radius: 75px;
+    border-radius: 20vw;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -64,7 +64,7 @@ body {
     border-style: solid;
     background-color: #909090;
     color: black;
-    transition: 0.15s;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
     cursor: pointer;
 }
 
@@ -90,11 +90,11 @@ body {
 .reaction-container {
     display: flex;
     position: absolute;
-    top: 75px;
+    top: 5.5vw;
     width: 35vw;
-    height: 200px;
-    gap: 10px;
-    margin-top: 10px;
+    height: 20vw;
+    gap: 1vw;
+    margin-top: 1vw;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
@@ -113,8 +113,8 @@ body {
 /*
     display: flex;
     flex-direction: column;*/
-    width: 200px;
-    height: 125px;
+    width: 14vw;
+    height: 9vw;
     border-radius: 35px;
 }
 
@@ -126,27 +126,27 @@ body {
 
 .reaction-option-title {
     text-align: center;
-    top: 10px;
-    font-size: 20px;
+    top: 1vw;
+    font-size: 1.35vw;
     width: 100%;
     position: relative;
 }
 
 .reaction-option-description {
     text-align: center;
-    font-size: 15px;
+    font-size: 0.95vw;
     width: 100%;
     position: relative;
 }
 
 .reaction-option-description-container {
-    margin: 10px;
-    bottom: 10px;
+    margin: 0.5vw;
+    bottom: 0.5vw;
     display: flex;
     flex-direction: column;
     top: 0px;
     position: relative;
-    height: 70px;
+    height: 6.25vw;
     justify-content: center;
 }
 
@@ -165,20 +165,16 @@ body {
 .reaction-container-title {
     color: white;
     text-align: center;
-    font-size: 50px;
+    font-size: 3vw;
     position: absolute;
     margin: 0;
     width: 35vw;
-    height: 75px;
+    height: 15vw;
     top: 10px;
 }
 
 #special-container-title {
     left: 65vw;
-}
-
-#special-reaction-container > .reaction-option > .reaction-option-title {
-    font-size: 20px;
 }
 
 #special-reaction-container > .reaction-option .active {
