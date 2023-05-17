@@ -477,5 +477,6 @@ fun loadLocalStorage() {
 }
 
 fun simulateTime(dt: Double) {
-    gameState.tick(dt)
+    gameState.tick(dt, cap = false)
+    GameTimer.tick(dt)
 }

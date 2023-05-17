@@ -26,7 +26,6 @@ fun loadGame() {
     gameState = GameState()
     gameState.elementAmounts[Elements.catalyst] = 1.0
     gameState.elementAmounts[Elements.a] = 1.0
-    GameTimer.registerTicker(gameState::tick)
     GameTimer.registerTicker {
         for ((symbol, element) in elements)
             DynamicHTMLManager.setVariable("element-$symbol-amount", "${gameState.elementAmounts[element]}")
@@ -133,7 +132,8 @@ fun loadGame() {
             lastSave = GameTimer.timeSex()
         }
     }
-    GameTimer.tick()
+    GameTimer.registerTicker(gameState::tick)
+    GameTimer.beginTicking()
 }
 
 fun sign(n: Int) = if (n < 0) -1 else if (n > 0) 1 else 0
@@ -151,12 +151,15 @@ object GameTimer {
         namedTickers[name] = ticker
     }
     var lastTick = timeSex()
-    fun tick() {
-        val dt = timeSex() - lastTick
+    fun tick(dt: Double) {
         for (ticker in tickers) ticker(dt)
         for ((_, ticker) in namedTickers) ticker(dt)
+    }
 
-        window.setTimeout({ tick() }, 1)
+    fun beginTicking() {
+        val dt = timeSex() - lastTick
+        tick(dt)
+        window.setTimeout({ beginTicking() }, 1)
         lastTick = timeSex()
     }
 }
@@ -246,7 +249,7 @@ class GameState {
         automationTickers[name] = automationTicker
     }
 
-    fun tick(dt: Double) {
+    fun tick(dt: Double, cap: Boolean = true) {
         lastAmounts = elementAmounts.copy().toMutableDefaultedMap(0.0)
         lastReaction = hoveredReaction
         timeSpent += dt
@@ -254,7 +257,7 @@ class GameState {
         automationTickers.values.forEach { it.tick(dt) }
 
         elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat] * 0.1 * dt * Stats.gameSpeed))
-        for ((key, value) in incoming) elementAmounts[key] = min(Stats.functionalElementCaps[key], max(0.0,
+        if (cap) for ((key, value) in incoming) elementAmounts[key] = min(Stats.functionalElementCaps[key], max(0.0,
             elementAmounts[key].plus(value)
         ))
         incoming = defaultMutableStack
