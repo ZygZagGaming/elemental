@@ -8,6 +8,7 @@ body {
     margin: 0;
     font-family: 'Noto Sans', sans-serif;
     cursor: default;
+    overflow: hidden;
 }
 
 .alchemy-container {
@@ -16,7 +17,7 @@ body {
     position: relative;
     margin: 0;
     left: 35vw;
-    top: 50%;
+    top: 50vh;
     transform: translateY(-50%);
 }
 
@@ -60,6 +61,11 @@ body {
     background-color: #303030;
     color: white;
     border-color: grey;
+}
+
+.navbar-element:hover, #options-button:hover:not(.active) {
+    background-color: #606060;
+    color: #c0c0c0;
 }
 
 .grey-bkg-style.disabled {
@@ -169,3 +175,93 @@ body {
     cursor: pointer;
 }
 
+#navbar {
+    width: 39.4vw;
+    left: 30.3vw;
+    height: 3vw;
+    background-color: black;
+    bottom: 0;
+    position: absolute;
+    border-top-left-radius: 2vw;
+    border-top-right-radius: 2vw;
+    display: flex;
+    border-top-width: 4px;
+    border-color: white;
+    border-top-style: solid;
+    overflow: hidden;
+}
+
+.navbar-element, #options-button {
+    width: 13.05vw;
+    height: 3.25vw;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+#options-button {
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    overflow: hidden;
+    border-top-left-radius: 2vw;
+    border-top-style: solid;
+    border-width: 4px;
+}
+
+#navbar-element-2 {
+    border-width: .2vw;
+    border-color: white;
+    border-left-style: solid;
+    border-right-style: solid;
+}
+
+.navbar-text {
+    width: 13vw;
+}
+
+.page {
+    width: 100vw;
+    height: 97vw;
+}
+
+.page-button > .page-text {
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.page-button.active, .page-button.active > .page-text {
+    color: #222222;
+    background-color: white;
+}
+
+#options-page {
+    display: flex;
+    justify-content: space-evenly;
+    height: 94vh;
+}
+
+.options-column {
+    width: 30vw;
+}
+
+.options-column-title {
+    width: 100%;
+    top: 1vw;
+    font-size: 2.5vw;
+    color: white;
+    text-align: center;
+    position: relative;
+}
+
+.options-column-line {
+    width: 100%;
+    top: 1.5vw;
+    height: .2vw;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0) 100%);
+    position: relative;
+}

@@ -480,3 +480,10 @@ fun simulateTime(dt: Double) {
     gameState.tick(dt, cap = false)
     GameTimer.tick(dt)
 }
+
+data class Page(val name: String)
+
+object Pages: Library<Page>() {
+    val elementsPage = register("elements", Page("Elements"))
+    val optionsPage = register("options", Page("Options"))
+}
