@@ -125,6 +125,14 @@ fun loadGame() {
             }
         }
     }
+    loadLocalStorage()
+    var lastSave = 0.0
+    GameTimer.registerTicker {
+        if (GameTimer.timeSex() - lastSave >= Options.saveInterval) {
+            saveLocalStorage()
+            lastSave = GameTimer.timeSex()
+        }
+    }
     GameTimer.tick()
 }
 
@@ -223,14 +231,13 @@ open class AutomationTicker(var rateHertz: Double, var effects: () -> Unit) {
     }
 }
 
-data class GameState(
-    var hoveredReaction: Reaction = NullReaction,
-    val elementAmounts: MutableDefaultedMap<ElementType, Double> = defaultMutableStack.toMutableDefaultedMap(0.0),
-    var timeSpent: Double = 0.0
-) {
+class GameState {
+    val elementAmounts: MutableDefaultedMap<ElementType, Double> = defaultMutableStack.toMutableDefaultedMap(0.0)
+    var hoveredReaction: Reaction = NullReaction
     var incoming = defaultMutableStack
     var lastAmounts = elementAmounts
     var lastReaction = hoveredReaction
+    var timeSpent: Double = 0.0
     var automationTickers = mutableMapOf(
         "a_to_b" to AutomationTicker(0.0) { attemptReaction(NormalReactions.aToB) }
     )
@@ -246,7 +253,7 @@ data class GameState(
 
         automationTickers.values.forEach { it.tick(dt) }
 
-        elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat] * 0.1 * dt * Options.gameSpeed))
+        elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat] * 0.1 * dt * Stats.gameSpeed))
         for ((key, value) in incoming) elementAmounts[key] = min(Stats.functionalElementCaps[key], max(0.0,
             elementAmounts[key].plus(value)
         ))
@@ -260,10 +267,14 @@ data class GameState(
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
-            elementAmounts.deduct(reaction.inputs)
+            elementAmounts.deduct(reaction.multipliedInputs)
             incoming.add(reaction.multipliedOutputs)
             if (reaction is SpecialReaction) reaction.execute()
         }
+    }
+
+    override fun toString(): String {
+        return super.toString()
     }
 }
 
@@ -505,7 +516,8 @@ typealias MutableElementStack = MutableDefaultedMap<ElementType, Double>
 open class Reaction(val name: String) {
     open var inputs: ElementStack = defaultStack.toDefaultedMap(0.0)
     open var outputs: ElementStack = defaultStack.toDefaultedMap(0.0)
-    val multipliedOutputs get() = outputs.entries.associate { (k, v) -> k to v * Stats.elementMultipliers[k] }.toDefaultedMap(0.0)
+    val multipliedInputs get() = inputs.entries.associate { (k, v) -> k to v * Stats.reactionEfficiencies[this] }.toDefaultedMap(0.0)
+    val multipliedOutputs get() = outputs.entries.associate { (k, v) -> k to v * Stats.elementMultipliers[k] * Stats.reactionEfficiencies[this] }.toDefaultedMap(0.0)
 
     companion object {
         operator fun invoke(name: String, inputs: ElementStack, outputs: ElementStack) = object : Reaction(name) {
@@ -516,7 +528,7 @@ open class Reaction(val name: String) {
 
     override fun toString(): String {
         if (this is NullReaction) return "-"
-        return "${inputs.format()} ⇒ ${multipliedOutputs.format()}"
+        return "${multipliedInputs.format()} ⇒ ${multipliedOutputs.format()}"
     }
 }
 
@@ -527,12 +539,11 @@ class SpecialReaction(name: String, val inputsSupplier: (Int) -> ElementStack, v
     override var outputs: ElementStack
         get() = outputsSupplier(nTimesUsed + 1)
         set(_) {}
-    var hasBeenUsed = false
+    val hasBeenUsed get() = nTimesUsed >= usageCap
     var nTimesUsed = 0
     fun execute() {
         nTimesUsed++
         effects(nTimesUsed)
-        if (nTimesUsed == usageCap) hasBeenUsed = true
     }
 }
 

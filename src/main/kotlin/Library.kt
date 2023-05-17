@@ -1,7 +1,10 @@
 @file:Suppress("unused")
 
 import kotlinx.browser.document
+import kotlinx.browser.localStorage
 import kotlinx.browser.window
+import org.w3c.dom.Storage
+import kotlin.js.Date
 import kotlin.math.*
 
 val elements = listOf(
@@ -15,8 +18,6 @@ val elements = listOf(
     ElementType("Element G", Symbols.g),
     ElementType("Heat", Symbols.heat)
 ).associateBy { it.symbol }
-
-
 
 open class Library<T> {
     val map get() = backingMap.toMap()
@@ -45,7 +46,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 )
             },
             effects = {
-                Options.gameSpeed = 1.0
+                Stats.gameSpeed = 1.0
             },
             stringEffects = {
                 "Game speed 0 → 1"
@@ -80,7 +81,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = {
                 GameTimer.registerTicker { dt ->
                     val multiplier = 0.2 * it
-                    val catalysts = dt * Options.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst]
+                    val catalysts = dt * Stats.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst]
                     gameState.incoming += elementStackOf(Elements.catalyst to floor(catalysts))
                     Stats.partialElements[Elements.catalyst] = catalysts.mod(1f)
                 }
@@ -164,6 +165,42 @@ object SpecialReactions: Library<SpecialReaction>() {
             stringEffects = {
                 if (it == 1) "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1)"
                 else "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1) x${(it - 1).squared()} → x${it.squared()}"
+            },
+            usageCap = 100
+        )
+    )
+    val onEfficiency = register("on_efficiency",
+        SpecialReaction(
+            "On Efficiency",
+            {
+                elementStackOf(
+                    Elements.catalyst to 5000.0 * it,
+                    Elements.b to 4000.0 * it
+                )
+            },
+            effects = {
+                Stats.reactionEfficiencies[NormalReactions.bBackToA] = 2.0 * it
+            },
+            stringEffects = {
+                "\"${NormalReactions.bBackToA.name}\" reaction efficiency x${if (it == 1) 1 else 2 * it - 2} → x${2 * it}"
+            },
+            usageCap = 100
+        )
+    )
+    val noneLeft = register("none_left",
+        SpecialReaction(
+            "None Left",
+            {
+                elementStackOf(
+                    Elements.catalyst to 100000.0 * (if (it <= 5) 1.0 else (it - 5.0) * (it - 5))
+                )
+            },
+            effects = {
+                Stats.elementMultipliers[Elements.a] = (it + 1.0) * (it + 1)
+                Stats.elementCapMultipliers[Elements.a] = (it + 1.0) * (it + 1)
+            },
+            stringEffects = {
+                "\"${Elements.a.symbol}\" and \"${Elements.a.symbol}\" cap x${it * it} → x${(it + 1) * (it + 1)}"
             },
             usageCap = 100
         )
@@ -299,7 +336,8 @@ object Symbols: Library<Char>() {
 }
 
 object Options {
-    var gameSpeed = 0.0
+    var saveInterval = 5.0
+    var saveMode = SaveMode.LOCAL_STORAGE
 }
 
 object Stats {
@@ -311,6 +349,8 @@ object Stats {
     }.toMutableDefaultedMap(Double.POSITIVE_INFINITY)
     val elementCapMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
     val functionalElementCaps get() = Elements.values.associateWith { elementCaps[it] * elementCapMultipliers[it] }.toDefaultedMap(Double.POSITIVE_INFINITY)
+    val reactionEfficiencies = mutableMapOf<Reaction, Double>().toMutableDefaultedMap(1.0)
+    var gameSpeed = 0.0
 }
 
 open class DefaultedMap<K, V>(private val backingMap: Map<K, V>, val defaultValue: V): Map<K, V> {
@@ -379,4 +419,63 @@ fun vmin(percent: Double): Double {
 
 fun vmax(percent: Double): Double {
     return max(vh(percent), vw(percent));
+}
+
+operator fun Storage.set(name: String, value: String) {
+    setItem(name, value)
+}
+
+operator fun Storage.get(name: String): String {
+    return getItem(name) ?: ""
+}
+
+enum class SaveMode {
+    LOCAL_STORAGE
+}
+
+fun save(saveMode: SaveMode = Options.saveMode) {
+    when (saveMode) {
+        SaveMode.LOCAL_STORAGE -> saveLocalStorage()
+    }
+}
+
+fun load(saveMode: SaveMode = Options.saveMode) {
+    when (saveMode) {
+        SaveMode.LOCAL_STORAGE -> loadLocalStorage()
+    }
+}
+
+fun saveLocalStorage() {
+    console.log("Saving game to local storage...")
+    document.apply {
+        localStorage["elementAmts"] = Elements.map.map { (k, v) -> "$k:${gameState.elementAmounts[v]}" }.joinToString(separator = ",")
+        localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
+        localStorage["timestamp"] = Date().toDateString()
+        localStorage["timeSpent"] = gameState.timeSpent.toString()
+    }
+}
+
+fun loadLocalStorage() {
+    console.log("Loading game from local storage...")
+    document.apply {
+        val timestamp = localStorage["timestamp"]
+        if (timestamp != "") {
+            localStorage["reactionAmts"].split(',').forEach {
+                val pair = it.split(':')
+                val reaction = SpecialReactions.map[pair[0]]
+                if (reaction != null) repeat(pair[1].toInt()) { reaction.execute() }
+            }
+            localStorage["elementAmts"].split(',').forEach {
+                val pair = it.split(':')
+                val element = Elements.map[pair[0]]
+                if (element != null) gameState.elementAmounts[element] = pair[1].toDouble()
+            }
+            gameState.timeSpent = localStorage["timeSpent"].toDouble()
+            simulateTime((Date().getUTCMilliseconds() - Date(timestamp).getUTCMilliseconds()) / 1000.0)
+        }
+    }
+}
+
+fun simulateTime(dt: Double) {
+    gameState.tick(dt)
 }

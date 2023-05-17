@@ -4,3 +4,6 @@ config.performance = {
     maxAssetSize: 512000,
     maxEntrypointSize: 512000
 };
+config.optimization = {
+    minimize: false
+};
