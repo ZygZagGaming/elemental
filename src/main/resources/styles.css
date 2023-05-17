@@ -242,11 +242,12 @@ body {
 #options-page {
     display: flex;
     justify-content: space-evenly;
-    height: 94vh;
+    height: 90vh;
 }
 
 .options-column {
     width: 30vw;
+    height: 90vh;
 }
 
 .options-column-title {
@@ -256,6 +257,7 @@ body {
     color: white;
     text-align: center;
     position: relative;
+    height: 3vw;
 }
 
 .options-column-line {
@@ -264,4 +266,36 @@ body {
     height: .2vw;
     background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0) 100%);
     position: relative;
+}
+
+.options-column-element {
+    height: 2vw;
+}
+
+.options-column-content {
+    height: 82.3vh;
+    top: 2.5vw;
+    position: relative;
+}
+
+.options-text {
+    color: white;
+    font-size: 1.5vw;
+    height: 2vw;
+    width: 6vw;
+}
+
+.align-left {
+    left: 0;
+    position: relative;
+}
+
+.align-right {
+    right: 0;
+    position: relative;
+}
+
+.on-off-switch {
+    height: 2vw;
+    width: 6vw;
 }
