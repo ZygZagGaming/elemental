@@ -111,7 +111,7 @@ body {
     flex-direction: column;*/
     width: 10vw;
     height: 7vw;
-    border-radius: 35px;
+    border-radius: 2vw;
 }
 
 .no-highlight {
@@ -202,7 +202,7 @@ body {
     justify-content: space-evenly;
     color: white;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 1.5vw;
     transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 

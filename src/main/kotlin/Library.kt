@@ -144,7 +144,6 @@ object SpecialReactions: Library<SpecialReaction>() {
             },
             effects = {
                 NormalReactions.cminglyOp.inputs += elementStackOf(Elements.heat to 2.0)
-                Unit
             },
             stringEffects = {
                 "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${6 + 2 * it} → ${8 + 2 * it}"
@@ -152,7 +151,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             usageCap = 100
         )
     )
-    val doubleBCap = register("double_b_cap",
+    val exponEntial = register("expon_ential",
         SpecialReaction(
             "ExponEntial",
             {
@@ -166,7 +165,6 @@ object SpecialReactions: Library<SpecialReaction>() {
                 GameTimer.registerNamedTicker("double_b_cap") {
                     Stats.elementCapMultipliers[Elements.b] = (gameState.elementAmounts[Elements.e] + 1) * multiplier
                 }
-                Unit
             },
             stringEffects = {
                 if (it == 1) "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1)"

@@ -59,12 +59,12 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
             val big = graphicalHeatAmount > 0.75
             lineWidth = strokeWidth * (if (big) 3.0 / 2 else 1.0)
             beginPath()
-            strokeStyle = if (big) createRadialGradient(half, half, elementRadius, half, half, elementRadius + strokeWidth * 3 / 2).apply {
+            strokeStyle = if (big) createRadialGradient(half, half, elementRadius, half, half, elementRadius + strokeWidth * 3 / 2 - 2).apply {
                 addColorStop(0.0, "rgba(255, 0, 0, 1)")
                 addColorStop(0.66, "rgba(255, 0, 0, 1)")
                 addColorStop(1.0, "rgba(255, 0, 0, 0)")
             } else "#ff0000"
-            arc(half, half, elementRadius + strokeWidth * (if (big) 2 else 1) / 2, k * PI, k * PI + angle)
+            arc(half, half, elementRadius + strokeWidth * (if (big) 1.5 else 1.0) / 2, k * PI, k * PI + angle)
             stroke()
 
             lineWidth = strokeWidth
