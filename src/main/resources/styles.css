@@ -9,6 +9,8 @@ body {
     font-family: 'Noto Sans', sans-serif;
     cursor: default;
     overflow: hidden;
+    z-index: -3;
+    position: absolute;
 }
 
 .alchemy-container {
@@ -227,7 +229,9 @@ body {
 
 .page {
     width: 100vw;
-    height: 97vw;
+    height: 100vh;
+    z-index: -2;
+    position: absolute;
 }
 
 .page-button > .page-text {
@@ -239,7 +243,7 @@ body {
     background-color: white;
 }
 
-#options-page {
+#options-page:not(.hidden) {
     display: flex;
     justify-content: space-evenly;
     height: 90vh;
@@ -283,6 +287,7 @@ body {
     font-size: 1.5vw;
     height: 2vw;
     width: 6vw;
+    display: inline-block;
 }
 
 .align-left {
@@ -298,4 +303,28 @@ body {
 .on-off-switch {
     height: 2vw;
     width: 6vw;
+    margin-left: 17.5625vw;
+    display: inline-block;
+}
+
+.autoclicker {
+    width: 3vw;
+    height: 3vw;
+}
+
+.autoclicker-dock {
+    width: 3vw;
+    height: 3vw;
+    border-width: 2px;
+    border-style: none;
+    border-top-style: solid;
+    border-top-right-radius: 1.5vw;
+    border-color: white;
+    background-color: black;
+    z-index: -1;
+}
+
+canvas {
+    overflow: visible;
+    transition: left 0.1s, top 0.1s;
 }

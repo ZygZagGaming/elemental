@@ -1,6 +1,7 @@
 @file:Suppress("UNUSED_VARIABLE", "MemberVisibilityCanBePrivate", "MoveLambdaOutsideParentheses")
 
 import kotlinx.browser.document
+import kotlinx.browser.localStorage
 import kotlinx.browser.window
 import kotlinx.dom.hasClass
 import org.w3c.dom.*
@@ -18,14 +19,24 @@ var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
 
 @OptIn(ExperimentalJsExport::class)
+@JsExport
+fun resetSave() {
+    localStorage.clear()
+    window.location.reload()
+}
+
+val defaultElements: MutableElementStack get() = mapOf(
+    Elements.catalyst to 1.0,
+    Elements.a to 1.0
+).toMutableMap().toMutableDefaultedMap(0.0)
+
+@OptIn(ExperimentalJsExport::class)
 @Suppress("RedundantUnitExpression")
 @JsExport
 fun loadGame() {
     doCircleShit()
 
     gameState = GameState()
-    gameState.elementAmounts[Elements.catalyst] = 1.0
-    gameState.elementAmounts[Elements.a] = 1.0
     GameTimer.registerTicker {
         for ((symbol, element) in elements)
             DynamicHTMLManager.setVariable("element-$symbol-amount", "${gameState.elementAmounts[element]}")
@@ -70,20 +81,20 @@ fun loadGame() {
         }
         for ((child, i) in children.indexed) {
             child.onclick = { _ ->
-                val reaction = NormalReactions.map[child.dataset["backendReactionId"]!!]!!
-                gameState.attemptReaction(reaction)
+                val reaction = NormalReactions.map[child.dataset["backendReactionId"] ?: ""]
+                if (reaction != null) gameState.attemptReaction(reaction)
 
                 Unit
             }
             child.onmouseenter = { _ ->
-                val reaction = NormalReactions.map[child.dataset["backendReactionId"]!!]!!
-                gameState.hoveredReaction = reaction
+                val reaction = NormalReactions.map[child.dataset["backendReactionId"] ?: ""]
+                if (reaction != null) gameState.hoveredReaction = reaction
 
                 Unit
             }
             child.onmouseleave = { _ ->
-                val reaction = NormalReactions.map[child.dataset["backendReactionId"]!!]!!
-                gameState.hoveredReaction = NullReaction
+                val reaction = NormalReactions.map[child.dataset["backendReactionId"] ?: ""]
+                if (reaction != null) gameState.hoveredReaction = NullReaction
 
                 Unit
             }
@@ -182,6 +193,10 @@ object DynamicHTMLManager {
         variables[id] = value
     }
 
+    fun getPageElement(page: Page): HTMLElement? {
+        return pages.toList().firstOrNull { it.dataset["pageId"] == Pages.id(page) }
+    }
+
     fun setDataVariable(classToSelect: String, variable: String, value: String) {
         for (dyn in dynamix) if (dyn.classList.contains(classToSelect)) dyn.dataset[variable] = value
     }
@@ -232,6 +247,41 @@ object DynamicHTMLManager {
             if (data != null) {
                 dyn.textContent = data
             }
+            if (dyn.classList.contains("draggable")) {
+                var dx: Int
+                var dy: Int
+                var x: Int
+                var y: Int
+                dyn.onmousedown = {
+                    it.preventDefault()
+                    x = it.clientX
+                    y = it.clientY
+                    dyn.dataset["dragging"] = "true"
+
+                    document.onmousemove = { it2 ->
+                        it2.preventDefault()
+                        dx = x - it2.clientX
+                        dy = y - it2.clientY
+                        x = it2.clientX
+                        y = it2.clientY
+
+                        dyn.style.top = (dyn.offsetTop - dy).px
+                        dyn.style.left = (dyn.offsetLeft - dx).px
+
+                        Unit
+                    }
+
+                    document.onmouseup = {
+                        document.onmousemove = null
+                        document.onmouseup = null
+                        dyn.dataset["dragging"] = "false"
+
+                        Unit
+                    }
+
+                    Unit
+                }
+            }
         }
         for (pageButton in pageButtons) {
             val pageId = pageButton.dataset["pageId"]
@@ -264,7 +314,7 @@ open class AutomationTicker(var rateHertz: Double, var effects: () -> Unit) {
 }
 
 class GameState {
-    val elementAmounts: MutableDefaultedMap<ElementType, Double> = defaultMutableStack.toMutableDefaultedMap(0.0)
+    val elementAmounts: MutableDefaultedMap<ElementType, Double> = defaultElements
     var hoveredReaction: Reaction = NullReaction
     var incoming = defaultMutableStack
     var lastAmounts = elementAmounts
@@ -273,6 +323,7 @@ class GameState {
     var automationTickers = mutableMapOf(
         "a_to_b" to AutomationTicker(0.0) { attemptReaction(NormalReactions.aToB) }
     )
+    val autoclickers = mutableListOf<AutoClicker>()
 
     fun addAutomationTicker(name: String, automationTicker: AutomationTicker) {
         automationTickers[name] = automationTicker
@@ -284,6 +335,7 @@ class GameState {
         timeSpent += dt
 
         automationTickers.values.forEach { it.tick(dt) }
+        autoclickers.forEach { if (DynamicHTMLManager.shownPage == Pages.id(it.page)) it.tick(dt) }
 
         elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat] * 0.1 * dt * Stats.gameSpeed))
         if (cap) for ((key, value) in incoming) elementAmounts[key] = min(Stats.functionalElementCaps[key], max(0.0,
@@ -437,3 +489,117 @@ operator fun HTMLCollection.iterator() = toList().iterator()
 
 val HTMLCollection.indices get() = toList().indices
 val HTMLCollection.indexed get() = toList().zip(indices) { a, b -> Indexed(a, b) }
+
+data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
+    var clickPercent = 0.0
+    val htmlElement: HTMLElement
+    val canvas: HTMLCanvasElement
+    val dock: HTMLElement
+    var sinceLastClick = 0.0
+    init {
+        val parent = DynamicHTMLManager.getPageElement(page)!!
+        htmlElement = document.createElement("div") as HTMLElement
+        canvas = document.createElement("canvas") as HTMLCanvasElement
+        parent.appendChild(canvas)
+        parent.appendChild(htmlElement)
+        canvas.apply {
+            width = vw(3.0).roundToInt()
+            height = vw(3.0).roundToInt()
+            style.position = "absolute"
+            classList.add("no-autoclick")
+        }
+        htmlElement.apply {
+            classList.apply {
+                add("autoclicker")
+                add("draggable")
+                add("dynamic")
+                add("no-autoclick")
+            }
+            id = "autoclicker-${this@AutoClicker.id}"
+            style.apply {
+                position = "absolute"
+                top = "50vh"
+                left = "50vw"
+            }
+        }
+
+        dock = document.createElement("dock") as HTMLElement
+        parent.appendChild(dock)
+        dock.apply {
+            id = "autoclicker-$id-dock"
+            classList.apply {
+                add("autoclicker-dock")
+            }
+            style.apply {
+                position = "absolute"
+                left = "0"
+                bottom = "0"
+            }
+            onclick = {
+                if (htmlElement.dataset["dragging"] != "false") {
+                    htmlElement.screenMiddleX = dock.screenMiddleX
+                    htmlElement.screenY = dock.screenY - vw(4.0)
+                }
+
+                Unit
+            }
+        }
+    }
+    fun click() {
+        //console.log(document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().yMiddle))
+        val element = document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().top).firstOrNull { !it.classList.contains("no-autoclick") }
+        if (element is HTMLElement) {
+            element.click()
+        }
+    }
+
+    fun tick(dt: Double) {
+        clickPercent += dt * cps
+        sinceLastClick += dt
+        while (clickPercent > 1) {
+            clickPercent--
+            click()
+            sinceLastClick = 0.0
+        }
+        canvas.apply {
+            style.left = htmlElement.style.left
+            style.top = htmlElement.style.top
+        }
+    }
+}
+
+val screenWidth get() = window.screen.width
+val screenHeight get() = window.screen.height
+
+val DOMRect.xMiddle get() = left + 0.5 * width
+val DOMRect.yMiddle get() = top + 0.5 * height
+
+
+var HTMLElement.x
+    get() = screenX / screenWidth
+    set(value) {
+        screenX = value * screenWidth
+    }
+var HTMLElement.y
+    get() = screenY / screenHeight
+    set(value) {
+        screenY = value * screenHeight
+    }
+
+var HTMLElement.screenX
+    get() = getBoundingClientRect().left
+    set(value) {
+        style.left = value.px
+    }
+
+var HTMLElement.screenMiddleX
+    get() = getBoundingClientRect().xMiddle
+    set(value) {
+        style.left = (value - clientWidth / 2).px
+    }
+
+var HTMLElement.screenY
+    get() = getBoundingClientRect().top
+    set(value) {
+        style.top = value.px
+    }

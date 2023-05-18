@@ -148,7 +148,7 @@
                 </div>
             </div>
         </div>
-        <div id="options-page" class="page" data-page-id="options">
+        <div id="options-page" class="page hidden" data-page-id="options">
             <div class="options-column">
                 <div class="options-column-title">Saving</div>
                 <div class="options-column-line"></div>
@@ -156,6 +156,9 @@
                     <div class="options-column-element">
                         <div class="options-text align-left">Saving</div>
                         <div class="on-off-switch align-right"></div>
+                    </div>
+                    <div class="options-column-element">
+                        <div class="options-text align-left" onclick="elemental.resetSave()">RESET SAVE (FOR DEBUG ONLY)</div>
                     </div>
                 </div>
             </div>

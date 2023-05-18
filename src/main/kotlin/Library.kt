@@ -28,6 +28,10 @@ open class Library<T> {
         else throw Exception("Duplicate values in registry")
         return elem
     }
+
+    fun id(elem: T): String? {
+        return map.entries.firstOrNull { it.value == elem }?.key
+    }
 }
 
 object SpecialReactions: Library<SpecialReaction>() {
@@ -62,10 +66,12 @@ object SpecialReactions: Library<SpecialReaction>() {
                 )
             },
             effects = {
-                gameState.automationTickers["a_to_b"]!!.rateHertz = 2.0 * it
+                if (it == 1) gameState.autoclickers.add(AutoClicker(1, Pages.elementsPage, cps = 1.0))
+                else gameState.autoclickers[0].cps += 1
             },
             stringEffects = {
-                "Automate \"A to B\" at a rate of ${2 * (it - 1)} → ${2 * it} per second"
+                if (it == 1) "Unlock Autoclicker 1"
+                else "Autoclicker 1 click rate ${it - 1} → $it per second"
             },
             usageCap = 100
         )
@@ -81,14 +87,14 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = {
                 GameTimer.registerTicker { dt ->
                     val multiplier = 0.2 * it
-                    val catalysts = dt * Stats.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst]
+                    val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst], Stats.functionalElementCaps[Elements.catalyst] * .99 - gameState.elementAmounts[Elements.catalyst]))
                     gameState.incoming += elementStackOf(Elements.catalyst to floor(catalysts))
                     Stats.partialElements[Elements.catalyst] = catalysts.mod(1f)
                 }
             },
             stringEffects = {
                 val multiplier = 0.2 * it
-                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.2).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second"
+                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.2).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second (until 99% of cap)"
             },
             usageCap = 100
         )
@@ -105,7 +111,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 Stats.elementMultipliers[Elements.b] = it.toDouble() + 1
             },
             stringEffects = {
-                "\"${Elements.b.symbol}\" x${Stats.elementMultipliers[Elements.b]} → x${it + 1}"
+                "\"${Elements.b.symbol}\" production x${Stats.elementMultipliers[Elements.b]} → x${it + 1}"
             },
             usageCap = 100
         )
@@ -200,7 +206,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 Stats.elementCapMultipliers[Elements.a] = (it + 1.0) * (it + 1)
             },
             stringEffects = {
-                "\"${Elements.a.symbol}\" and \"${Elements.a.symbol}\" cap x${it * it} → x${(it + 1) * (it + 1)}"
+                "\"${Elements.a.symbol}\" production and \"${Elements.a.symbol}\" cap x${it * it} → x${(it + 1) * (it + 1)}"
             },
             usageCap = 100
         )
@@ -452,6 +458,7 @@ fun saveLocalStorage() {
         localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
         localStorage["timestamp"] = Date().toDateString()
         localStorage["timeSpent"] = gameState.timeSpent.toString()
+        localStorage["autoclickerPositions"] = gameState.autoclickers.map { "${it.id}:${it.htmlElement.x},${it.htmlElement.y}" }.joinToString(separator = ";")
     }
 }
 
@@ -472,6 +479,18 @@ fun loadLocalStorage() {
             }
             gameState.timeSpent = localStorage["timeSpent"].toDouble()
             simulateTime((Date().getUTCMilliseconds() - Date(timestamp).getUTCMilliseconds()) / 1000.0)
+            val positions = localStorage["autoclickerPositions"].split(";").filter { it != "" }.associate {
+                val pair = it.split(":")
+                val pair2 = pair[1].split(",")
+                pair[0].toInt() to (pair2[0] to pair2[1])
+            }
+            gameState.autoclickers.forEach {
+                val pos = positions[it.id]
+                if (pos != null) {
+                    it.htmlElement.x = pos.first.toDouble()
+                    it.htmlElement.y = pos.second.toDouble()
+                }
+            }
         }
     }
 }
