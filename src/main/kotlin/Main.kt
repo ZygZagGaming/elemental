@@ -524,7 +524,7 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
         }
 
         dock = document.createElement("div") as HTMLElement
-        parent.appendChild(dock)
+        parent.children.toList().first { it.classList.contains("autoclicker-dock-container") }.appendChild(dock)
         dock.apply {
             id = "autoclicker-$id-dock"
             classList.apply {

@@ -274,6 +274,8 @@ body {
 
 .options-column-element {
     height: 2vw;
+    display: flex;
+    justify-content: space-between;
 }
 
 .options-column-content {
@@ -286,18 +288,6 @@ body {
     color: white;
     font-size: 1.5vw;
     height: 2vw;
-    width: 6vw;
-    display: inline-block;
-}
-
-.align-left {
-    left: 0;
-    position: relative;
-}
-
-.align-right {
-    right: 0;
-    position: relative;
 }
 
 .on-off-switch {
@@ -310,9 +300,10 @@ body {
 .autoclicker {
     width: 3vw;
     height: 3vw;
+    cursor: move;
 }
 
-.autoclicker-dock {
+.autoclicker-dock-container {
     width: 3vw;
     height: 3vw;
     border-width: 2px;
@@ -322,8 +313,30 @@ body {
     border-color: white;
     background-color: black;
     z-index: -1;
+    bottom: 0;
+    left: 0;
+    position: absolute
+}
+
+.autoclicker-dock {
+    width: 3vw;
+    height: 3vw;
 }
 
 canvas {
     overflow: visible;
+}
+
+.options-button {
+    border-radius: 0.75vw;
+    padding-left: 1vw;
+    padding-right: 1vw;
+    vertical-align: middle;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+}
+
+.options-button > div {
+    font-size: 1vw;
 }
