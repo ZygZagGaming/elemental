@@ -523,7 +523,7 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
             }
         }
 
-        dock = document.createElement("dock") as HTMLElement
+        dock = document.createElement("div") as HTMLElement
         parent.appendChild(dock)
         dock.apply {
             id = "autoclicker-$id-dock"
@@ -536,9 +536,9 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
                 bottom = "0"
             }
             onclick = {
-                if (htmlElement.dataset["dragging"] != "false") {
+                if (htmlElement.dataset["dragging"] != "true") {
                     htmlElement.screenMiddleX = dock.screenMiddleX
-                    htmlElement.screenY = dock.screenY - vw(4.0)
+                    htmlElement.screenY = dock.screenY
                 }
 
                 Unit
@@ -562,8 +562,21 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
             sinceLastClick = 0.0
         }
         canvas.apply {
-            style.left = htmlElement.style.left
-            style.top = htmlElement.style.top
+            val pixels = 10000 * dt
+            val dx = htmlElement.screenX - screenX
+            val dy = htmlElement.screenY - screenY
+            val totalDistance = sqrt(dx * dx + dy * dy + 0.0)
+            if (totalDistance > 1e-6) {
+                if (totalDistance < pixels) {
+                    screenX = htmlElement.screenX
+                    screenY = htmlElement.screenY
+                } else {
+                    screenX += (dx * pixels / totalDistance).roundToInt()
+                    screenY += (dy * pixels / totalDistance).roundToInt()
+                }
+                style.width = htmlElement.clientWidth.px
+                style.height = htmlElement.clientHeight.px
+            }
         }
     }
 }

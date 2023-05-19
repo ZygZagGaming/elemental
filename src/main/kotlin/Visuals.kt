@@ -11,10 +11,6 @@ fun visuals(gameState: GameState) {
     }
 }
 
-val autoclickerImage = Image(500, 500).apply {
-    src = "images/autoclicker.svg"
-}
-
 fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement) {
     val elements = alchemyContainer.children
     val half = alchemyContainer.getBoundingClientRect().width / 2
@@ -124,12 +120,15 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
     }
 }
 
+
+const val margin = 50.0
+
 fun autoclickerVisuals(gameState: GameState, autoclicker: AutoClicker) {
     val canvas = autoclicker.canvas
     (canvas.getContext("2d") as CanvasRenderingContext2D).apply {
         val size = autoclicker.htmlElement.clientWidth.toDouble()
         fillStyle = "rgba(255, 255, 255, 0)"
-        clearRect(0.0, 0.0, size, size)
+        clearRect(-margin, -margin, size + margin, size + margin)
 
         strokeStyle = "#ffffff"
         lineWidth = 3.0

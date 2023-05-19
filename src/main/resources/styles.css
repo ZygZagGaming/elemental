@@ -326,5 +326,4 @@ body {
 
 canvas {
     overflow: visible;
-    transition: left 0.1s, top 0.1s;
 }
