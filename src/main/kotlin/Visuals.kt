@@ -2,7 +2,6 @@ import kotlinx.browser.document
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.Image
 import kotlin.math.*
 
 fun visuals(gameState: GameState) {
@@ -124,26 +123,29 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
 const val margin = 50.0
 
 fun autoclickerVisuals(gameState: GameState, autoclicker: AutoClicker) {
-    val canvas = autoclicker.canvas
+    if (autoclicker.docked) drawAutoclickerToCanvas(autoclicker.canvas, autoclicker.htmlElement.screenWidth)
+    else drawAutoclickerToCanvas(autoclicker.canvas, autoclicker.htmlElement.screenWidth, autoclicker.cps, autoclicker.timeSinceLastClick)
+    drawAutoclickerToCanvas(autoclicker.dockCanvas, autoclicker.htmlElement.screenWidth, color = "#606060")
+}
+
+fun drawAutoclickerToCanvas(canvas: HTMLCanvasElement, size: Double, cps: Double = 1.0, timeSinceLastClick: Double = 0.5, color: String = "#ffffff") {
     (canvas.getContext("2d") as CanvasRenderingContext2D).apply {
-        val size = autoclicker.htmlElement.clientWidth.toDouble()
         fillStyle = "rgba(255, 255, 255, 0)"
         clearRect(-margin, -margin, size + margin, size + margin)
 
-        strokeStyle = "#ffffff"
+        strokeStyle = color
+        fillStyle = color
         lineWidth = 3.0
         beginPath()
         arc(size / 2, size * (1 - 0.35), size * 0.35 - lineWidth / 2, 0.0, 2 * PI)
         stroke()
 
-        fillStyle = "#ffffff"
         beginPath()
         arc(size / 2, size * (1 - 0.35), size * 0.15, 0.0, 2 * PI)
         fill()
 
-        val animSpeed = 20
-        val slc = autoclicker.sinceLastClick * animSpeed
-        val arrowHeightAmount = (if (slc < 1) slc * slc else 1 - (slc - 1) * (slc - 1)).clamp(0.0..1.0)
+        val interval = 1.0 / cps
+        val arrowHeightAmount = (if (timeSinceLastClick < interval / 2) 1 - (2 * timeSinceLastClick / interval).squared() else (1 - 2 * timeSinceLastClick / interval).squared()).clamp(0.0..1.0)
         val arrowHeight = size * 0.2 * (1 - arrowHeightAmount)
         beginPath()
         moveTo(size / 2, arrowHeight)

@@ -304,7 +304,6 @@ body {
 }
 
 .autoclicker-dock-container {
-    width: 3vw;
     height: 3vw;
     border-width: 2px;
     border-style: none;
@@ -315,7 +314,8 @@ body {
     z-index: -1;
     bottom: 0;
     left: 0;
-    position: absolute
+    position: absolute;
+    display: flex;
 }
 
 .autoclicker-dock {

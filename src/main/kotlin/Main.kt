@@ -347,7 +347,7 @@ class GameState {
     fun canDoReaction(reaction: Reaction) =
         ((reaction !is NullReaction)
                 && reaction.inputs.all { (k, v) -> v <= elementAmounts[k] }
-                && reaction.multipliedOutputs.none { (k, v) -> v + elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementCaps[k] })
+                && reaction.multipliedOutputs.none { (k, v) -> if (k == Elements.heat) v + elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementCaps[k] else v != 0.0 && elementAmounts[k] >= Stats.functionalElementCaps[k] })
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
@@ -495,7 +495,14 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
     val htmlElement: HTMLElement
     val canvas: HTMLCanvasElement
     val dock: HTMLElement
-    var sinceLastClick = 0.0
+    val dockCanvas: HTMLCanvasElement
+    var timeSinceLastClick = 0.0
+    var wasDragging = false
+    val dragging get() = htmlElement.dataset["dragging"] == "true"
+    var docked get() = htmlElement.dataset["docked"] == "true"
+    set(value) {
+        htmlElement.dataset["docked"] = value.toString()
+    }
     init {
         val parent = DynamicHTMLManager.getPageElement(page)!!
         htmlElement = document.createElement("div") as HTMLElement
@@ -530,18 +537,18 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
             classList.apply {
                 add("autoclicker-dock")
             }
-            style.apply {
-                position = "absolute"
-                left = "0"
-                bottom = "0"
-            }
             onclick = {
-                if (htmlElement.dataset["dragging"] != "true") {
-                    htmlElement.screenMiddleX = dock.screenMiddleX
-                    htmlElement.screenY = dock.screenY
-                }
+                if (!dragging) moveToDock()
 
                 Unit
+            }
+            dockCanvas = document.createElement("canvas") as HTMLCanvasElement
+            appendChild(dockCanvas)
+            dockCanvas.apply {
+                width = vw(3.0).roundToInt()
+                height = vw(3.0).roundToInt()
+                style.position = "absolute"
+                classList.add("no-autoclick")
             }
         }
     }
@@ -554,12 +561,14 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
     }
 
     fun tick(dt: Double) {
-        clickPercent += dt * cps
-        sinceLastClick += dt
-        while (clickPercent > 1) {
-            clickPercent--
-            click()
-            sinceLastClick = 0.0
+        if (!docked) {
+            clickPercent += dt * cps
+            timeSinceLastClick += dt
+            while (clickPercent > 1) {
+                clickPercent--
+                click()
+                timeSinceLastClick = 0.0
+            }
         }
         canvas.apply {
             val pixels = 10000 * dt
@@ -574,9 +583,30 @@ data class AutoClicker(val id: Int, val page: Page, var cps: Double = 2.0) {
                     screenX += (dx * pixels / totalDistance).roundToInt()
                     screenY += (dy * pixels / totalDistance).roundToInt()
                 }
-                style.width = htmlElement.clientWidth.px
-                style.height = htmlElement.clientHeight.px
             }
+            if (abs(width - htmlElement.screenWidth) > 0.5) width = htmlElement.screenWidth.roundToInt()
+            if (abs(height - htmlElement.screenHeight) > 0.5) height = htmlElement.screenHeight.roundToInt()
+            if (abs(screenWidth - htmlElement.screenWidth) > 0.5) screenWidth = htmlElement.screenWidth
+            if (abs(screenHeight - htmlElement.screenHeight) > 0.5) screenHeight = htmlElement.screenHeight
+        }
+        dockCanvas.apply {
+            if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
+            if (abs(height - dock.screenHeight) > 0.5) height = dock.screenHeight.roundToInt()
+            if (abs(screenWidth - dock.screenWidth) > 0.5) screenWidth = dock.screenWidth
+            if (abs(screenHeight - dock.screenHeight) > 0.5) screenHeight = dock.screenHeight
+        }
+        if (!dragging && wasDragging) docked = false
+        if (!dragging && !docked
+            && (htmlElement.screenMiddleX - dock.screenMiddleX).squared() + (htmlElement.screenMiddleY - dock.screenMiddleY).squared() <= Options.autoclickerDockSnapDistance.squared())
+            moveToDock()
+        wasDragging = dragging
+    }
+
+    fun moveToDock() {
+        htmlElement.apply {
+            screenMiddleX = dock.screenMiddleX
+            screenMiddleY = dock.screenMiddleY
+            docked = true
         }
     }
 }
@@ -615,4 +645,22 @@ var HTMLElement.screenY
     get() = getBoundingClientRect().top
     set(value) {
         style.top = value.px
+    }
+
+var HTMLElement.screenMiddleY
+    get() = getBoundingClientRect().yMiddle
+    set(value) {
+        style.top = (value - clientHeight / 2).px
+    }
+
+var HTMLElement.screenWidth
+    get() = getBoundingClientRect().width
+    set(value) {
+        style.width = value.px
+    }
+
+var HTMLElement.screenHeight
+    get() = getBoundingClientRect().height
+    set(value) {
+        style.height = value.px
     }
