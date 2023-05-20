@@ -75,7 +75,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                     1 -> "Unlock Keyclickers 1-5"
                     2 -> "Convert Keyclicker 1 into an Autoclicker with a click rate of 8 Hz"
                     3 -> "Convert Keyclickers 2 and 3 into Autoclickers with click rates of 8 Hz"
-                    else -> "All Autoclicker click rates ${it * 2} → ${2 + it * 2} Hz"
+                    else -> "All Autoclicker click rates ${it + 4} → ${it + 5} Hz"
                 }
             },
             usageCap = 100
