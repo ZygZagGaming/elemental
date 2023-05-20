@@ -32,8 +32,8 @@ fun loadGame() {
 
     gameState = GameState()
     GameTimer.registerTicker {
-        for ((symbol, element) in Elements.map)
-            DynamicHTMLManager.setVariable("element-$symbol-amount", "${gameState.elementAmounts[element]}")
+        for ((name, element) in Elements.map)
+            DynamicHTMLManager.setVariable("element-${element.symbol}-amount", "${gameState.elementAmounts[element]}")
 
         for ((i, entry) in NormalReactions.map.entries.withIndex()) {
             val (backendId, reaction) = entry
