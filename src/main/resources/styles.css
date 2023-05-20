@@ -304,7 +304,7 @@ body {
 }
 
 .autoclicker-dock-container {
-    height: 3vw;
+    height: 3.5vw;
     border-width: 2px;
     border-style: none;
     border-top-style: solid;
@@ -321,6 +321,7 @@ body {
 .autoclicker-dock {
     width: 3vw;
     height: 3vw;
+    bottom: 0.5vw;
 }
 
 canvas {
