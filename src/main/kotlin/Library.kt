@@ -54,12 +54,29 @@ object SpecialReactions: Library<SpecialReaction>() {
                 )
             },
             effects = {
-                if (it == 1) gameState.autoclickers.add(Autoclicker(1, Pages.elementsPage, cps = 1.0))
-                else gameState.autoclickers[0].cps += 1
+                when (it) {
+                    1 -> {
+                        repeat(5) { n -> gameState.addClicker(Keyclicker(n, Pages.elementsPage, key = Key((n + 1).toString()))) }
+                    }
+                    2 -> {
+                        gameState.addClicker(Autoclicker(0, Pages.elementsPage, cps = 8.0))
+                    }
+                    3 -> {
+                        gameState.addClicker(Autoclicker(1, Pages.elementsPage, cps = 8.0))
+                        gameState.addClicker(Autoclicker(2, Pages.elementsPage, cps = 8.0))
+                    }
+                    else -> {
+                        repeat(3) { n -> (gameState.clickersById[n] as Autoclicker).cps++ }
+                    }
+                }
             },
             stringEffects = {
-                if (it == 1) "Unlock Autoclicker 1"
-                else "Autoclicker 1 click rate ${it - 1} → $it per second"
+                when (it) {
+                    1 -> "Unlock Keyclickers 1-5"
+                    2 -> "Convert Keyclicker 1 into an Autoclicker with a click rate of 8 Hz"
+                    3 -> "Convert Keyclickers 2 and 3 into Autoclickers with click rates of 8 Hz"
+                    else -> "All Autoclicker click rates ${it * 2} → ${2 + it * 2} Hz"
+                }
             },
             usageCap = 100
         )
@@ -382,6 +399,8 @@ class MutableDefaultedMap<K, V>(private val backingMap: MutableMap<K, V>, defaul
     override fun put(key: K, value: V): V {
         return backingMap.put(key, value) ?: defaultValue
     }
+
+    fun unmutable(): DefaultedMap<K, V> = toMap().toDefaultedMap(defaultValue)
 }
 
 fun <K, V> Map<K, V>.toDefaultedMap(value: V) = DefaultedMap(this, value)
@@ -390,6 +409,7 @@ fun <K, V> MutableMap<K, V>.toMutableDefaultedMap(value: V) = MutableDefaultedMa
 fun Double.roundToOneDecimalPlace() = (this * 10).roundToInt() / 10.0
 
 fun <K, V> defaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mapOf(*values).toDefaultedMap(defaultValue)
+fun <K, V> mutableDefaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mutableMapOf(*values).toMutableDefaultedMap(defaultValue)
 fun elementStackOf(vararg values: Pair<ElementType, Double>, defaultValue: Double = 0.0): ElementStack = defaultedMapOf(defaultValue, *values)
 
 operator fun ElementStack.plus(other: ElementStack): ElementStack = entries.associate { (k, v) -> k to (v + other[k]) }.toDefaultedMap(0.0)
@@ -407,11 +427,11 @@ fun vw(percent: Double): Double {
 }
 
 fun vmin(percent: Double): Double {
-    return min(vh(percent), vw(percent));
+    return min(vh(percent), vw(percent))
 }
 
 fun vmax(percent: Double): Double {
-    return max(vh(percent), vw(percent));
+    return max(vh(percent), vw(percent))
 }
 
 operator fun Storage.set(name: String, value: String) {
@@ -445,7 +465,7 @@ fun saveLocalStorage() {
         localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
         localStorage["timestamp"] = Date().toDateString()
         localStorage["timeSpent"] = gameState.timeSpent.toString()
-        localStorage["autoclickerPositions"] = gameState.autoclickers.map { "${it.id}:${it.htmlElement.x},${it.htmlElement.y}" }.joinToString(separator = ";")
+        localStorage["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.x},${clicker.htmlElement.y}"}" }.joinToString(separator = ";")
     }
 }
 
@@ -469,13 +489,17 @@ fun loadLocalStorage() {
             val positions = localStorage["autoclickerPositions"].split(";").filter { it != "" }.associate {
                 val pair = it.split(":")
                 val pair2 = pair[1].split(",")
-                pair[0].toInt() to (pair2[0] to pair2[1])
+                pair[0].toInt() to (if (pair2.size == 2) pair2[0] to pair2[1] else null)
             }
-            gameState.autoclickers.forEach {
-                val pos = positions[it.id]
+            gameState.clickersById.forEach { (id, it) ->
+                val pos = positions[id]
                 if (pos != null) {
                     it.htmlElement.x = pos.first.toDouble()
                     it.htmlElement.y = pos.second.toDouble()
+                    it.canvasParent.x = pos.first.toDouble()
+                    it.canvasParent.y = pos.second.toDouble()
+                } else {
+                    it.moveToDock(force = true)
                 }
             }
         }

@@ -1,3 +1,5 @@
+import kotlinx.browser.document
+import org.w3c.dom.get
 import kotlin.math.max
 import kotlin.math.min
 
@@ -8,14 +10,15 @@ class GameState {
     var lastAmounts = elementAmounts
     var lastReaction = hoveredReaction
     var timeSpent: Double = 0.0
-    val autoclickers = mutableListOf<Autoclicker>()
+    val clickersById = mutableMapOf<Int, Clicker>()
 
     fun tick(dt: Double, cap: Boolean = true) {
+        Input.tick(dt)
         lastAmounts = elementAmounts.copy().toMutableDefaultedMap(0.0)
         lastReaction = hoveredReaction
         timeSpent += dt
 
-        autoclickers.forEach { if (DynamicHTMLManager.shownPage == Pages.id(it.page)) it.tick(dt) }
+        clickersById.values.forEach { if (DynamicHTMLManager.shownPage == Pages.id(it.page)) it.tick(dt) }
 
         elementAmounts.deduct(Elements.heat.withCount(elementAmounts[Elements.heat] * 0.1 * dt * Stats.gameSpeed))
         if (cap) for ((key, value) in incoming) elementAmounts[key] = min(
@@ -42,5 +45,25 @@ class GameState {
 
     override fun toString(): String {
         return super.toString()
+    }
+
+    fun addClicker(clicker: Clicker) {
+        val old = clickersById[clicker.id]
+        old?.deInit()
+        clickersById[clicker.id] = clicker
+        clicker.init()
+        fixClickerDockOrder()
+        clicker.moveToDock(force = true)
+    }
+
+    fun fixClickerDockOrder() {
+        val fragment = document.createDocumentFragment()
+        clickersById.entries.sortedBy { (id, _) -> id }.forEach { (_, clicker) -> fragment.appendChild(clicker.dock) }
+        document.getElementsByClassName("clicker-dock-container")[0]!!.appendChild(fragment)
+    }
+
+    fun removeClicker(clicker: Clicker) {
+        clickersById.remove(clicker.id)
+        clicker.deInit()
     }
 }

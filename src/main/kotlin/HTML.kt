@@ -1,5 +1,4 @@
 import kotlinx.browser.document
-import kotlinx.browser.window
 import org.w3c.dom.*
 import kotlin.math.roundToInt
 
@@ -130,7 +129,11 @@ object DynamicHTMLManager {
 }
 
 val Int.px get() = "${this}px"
+val Int.pxToVw get() = "${this.toDouble() * 100 / viewportWidth}vw"
+val Int.pxToVh get() = "${this.toDouble() * 100 / viewportHeight}vh"
 val Double.px get() = "${roundToInt()}px"
+val Double.pxToVw get() = "${this * 100 / viewportWidth}vw"
+val Double.pxToVh get() = "${this * 100 / viewportHeight}vh"
 fun HTMLCollection.toList(): List<HTMLElement> {
     val list = mutableListOf<HTMLElement>()
     for (index in 0..length) {
@@ -143,8 +146,8 @@ fun HTMLCollection.toList(): List<HTMLElement> {
 operator fun HTMLCollection.iterator() = toList().iterator()
 val HTMLCollection.indices get() = toList().indices
 val HTMLCollection.indexed get() = toList().zip(indices) { a, b -> Indexed(a, b) }
-val screenWidth get() = window.screen.width
-val screenHeight get() = window.screen.height
+val viewportWidth get() = (document.documentElement as HTMLElement).screenWidth
+val viewportHeight get() = (document.documentElement as HTMLElement).screenHeight
 val DOMRect.xMiddle get() = left + 0.5 * width
 val DOMRect.yMiddle get() = top + 0.5 * height
 var HTMLElement.x
@@ -160,30 +163,30 @@ var HTMLElement.y
 var HTMLElement.screenX
     get() = getBoundingClientRect().left
     set(value) {
-        style.left = value.px
+        style.left = value.pxToVw
     }
 var HTMLElement.screenMiddleX
     get() = getBoundingClientRect().xMiddle
     set(value) {
-        style.left = (value - clientWidth / 2).px
+        style.left = (value - clientWidth / 2).pxToVw
     }
 var HTMLElement.screenY
     get() = getBoundingClientRect().top
     set(value) {
-        style.top = value.px
+        style.top = value.pxToVh
     }
 var HTMLElement.screenMiddleY
     get() = getBoundingClientRect().yMiddle
     set(value) {
-        style.top = (value - clientHeight / 2).px
+        style.top = (value - clientHeight / 2).pxToVh
     }
 var HTMLElement.screenWidth
     get() = getBoundingClientRect().width
     set(value) {
-        style.width = value.px
+        style.width = value.pxToVw
     }
 var HTMLElement.screenHeight
     get() = getBoundingClientRect().height
     set(value) {
-        style.height = value.px
+        style.height = value.pxToVh
     }

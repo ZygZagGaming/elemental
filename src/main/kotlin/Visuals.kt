@@ -119,16 +119,19 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
     }
 }
 
-
 const val margin = 50.0
+val Clicker.color get() = if (this is Autoclicker) "#ffffff" else "#669"
 
-fun autoclickerVisuals(gameState: GameState, autoclicker: Autoclicker) {
-    if (autoclicker.docked) drawAutoclickerToCanvas(autoclicker.canvas, autoclicker.htmlElement.screenWidth)
-    else drawAutoclickerToCanvas(autoclicker.canvas, autoclicker.htmlElement.screenWidth, autoclicker.cps, autoclicker.timeSinceLastClick)
-    drawAutoclickerToCanvas(autoclicker.dockCanvas, autoclicker.htmlElement.screenWidth, color = "#606060")
+fun clickerVisuals(clicker: Clicker) {
+    if (clicker.docked) drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, color = clicker.color)
+    else {
+        val cps = if (clicker is Autoclicker) clicker.cps else if (clicker is Keyclicker) clicker.heldCps else 0.0
+        drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, clicker.timeSinceLastClick * cps, color = clicker.color)
+    }
+    drawClickerToCanvas(clicker.dockCanvas, clicker.htmlElement.screenWidth, color = "#606060")
 }
 
-fun drawAutoclickerToCanvas(canvas: HTMLCanvasElement, size: Double, cps: Double = 1.0, timeSinceLastClick: Double = 0.5, color: String = "#ffffff") {
+fun drawClickerToCanvas(canvas: HTMLCanvasElement, size: Double, animationProgress: Double = 0.5, color: String = "#ffffff") {
     (canvas.getContext("2d") as CanvasRenderingContext2D).apply {
         fillStyle = "rgba(255, 255, 255, 0)"
         clearRect(-margin, -margin, size + margin, size + margin)
@@ -144,8 +147,7 @@ fun drawAutoclickerToCanvas(canvas: HTMLCanvasElement, size: Double, cps: Double
         arc(size / 2, size * (1 - 0.35), size * 0.15, 0.0, 2 * PI)
         fill()
 
-        val interval = 1.0 / cps
-        val arrowHeightAmount = (if (timeSinceLastClick < interval / 2) 1 - (2 * timeSinceLastClick / interval).squared() else (1 - 2 * timeSinceLastClick / interval).squared()).clamp(0.0..1.0)
+        val arrowHeightAmount = (if (animationProgress < 0.5) 1 - (2 * animationProgress).squared() else (1 - 2 * animationProgress).squared()).clamp(0.0..1.0)
         val arrowHeight = size * 0.2 * (1 - arrowHeightAmount)
         beginPath()
         moveTo(size / 2, arrowHeight)
@@ -159,8 +161,7 @@ fun drawAutoclickerToCanvas(canvas: HTMLCanvasElement, size: Double, cps: Double
 fun elementsPageVisuals(gameState: GameState) {
     val alchemyContainers = document.getElementsByClassName("alchemy-container")
     for (alchemyContainer in alchemyContainers) alchemyContainerVisuals(gameState, alchemyContainer)
-    val autoclickers = gameState.autoclickers
-    for (autoclicker in autoclickers) autoclickerVisuals(gameState, autoclicker)
+    for (clicker in gameState.clickersById.values) clickerVisuals(clicker)
 }
 
 fun CanvasRenderingContext2D.gradientLine(posA: Vec2, posB: Vec2, r: Int, g: Int, b: Int, a: Double, width: Double) {

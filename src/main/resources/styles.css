@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
 
+html {
+    width: 100vw;
+    height: 100vh;
+}
+
 body {
     background-color: black;
     width: 100vw;
@@ -297,13 +302,22 @@ body {
     display: inline-block;
 }
 
-.autoclicker {
+.clicker {
     width: 3vw;
     height: 3vw;
     cursor: move;
 }
 
-.autoclicker-dock-container {
+.clicker-text {
+    color: white;
+    font-size: 0.65vw;
+    text-align: center;
+    width: 100%;
+    top: 1.5vw;
+    position: absolute;
+}
+
+.clicker-dock-container {
     height: 3.5vw;
     border-width: 2px;
     border-style: none;
@@ -318,7 +332,7 @@ body {
     display: flex;
 }
 
-.autoclicker-dock {
+.clicker-dock {
     width: 3vw;
     height: 3vw;
     bottom: 0.5vw;

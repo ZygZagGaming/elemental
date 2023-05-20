@@ -7,12 +7,46 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
+class Autoclicker(id: Int, page: Page, var cps: Double = 1.0): Clicker(id, page) {
+    override fun tick(dt: Double) {
+        if (!docked) clickPercent += dt * cps
+        super.tick(dt)
+    }
+}
+
+class Keyclicker(id: Int, page: Page, var key: Key): Clicker(id, page) {
+    val heldCps = 6.0
+    lateinit var text: HTMLElement
+    override fun tick(dt: Double) {
+        if (!docked) {
+            if (Input.keyPressedThisTick[key]) clickPercent = 1.0
+            else if (Input.keyDownMap[key]) clickPercent += heldCps * dt
+        }
+        super.tick(dt)
+    }
+
+    override fun init() {
+        super.init()
+        text = document.createElement("div") as HTMLElement
+        text.id = "clicker-$id-text"
+        text.textContent = key.key
+        text.classList.add("clicker-text")
+        canvasParent.appendChild(text)
+    }
+
+    override fun deInit() {
+        super.deInit()
+        text.remove()
+    }
+}
+
+open class Clicker(val id: Int, val page: Page) {
     var clickPercent = 0.0
-    val htmlElement: HTMLElement
-    val canvas: HTMLCanvasElement
-    val dock: HTMLElement
-    val dockCanvas: HTMLCanvasElement
+    lateinit var htmlElement: HTMLElement
+    lateinit var canvas: HTMLCanvasElement
+    lateinit var canvasParent: HTMLElement
+    lateinit var dock: HTMLElement
+    lateinit var dockCanvas: HTMLCanvasElement
     var timeSinceLastClick = 0.0
     var wasDragging = false
     val dragging get() = htmlElement.dataset["dragging"] == "true"
@@ -20,26 +54,42 @@ data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
     set(value) {
         htmlElement.dataset["docked"] = value.toString()
     }
-    init {
+
+    open fun deInit() {
+        htmlElement.remove()
+        canvas.remove()
+        canvasParent.remove()
+        dock.remove()
+        dockCanvas.remove()
+    }
+
+    open fun init() {
         val parent = DynamicHTMLManager.getPageElement(page)!!
         htmlElement = document.createElement("div") as HTMLElement
+        canvasParent = document.createElement("div") as HTMLElement
+        canvasParent.classList.add("canvas-parent")
         canvas = document.createElement("canvas") as HTMLCanvasElement
-        parent.appendChild(canvas)
+        parent.appendChild(canvasParent)
+        canvasParent.appendChild(canvas)
         parent.appendChild(htmlElement)
         canvas.apply {
             width = vw(3.0).roundToInt()
             height = vw(3.0).roundToInt()
+            style.position = "relative"
+            classList.add("no-autoclick")
+        }
+        canvasParent.apply {
             style.position = "absolute"
             classList.add("no-autoclick")
         }
         htmlElement.apply {
             classList.apply {
-                add("autoclicker")
+                add("clicker")
                 add("draggable")
                 add("dynamic")
                 add("no-autoclick")
             }
-            id = "autoclicker-${this@Autoclicker.id}"
+            id = "autoclicker-${this@Clicker.id}"
             style.apply {
                 position = "absolute"
                 top = "50vh"
@@ -48,11 +98,11 @@ data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
         }
 
         dock = document.createElement("div") as HTMLElement
-        parent.children.toList().first { it.classList.contains("autoclicker-dock-container") }.appendChild(dock)
+        parent.children.toList().first { it.classList.contains("clicker-dock-container") }.appendChild(dock)
         dock.apply {
-            id = "autoclicker-$id-dock"
+            id = "clicker-$id-dock"
             classList.apply {
-                add("autoclicker-dock")
+                add("clicker-dock")
             }
             onclick = {
                 if (!dragging) moveToDock()
@@ -77,9 +127,8 @@ data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
         }
     }
 
-    fun tick(dt: Double) {
+    open fun tick(dt: Double) {
         if (!docked) {
-            clickPercent += dt * cps
             timeSinceLastClick += dt
             while (clickPercent > 1) {
                 clickPercent--
@@ -87,7 +136,7 @@ data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
                 timeSinceLastClick = 0.0
             }
         }
-        canvas.apply {
+        canvasParent.apply {
             val pixels = 10000 * dt
             val dx = htmlElement.screenX - screenX
             val dy = htmlElement.screenY - screenY
@@ -97,14 +146,18 @@ data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
                     screenX = htmlElement.screenX
                     screenY = htmlElement.screenY
                 } else {
-                    screenX += (dx * pixels / totalDistance).roundToInt()
-                    screenY += (dy * pixels / totalDistance).roundToInt()
+                    screenX += dx * pixels / totalDistance
+                    screenY += dy * pixels / totalDistance
                 }
             }
-            if (abs(width - htmlElement.screenWidth) > 0.5) width = htmlElement.screenWidth.roundToInt()
-            if (abs(height - htmlElement.screenHeight) > 0.5) height = htmlElement.screenHeight.roundToInt()
             if (abs(screenWidth - htmlElement.screenWidth) > 0.5) screenWidth = htmlElement.screenWidth
             if (abs(screenHeight - htmlElement.screenHeight) > 0.5) screenHeight = htmlElement.screenHeight
+        }
+        canvas.apply {
+            if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
+            if (abs(height - dock.screenHeight) > 0.5) height = dock.screenHeight.roundToInt()
+            if (abs(screenWidth - dock.screenWidth) > 0.5) screenWidth = dock.screenWidth
+            if (abs(screenHeight - dock.screenHeight) > 0.5) screenHeight = dock.screenHeight
         }
         dockCanvas.apply {
             if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
@@ -119,11 +172,15 @@ data class Autoclicker(val id: Int, val page: Page, var cps: Double = 2.0) {
         wasDragging = dragging
     }
 
-    fun moveToDock() {
+    fun moveToDock(force: Boolean = false) {
         htmlElement.apply {
             screenMiddleX = dock.screenMiddleX
             screenMiddleY = dock.screenMiddleY
-            docked = true
+        }
+        docked = true
+        if (force) canvasParent.apply {
+            screenMiddleX = dock.screenMiddleX
+            screenMiddleY = dock.screenMiddleY
         }
     }
 }
