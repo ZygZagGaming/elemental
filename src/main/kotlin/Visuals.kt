@@ -122,7 +122,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
 
 const val margin = 50.0
 
-fun autoclickerVisuals(gameState: GameState, autoclicker: AutoClicker) {
+fun autoclickerVisuals(gameState: GameState, autoclicker: Autoclicker) {
     if (autoclicker.docked) drawAutoclickerToCanvas(autoclicker.canvas, autoclicker.htmlElement.screenWidth)
     else drawAutoclickerToCanvas(autoclicker.canvas, autoclicker.htmlElement.screenWidth, autoclicker.cps, autoclicker.timeSinceLastClick)
     drawAutoclickerToCanvas(autoclicker.dockCanvas, autoclicker.htmlElement.screenWidth, color = "#606060")

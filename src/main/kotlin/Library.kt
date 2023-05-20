@@ -7,18 +7,6 @@ import org.w3c.dom.Storage
 import kotlin.js.Date
 import kotlin.math.*
 
-val elements = listOf(
-    ElementType("Catalyst", Symbols.catalyst),
-    ElementType("Element A", Symbols.a),
-    ElementType("Element B", Symbols.b),
-    ElementType("Element C", Symbols.c),
-    ElementType("Element D", Symbols.d),
-    ElementType("Element E", Symbols.e),
-    ElementType("Element F", Symbols.f),
-    ElementType("Element G", Symbols.g),
-    ElementType("Heat", Symbols.heat)
-).associateBy { it.symbol }
-
 open class Library<T> {
     val map get() = backingMap.toMap()
     val values get() = map.values
@@ -66,7 +54,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 )
             },
             effects = {
-                if (it == 1) gameState.autoclickers.add(AutoClicker(1, Pages.elementsPage, cps = 1.0))
+                if (it == 1) gameState.autoclickers.add(Autoclicker(1, Pages.elementsPage, cps = 1.0))
                 else gameState.autoclickers[0].cps += 1
             },
             stringEffects = {
@@ -168,7 +156,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             },
             stringEffects = {
                 if (it == 1) "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1)"
-                else "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1) x${(it - 1).squared()} → x${it.squared()}"
+                else "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count ( + 1) x${(it - 1).squared()} → x${it.squared()}"
             },
             usageCap = 100
         )
@@ -348,7 +336,7 @@ object Options {
 object Stats {
     val partialElements = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(0.0)
     val elementMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val elementCaps = elements.values.associateWith { 1000.0 }.toMutableMap().also {
+    val elementCaps = Elements.values.associateWith { 1000.0 }.toMutableMap().also {
         it[Elements.catalyst] = 100000.0
         it[Elements.heat] = 10.0
     }.toMutableDefaultedMap(Double.POSITIVE_INFINITY)
