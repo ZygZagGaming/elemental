@@ -88,7 +88,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 GameTimer.registerTicker { dt ->
                     val multiplier = 0.2 * it
                     val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst], Stats.functionalElementCaps[Elements.catalyst] * .99 - gameState.elementAmounts[Elements.catalyst]))
-                    gameState.incoming += elementStackOf(Elements.catalyst to floor(catalysts))
+                    gameState.incoming.add(elementStackOf(Elements.catalyst to floor(catalysts)))
                     Stats.partialElements[Elements.catalyst] = catalysts.mod(1f)
                 }
             },
