@@ -59,23 +59,23 @@ object SpecialReactions: Library<SpecialReaction>() {
                         repeat(5) { n -> gameState.addClicker(Keyclicker(n, Pages.elementsPage, key = Key((n + 1).toString()))) }
                     }
                     2 -> {
-                        gameState.addClicker(Autoclicker(0, Pages.elementsPage, cps = 8.0))
+                        gameState.addClicker(Autoclicker(0, Pages.elementsPage, cps = 4.0))
                     }
                     3 -> {
-                        gameState.addClicker(Autoclicker(1, Pages.elementsPage, cps = 8.0))
-                        gameState.addClicker(Autoclicker(2, Pages.elementsPage, cps = 8.0))
+                        gameState.addClicker(Autoclicker(1, Pages.elementsPage, cps = 4.0))
+                        gameState.addClicker(Autoclicker(2, Pages.elementsPage, cps = 4.0))
                     }
                     else -> {
-                        repeat(3) { n -> (gameState.clickersById[n] as Autoclicker).cps++ }
+                        repeat(3) { n -> (gameState.clickersById[n] as Autoclicker).cps += 0.5 }
                     }
                 }
             },
             stringEffects = {
                 when (it) {
                     1 -> "Unlock Keyclickers 1-5"
-                    2 -> "Convert Keyclicker 1 into an Autoclicker with a click rate of 8 Hz"
-                    3 -> "Convert Keyclickers 2 and 3 into Autoclickers with click rates of 8 Hz"
-                    else -> "All Autoclicker click rates ${it + 4} → ${it + 5} Hz"
+                    2 -> "Convert Keyclicker 1 into an Autoclicker with a click rate of 4 Hz"
+                    3 -> "Convert Keyclickers 2 and 3 into Autoclickers with click rates of 4 Hz"
+                    else -> "All Autoclicker click rates ${it / 2.0 + 2} → ${it / 2.0 + 2.5} Hz"
                 }
             },
             usageCap = 100
@@ -178,42 +178,42 @@ object SpecialReactions: Library<SpecialReaction>() {
             usageCap = 100
         )
     )
-    val onEfficiency = register("on_efficiency",
-        SpecialReaction(
-            "On Efficiency",
-            {
-                elementStackOf(
-                    Elements.catalyst to 5000.0 * it,
-                    Elements.b to 4000.0 * it
-                )
-            },
-            effects = {
-                Stats.reactionEfficiencies[NormalReactions.bBackToA] = 2.0 * it
-            },
-            stringEffects = {
-                "\"${NormalReactions.bBackToA.name}\" reaction efficiency x${if (it == 1) 1 else 2 * it - 2} → x${2 * it}"
-            },
-            usageCap = 100
-        )
-    )
-    val noneLeft = register("none_left",
-        SpecialReaction(
-            "None Left",
-            {
-                elementStackOf(
-                    Elements.catalyst to 100000.0 * (if (it <= 5) 1.0 else (it - 5.0) * (it - 5))
-                )
-            },
-            effects = {
-                Stats.elementMultipliers[Elements.a] = (it + 1.0) * (it + 1)
-                Stats.elementCapMultipliers[Elements.a] = (it + 1.0) * (it + 1)
-            },
-            stringEffects = {
-                "\"${Elements.a.symbol}\" production and \"${Elements.a.symbol}\" cap x${it * it} → x${(it + 1) * (it + 1)}"
-            },
-            usageCap = 100
-        )
-    )
+//    val onEfficiency = register("on_efficiency",
+//        SpecialReaction(
+//            "On Efficiency",
+//            {
+//                elementStackOf(
+//                    Elements.catalyst to 5000.0 * it,
+//                    Elements.b to 4000.0 * it
+//                )
+//            },
+//            effects = {
+//                Stats.reactionEfficiencies[NormalReactions.bBackToA] = 2.0 * it
+//            },
+//            stringEffects = {
+//                "\"${NormalReactions.bBackToA.name}\" reaction efficiency x${if (it == 1) 1 else 2 * it - 2} → x${2 * it}"
+//            },
+//            usageCap = 100
+//        )
+//    )
+//    val noneLeft = register("none_left",
+//        SpecialReaction(
+//            "None Left",
+//            {
+//                elementStackOf(
+//                    Elements.catalyst to 100000.0 * (if (it <= 5) 1.0 else (it - 5.0) * (it - 5))
+//                )
+//            },
+//            effects = {
+//                Stats.elementMultipliers[Elements.a] = (it + 1.0) * (it + 1)
+//                Stats.elementCapMultipliers[Elements.a] = (it + 1.0) * (it + 1)
+//            },
+//            stringEffects = {
+//                "\"${Elements.a.symbol}\" production and \"${Elements.a.symbol}\" cap x${it * it} → x${(it + 1) * (it + 1)}"
+//            },
+//            usageCap = 100
+//        )
+//    )
 }
 
 fun Double.squared() = this * this
@@ -407,6 +407,7 @@ fun <K, V> Map<K, V>.toDefaultedMap(value: V) = DefaultedMap(this, value)
 fun <K, V> MutableMap<K, V>.toMutableDefaultedMap(value: V) = MutableDefaultedMap(this, value)
 
 fun Double.roundToOneDecimalPlace() = (this * 10).roundToInt() / 10.0
+fun Double.roundTo(places: Int) = (this * 10.0.pow(places)).roundToInt() / 10.0.pow(places)
 
 fun <K, V> defaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mapOf(*values).toDefaultedMap(defaultValue)
 fun <K, V> mutableDefaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mutableMapOf(*values).toMutableDefaultedMap(defaultValue)
@@ -516,4 +517,5 @@ data class Page(val name: String)
 object Pages: Library<Page>() {
     val elementsPage = register("elements", Page("Elements"))
     val optionsPage = register("options", Page("Options"))
+    val dimensionsPage = register("dimensions", Page("???"))
 }
