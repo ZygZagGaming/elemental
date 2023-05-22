@@ -37,7 +37,6 @@ object Input {
 
     fun tick(dt: Double) {
         _keyDownMap.entries.forEach { (key, down) ->
-            console.log(key.key)
             if (down) {
                 _keyHeldTicksMap[key]++
                 _keyHeldTimeMap[key] += dt

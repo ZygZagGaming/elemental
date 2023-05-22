@@ -8,7 +8,7 @@ import org.w3c.dom.*
 import kotlin.math.*
 
 fun main() {
-    console.log("Hello, black men twerking")
+    console.log("Hello!")
     //val load = { load() }
 }
 

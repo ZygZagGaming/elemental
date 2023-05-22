@@ -191,23 +191,25 @@ fun CanvasRenderingContext2D.gradientLineColorBar(posA: Vec2, posB: Vec2, r: Int
     val transpose = Vec2(-diff.y, diff.x).normalized * width / 2.0
     val p1 = avg + transpose
     val p2 = avg - transpose
-    val gradient = createLinearGradient(p1.x, p1.y, p2.x, p2.y)
-    gradient.addColorStop(0.0, "rgba($r, $g, $b, 0.0)")
-    gradient.addColorStop(0.5, "rgba($r, $g, $b, $a)")
-    gradient.addColorStop(1.0, "rgba($r, $g, $b, 0.0)")
-    strokeStyle = gradient
+    createLinearGradient(p1.x, p1.y, p2.x, p2.y).apply {
+        addColorStop(0.0, "rgba($r, $g, $b, 0.0)")
+        addColorStop(0.5, "rgba($r, $g, $b, $a)")
+        addColorStop(1.0, "rgba($r, $g, $b, 0.0)")
+        strokeStyle = this
+    }
     beginPath()
     moveTo(posA)
     lineTo(posB)
     stroke()
 
-    val secondaryGradient = createLinearGradient(posA.x, posA.y, posB.x, posB.y)
-    secondaryGradient.addColorStop(0.0, "rgba(255, 255, 255, 0.0)")
-    secondaryGradient.addColorStop(max(0.0, colorBarPosition - colorBarWidth), "rgba(255, 255, 255, 0.0)")
-    secondaryGradient.addColorStop(colorBarPosition, "rgba(255, 255, 255, $colorBarOpacity)")
-    secondaryGradient.addColorStop(min(1.0, colorBarPosition + colorBarWidth), "rgba(255, 255, 255, 0.0)")
-    secondaryGradient.addColorStop(1.0, "rgba(255, 255, 255, 0.0)")
-    strokeStyle = secondaryGradient
+    createLinearGradient(posA.x, posA.y, posB.x, posB.y).apply {
+        addColorStop(0.0, "rgba(255, 255, 255, 0.0)")
+        addColorStop(max(0.0, colorBarPosition - colorBarWidth), "rgba(255, 255, 255, 0.0)")
+        addColorStop(colorBarPosition, "rgba(255, 255, 255, $colorBarOpacity)")
+        addColorStop(min(1.0, colorBarPosition + colorBarWidth), "rgba(255, 255, 255, 0.0)")
+        addColorStop(1.0, "rgba(255, 255, 255, 0.0)")
+        strokeStyle = this
+    }
     beginPath()
     moveTo(posA)
     lineTo(posB)
