@@ -44,7 +44,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
         val k = 0.5
         val angle = graphicalHeatAmount * 2 * PI
         val strokeWidth = vw(0.75)
-        if (gameState.elementAmounts[Elements.heat] <= 1e-6) {
+        if (Stats.elementAmounts[Elements.heat] <= 1e-6) {
             lineWidth = strokeWidth
             beginPath()
             strokeStyle = "#cccccc"
@@ -183,7 +183,7 @@ fun CanvasRenderingContext2D.gradientLine(posA: Vec2, posB: Vec2, r: Int, g: Int
 
 }
 
-val graphicalHeatAmount get() = gameState.elementAmounts[Elements.heat] / Stats.functionalElementCaps[Elements.heat]
+val graphicalHeatAmount get() = Stats.elementAmounts[Elements.heat] / Stats.functionalElementCaps[Elements.heat]
 fun CanvasRenderingContext2D.gradientLineColorBar(posA: Vec2, posB: Vec2, r: Int, g: Int, b: Int, a: Double, width: Double, colorBarPosition: Double, colorBarWidth: Double, colorBarOpacity: Double) {
     val len = (posA - posB).magnitude
     val avg = (posA + posB) / 2.0

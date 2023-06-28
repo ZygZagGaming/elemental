@@ -16,7 +16,6 @@ class Autoclicker(id: Int, page: Page, var cps: Double = 1.0): Clicker(id, page)
 
 class Keyclicker(id: Int, page: Page, var key: Key): Clicker(id, page) {
     val heldCps = 6.0
-    lateinit var text: HTMLElement
     override fun tick(dt: Double) {
         if (!docked) {
             if (Input.keyPressedThisTick[key]) clickPercent = 1.0
@@ -27,16 +26,8 @@ class Keyclicker(id: Int, page: Page, var key: Key): Clicker(id, page) {
 
     override fun init() {
         super.init()
-        text = document.createElement("div") as HTMLElement
-        text.id = "clicker-$id-text"
+        canvasParent.classList.add("keyclicker")
         text.textContent = key.key
-        text.classList.add("clicker-text")
-        canvasParent.appendChild(text)
-    }
-
-    override fun deInit() {
-        super.deInit()
-        text.remove()
     }
 }
 
@@ -54,6 +45,7 @@ open class Clicker(val id: Int, val page: Page) {
     set(value) {
         htmlElement.dataset["docked"] = value.toString()
     }
+    lateinit var text: HTMLElement
 
     open fun deInit() {
         htmlElement.remove()
@@ -61,6 +53,7 @@ open class Clicker(val id: Int, val page: Page) {
         canvasParent.remove()
         dock.remove()
         dockCanvas.remove()
+        text.remove()
     }
 
     open fun init() {
@@ -118,7 +111,13 @@ open class Clicker(val id: Int, val page: Page) {
                 classList.add("no-autoclick")
             }
         }
+        text = document.createElement("div") as HTMLElement
+        text.id = "clicker-$id-text"
+        text.textContent = (id + 1).toString()
+        text.classList.add("clicker-text")
+        canvasParent.appendChild(text)
     }
+
     fun click() {
         //console.log(document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().yMiddle))
         val element = document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().top).firstOrNull { !it.classList.contains("no-autoclick") }

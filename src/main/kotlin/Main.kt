@@ -33,7 +33,7 @@ fun loadGame() {
     gameState = GameState()
     GameTimer.registerTicker {
         for ((name, element) in Elements.map)
-            DynamicHTMLManager.setVariable("element-${element.symbol}-amount", "${gameState.elementAmounts[element]}")
+            DynamicHTMLManager.setVariable("element-${element.symbol}-amount", "${if (element.isDecimal) Stats.elementAmounts[element] else floor(Stats.elementAmounts[element])}")
 
         for ((i, entry) in NormalReactions.map.entries.withIndex()) {
             val (backendId, reaction) = entry

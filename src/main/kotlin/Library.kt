@@ -92,9 +92,8 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = {
                 GameTimer.registerTicker { dt ->
                     val multiplier = 0.2 * it
-                    val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * gameState.elementAmounts[Elements.d] + Stats.partialElements[Elements.catalyst], Stats.functionalElementCaps[Elements.catalyst] * .99 - gameState.elementAmounts[Elements.catalyst]))
-                    gameState.incoming.add(elementStackOf(Elements.catalyst to floor(catalysts)))
-                    Stats.partialElements[Elements.catalyst] = catalysts.mod(1f)
+                    val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * Stats.elementAmounts[Elements.d], Stats.functionalElementCaps[Elements.catalyst] * .99 - Stats.elementAmounts[Elements.catalyst]))
+                    gameState.incoming.add(elementStackOf(Elements.catalyst to catalysts))
                 }
             },
             stringEffects = {
@@ -168,7 +167,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = {
                 val multiplier = it.squared()
                 GameTimer.registerNamedTicker("double_b_cap") {
-                    Stats.elementCapMultipliers[Elements.b] = (gameState.elementAmounts[Elements.e] + 1) * multiplier
+                    Stats.elementCapMultipliers[Elements.b] = (Stats.elementAmounts[Elements.e] + 1) * multiplier
                 }
             },
             stringEffects = {
@@ -329,7 +328,7 @@ object Elements: Library<ElementType>() {
     val e = register("element_e", ElementType("Element E", Symbols.e))
     val f = register("element_f", ElementType("Element F", Symbols.f))
     val g = register("element_g", ElementType("Element G", Symbols.g))
-    val heat = register("heat", ElementType("Heat", Symbols.heat))
+    val heat = register("heat", ElementType("Heat", Symbols.heat, isDecimal = true))
 }
 
 object Symbols: Library<Char>() {
@@ -351,7 +350,6 @@ object Options {
 }
 
 object Stats {
-    val partialElements = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(0.0)
     val elementMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
     val elementCaps = Elements.values.associateWith { 1000.0 }.toMutableMap().also {
         it[Elements.catalyst] = 100000.0
@@ -361,6 +359,15 @@ object Stats {
     val functionalElementCaps get() = Elements.values.associateWith { elementCaps[it] * elementCapMultipliers[it] }.toDefaultedMap(Double.POSITIVE_INFINITY)
     val reactionEfficiencies = mutableMapOf<Reaction, Double>().toMutableDefaultedMap(1.0)
     var gameSpeed = 0.0
+    val elementAmounts: MutableElementStack = defaultElements
+    var elementAmountsLastTick: ElementStack = defaultElements
+    var elementDeltas: ElementStack = defaultedMapOf(0.0)
+    var elementDeltasUnspent: ElementStack = defaultedMapOf(0.0)
+    var lastTickDt = 0.0
+
+    fun resetDeltas() {
+        elementDeltasUnspent = elementDeltas
+    }
 }
 
 open class DefaultedMap<K, V>(private val backingMap: Map<K, V>, val defaultValue: V): Map<K, V> {
@@ -462,7 +469,7 @@ fun load(saveMode: SaveMode = Options.saveMode) {
 fun saveLocalStorage() {
     console.log("Saving game to local storage...")
     document.apply {
-        localStorage["elementAmts"] = Elements.map.map { (k, v) -> "$k:${gameState.elementAmounts[v]}" }.joinToString(separator = ",")
+        localStorage["elementAmts"] = Elements.map.map { (k, v) -> "$k:${Stats.elementAmounts[v]}" }.joinToString(separator = ",")
         localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
         localStorage["timestamp"] = Date().toDateString()
         localStorage["timeSpent"] = gameState.timeSpent.toString()
@@ -483,7 +490,7 @@ fun loadLocalStorage() {
             localStorage["elementAmts"].split(',').forEach {
                 val pair = it.split(':')
                 val element = Elements.map[pair[0]]
-                if (element != null) gameState.elementAmounts[element] = pair[1].toDouble()
+                if (element != null) Stats.elementAmounts[element] = pair[1].toDouble()
             }
             gameState.timeSpent = localStorage["timeSpent"].toDouble()
             simulateTime((Date().getUTCMilliseconds() - Date(timestamp).getUTCMilliseconds()) / 1000.0)
@@ -497,6 +504,7 @@ fun loadLocalStorage() {
                 if (pos != null) {
                     it.htmlElement.x = pos.first.toDouble()
                     it.htmlElement.y = pos.second.toDouble()
+                    it.docked = false
                     it.canvasParent.x = pos.first.toDouble()
                     it.canvasParent.y = pos.second.toDouble()
                 } else {
@@ -508,7 +516,7 @@ fun loadLocalStorage() {
 }
 
 fun simulateTime(dt: Double) {
-    gameState.tick(dt, cap = false)
+    gameState.tick(dt, firstTick = true)
     GameTimer.tick(dt)
 }
 
@@ -517,5 +525,5 @@ data class Page(val name: String)
 object Pages: Library<Page>() {
     val elementsPage = register("elements", Page("Elements"))
     val optionsPage = register("options", Page("Options"))
-    val dimensionsPage = register("dimensions", Page("???"))
+    val capsPage = register("caps", Page("Caps"))
 }

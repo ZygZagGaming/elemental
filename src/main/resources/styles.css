@@ -309,12 +309,16 @@ body {
 }
 
 .clicker-text {
-    color: white;
+    color: black;
     font-size: 0.65vw;
     text-align: center;
     width: 100%;
     top: 1.5vw;
     position: absolute;
+}
+
+.keyclicker > .clicker-text {
+    color: white;
 }
 
 .clicker-dock-container {
@@ -354,4 +358,15 @@ canvas {
 
 .options-button > div {
     font-size: 1vw;
+}
+
+#info-container {
+    position: absolute;
+    width: 30vw;
+    height: 10vw;
+    top: 0;
+    left: 35vw;
+    color: white;
+    text-align: center;
+    font-size: 2vw;
 }
