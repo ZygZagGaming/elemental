@@ -171,6 +171,11 @@ fun doCircleShit() {
     }
 }
 
+open class MovableClicker(val id: Int, val page: Page) {
+    val htmlElement: HTMLElement
+    val canvas: HTMLCanvasElement
+    val dock: HTMLElement
+    var clickPercent = 0.0
     var sinceLastClick = 0.0
     init {
         val parent = DynamicHTMLManager.getPageElement(page)!!
