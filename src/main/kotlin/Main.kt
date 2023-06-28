@@ -171,4 +171,107 @@ fun doCircleShit() {
     }
 }
 
+    var sinceLastClick = 0.0
+    init {
+        val parent = DynamicHTMLManager.getPageElement(page)!!
+        htmlElement = document.createElement("div") as HTMLElement
+        canvas = document.createElement("canvas") as HTMLCanvasElement
+        parent.appendChild(canvas)
+        parent.appendChild(htmlElement)
+        canvas.apply {
+            width = vw(3.0).roundToInt()
+            height = vw(3.0).roundToInt()
+            style.position = "absolute"
+            classList.add("no-autoclick")
+        }
+        htmlElement.apply {
+            classList.apply {
+                add("autoclicker")
+                add("draggable")
+                add("dynamic")
+                add("no-autoclick")
+            }
+            id = "autoclicker-${this@MovableClicker.id}"
+            style.apply {
+                position = "absolute"
+                top = "50vh"
+                left = "50vw"
+            }
+        }
 
+        dock = document.createElement("div") as HTMLElement
+        parent.children.toList().first { it.classList.contains("autoclicker-dock-container") }.appendChild(dock)
+        dock.apply {
+            id = "autoclicker-$id-dock"
+            classList.apply {
+                add("autoclicker-dock")
+            }
+            style.apply {
+                position = "absolute"
+                left = "0"
+                bottom = "0"
+            }
+            onclick = {
+                if (htmlElement.dataset["dragging"] != "true") {
+                    htmlElement.screenMiddleX = dock.screenMiddleX
+                    htmlElement.screenY = dock.screenY
+                }
+
+                Unit
+            }
+        }
+    }
+
+    fun click() {
+        //console.log(document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().yMiddle))
+        val element = document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().top).firstOrNull { !it.classList.contains("no-autoclick") }
+        if (element is HTMLElement) {
+            element.click()
+        }
+    }
+
+    open fun tick(dt: Double) {
+        sinceLastClick += dt
+        while (clickPercent > 1) {
+            clickPercent--
+            click()
+            sinceLastClick = 0.0
+        }
+        canvas.apply {
+            val pixels = 10000 * dt
+            val dx = htmlElement.screenX - screenX
+            val dy = htmlElement.screenY - screenY
+            val totalDistance = sqrt(dx * dx + dy * dy + 0.0)
+            if (totalDistance > 1e-6) {
+                if (totalDistance < pixels) {
+                    screenX = htmlElement.screenX
+                    screenY = htmlElement.screenY
+                } else {
+                    screenX += (dx * pixels / totalDistance).roundToInt()
+                    screenY += (dy * pixels / totalDistance).roundToInt()
+                }
+                style.width = htmlElement.clientWidth.px
+                style.height = htmlElement.clientHeight.px
+            }
+        }
+    }
+}
+
+class KeyClicker(id: Int, page: Page, var holdCps: Double, var key: Key): MovableClicker(id, page) {
+    override fun tick(dt: Double) {
+        if (Input.keyPressedThisTick[key]) clickPercent += 1.0
+        else if (Input.keyDownMap[key]) clickPercent += holdCps * dt
+        else clickPercent = 0.0
+        super.tick(dt)
+    }
+}
+
+class AutoClicker(id: Int, page: Page, var cps: Double = 2.0): MovableClicker(id, page) {
+    override fun tick(dt: Double) {
+        clickPercent += dt * cps
+        super.tick(dt)
+    }
+}
+
+val screenWidth get() = window.screen.width
+val screenHeight get() = window.screen.height
