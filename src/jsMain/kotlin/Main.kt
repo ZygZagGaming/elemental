@@ -24,16 +24,57 @@ fun resetSave() {
     window.location.reload()
 }
 
+val notation = RateOfChangeNotation.MAXPERSEC
+
 @OptIn(ExperimentalJsExport::class)
 @Suppress("RedundantUnitExpression")
 @JsExport
 fun loadGame() {
     doCircleShit()
+    ContextMenu.applyEventListeners()
 
     gameState = GameState()
-    GameTimer.registerTicker {
-        for ((name, element) in Elements.map)
-            DynamicHTMLManager.setVariable("element-${element.symbol}-amount", "${if (element.isDecimal) Stats.elementAmounts[element] else floor(Stats.elementAmounts[element])}")
+    ContextMenu.init()
+    GameTimer.registerTicker("HTML updates") {
+        val prefix = notation.prefix
+        val suffix = notation.suffix
+        for ((name, element) in Elements.map) {
+            val symbol = element.symbol
+            DynamicHTMLManager.setVariable(
+                "element-$symbol-amount",
+                "${if (element.isDecimal) Stats.elementAmounts[element].roundTo(2) else floor(Stats.elementAmounts[element])}"
+            )
+            DynamicHTMLManager.setVariable(
+                "$symbol-amount-display",
+                "$symbol = ${floor(Stats.elementAmounts[element])}"
+            )
+            DynamicHTMLManager.setVariable(
+                "$symbol-bounds-display",
+                "${Stats.functionalElementLowerBounds[element].roundTo(2)} ≤ $symbol ≤ ${Stats.functionalElementUpperBounds[element].roundTo(2)}"
+            )
+            DynamicHTMLManager.setVariable(
+                "$symbol-rate-display",
+                "current $symbol / s = ${Stats.elementRates[element].roundTo(2)}"
+            )
+            DynamicHTMLManager.setVariable(
+                "$symbol-max-rate-display",
+                "$prefix$symbol$suffix = ${Stats.elementDeltas[element].roundTo(2)}"
+            )
+        }
+
+        for ((id, keybind) in Input.keybinds) {
+            DynamicHTMLManager.setVariable(
+                "keybind-$id-key",
+                keybind.key.key
+            )
+        }
+
+        for ((id, clicker) in gameState.clickersById) {
+            DynamicHTMLManager.setVariable(
+                "clicker-$id-mode",
+                clicker.mode.pretty
+            )
+        }
 
         for ((i, entry) in NormalReactions.map.entries.withIndex()) {
             val (backendId, reaction) = entry
@@ -55,10 +96,10 @@ fun loadGame() {
 
         doCircleShit()
     }
-    GameTimer.registerTicker {
+    GameTimer.registerTicker("DynamicHTMLManager tick") {
         DynamicHTMLManager.tick()
     }
-    GameTimer.registerTicker {
+    GameTimer.registerTicker("Visuals") {
         visuals(gameState)
     }
     val container1 = document.getElementById("reaction-container")
@@ -131,13 +172,13 @@ fun loadGame() {
     }
     loadLocalStorage()
     var lastSave = 0.0
-    GameTimer.registerTicker {
+    GameTimer.registerTicker("Saving") {
         if (GameTimer.timeSex() - lastSave >= Options.saveInterval) {
             saveLocalStorage()
             lastSave = GameTimer.timeSex()
         }
     }
-    GameTimer.registerTicker(gameState::tick)
+    GameTimer.registerTicker("gameState tick", gameState::tick)
     GameTimer.beginTicking()
 }
 
@@ -159,7 +200,7 @@ fun doCircleShit() {
         for ((element, i) in elements.indexed) {
             if (element.hasClass("alchemy-element")) {
                 val symbol = element.dataset["element"]
-                if (symbol != null) {
+                if (symbol != null && symbol != "h") {
                     val halfElem = element.getBoundingClientRect().width / 2
                     val normalizedPos = getAlchemyElementPos(symbol[0]) // should only be 1 char
                     val pos = Vec2(half - halfElem, half - halfElem) + normalizedPos * radius

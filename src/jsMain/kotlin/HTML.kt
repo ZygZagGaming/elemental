@@ -93,8 +93,8 @@ object DynamicHTMLManager {
                         x = it2.clientX
                         y = it2.clientY
 
-                        dyn.style.top = (dyn.offsetTop - dy).px
-                        dyn.style.left = (dyn.offsetLeft - dx).px
+                        dyn.style.top = (dyn.offsetTop - dy).pxToVw
+                        dyn.style.left = (dyn.offsetLeft - dx).pxToVw
 
                         Unit
                     }
@@ -127,7 +127,7 @@ object DynamicHTMLManager {
             }
         }
 
-        for (alchemyContainer in document.getElementsByClassName("alchemy-element")) {
+        if (infoScreen) for (alchemyContainer in document.getElementsByClassName("alchemy-element")) {
             alchemyContainer.onmouseenter = { _ ->
                 val symbol = (alchemyContainer.dataset["element"] ?: " ")[0]
                 val element = Elements.map.values.associateBy { it.symbol }[symbol]
@@ -140,7 +140,7 @@ object DynamicHTMLManager {
                             Stats.elementAmounts[element]
                         )
                     }"
-                    line2.innerHTML = "${element.capText} = ${Stats.functionalElementCaps[element]}"
+                    line2.innerHTML = "${element.capText} = ${Stats.functionalElementUpperBounds[element]}"
                     line3.innerHTML = "${element.deltaText} = ${Stats.elementDeltas[element]}"
                     info.appendChild(line1)
                     info.appendChild(line2)
@@ -222,3 +222,5 @@ var HTMLElement.screenHeight
     set(value) {
         style.height = value.pxToVh
     }
+val Document.contextMenu get() = document.getElementById("context-menu") as HTMLElement
+val infoScreen = false

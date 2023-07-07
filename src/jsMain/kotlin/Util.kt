@@ -26,12 +26,18 @@ fun <K, V> Map<K, V>.mutate(function: (MutableMap<K, V>) -> Unit): Map<K, V> {
     return mutable.toMap()
 }
 
+fun <K, V> DefaultedMap<K, V>.mutateDefaulted(function: (MutableDefaultedMap<K, V>) -> Unit): DefaultedMap<K, V> {
+    val mutable = toMutableDefaultedMap()
+    function(mutable)
+    return mutable.unmutable()
+}
+
 typealias BiMap<K1, K2, V> = Map<Pair<K1, K2>, V>
 
 fun <K1, K2, V> Map<K1, Map<K2, V>>.toBiMap(): BiMap<K1, K2, V> = flatMap { (k1, v1) -> v1.map { (k2, v) -> (k1 to k2) to v } }.toMap()
 
 fun <K1, K2, V> BiMap<K1, K2, V>.switchKeys(): BiMap<K2, K1, V> = mapKeys { (k, v) -> k.switch() }
 
-fun <K1, K2, V> BiMap<K1, K2, V>.toNestedMap(): Map<K1, Map<K2, V>> = entries.groupBy { it.key.first }.mapValues { (k, l) -> l.map { (p, v) -> p.second to v }.toMap() }
+fun <K1, K2, V> BiMap<K1, K2, V>.toNestedMap(): Map<K1, Map<K2, V>> = entries.groupBy { it.key.first }.mapValues { (_, l) -> l.associate { (p, v) -> p.second to v } }
 
 fun <A, B> Pair<A, B>.switch() = second to first

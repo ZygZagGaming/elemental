@@ -41,7 +41,8 @@ object SpecialReactions: Library<SpecialReaction>() {
                 Stats.gameSpeed = 1.0
             },
             stringEffects = {
-                "Game speed 0 → 1"
+                if (it == 1) "Game speed x0 → x1"
+                else "Game speed x1"
             }
         )
     )
@@ -56,26 +57,26 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = {
                 when (it) {
                     1 -> {
-                        repeat(5) { n -> gameState.addClicker(Keyclicker(n, Pages.elementsPage, key = Key((n + 1).toString()))) }
+                        repeat(5) { n -> gameState.addClicker(Clicker(n + 1, Pages.elementsPage, ClickerMode.MANUAL, 4.0, 6.0)) }
                     }
                     2 -> {
-                        gameState.addClicker(Autoclicker(0, Pages.elementsPage, cps = 4.0))
+                        gameState.clickersById[1]!!.modesUnlocked.add(ClickerMode.AUTO)
                     }
                     3 -> {
-                        gameState.addClicker(Autoclicker(1, Pages.elementsPage, cps = 4.0))
-                        gameState.addClicker(Autoclicker(2, Pages.elementsPage, cps = 4.0))
+                        gameState.clickersById[2]!!.modesUnlocked.add(ClickerMode.AUTO)
+                        gameState.clickersById[3]!!.modesUnlocked.add(ClickerMode.AUTO)
                     }
                     else -> {
-                        repeat(3) { n -> (gameState.clickersById[n] as Autoclicker).cps += 0.5 }
+                        repeat(3) { n -> gameState.clickersById[n + 1]!!.autoCps += 0.5 }
                     }
                 }
             },
             stringEffects = {
                 when (it) {
-                    1 -> "Unlock Keyclickers 1-5"
-                    2 -> "Convert Keyclicker 1 into an Autoclicker with a click rate of 4 Hz"
-                    3 -> "Convert Keyclickers 2 and 3 into Autoclickers with click rates of 4 Hz"
-                    else -> "All Autoclicker click rates ${it / 2.0 + 2} → ${it / 2.0 + 2.5} Hz"
+                    1 -> "Unlock Clickers 1-5"
+                    2 -> "Unlock Auto Mode on Clicker 1 with a click rate of 4 Hz"
+                    3 -> "Unlock Auto Mode on Clickers 2 and 3 with click rates of 4 Hz"
+                    else -> "All Clicker autoclick rates ${it / 2.0 + 2} → ${it / 2.0 + 2.5} Hz"
                 }
             },
             usageCap = 100
@@ -90,9 +91,9 @@ object SpecialReactions: Library<SpecialReaction>() {
                 )
             },
             effects = {
-                GameTimer.registerTicker { dt ->
+                GameTimer.registerTicker("massiveClockTicker") { dt ->
                     val multiplier = 0.2 * it
-                    val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * Stats.elementAmounts[Elements.d], Stats.functionalElementCaps[Elements.catalyst] * .99 - Stats.elementAmounts[Elements.catalyst]))
+                    val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * Stats.elementAmounts[Elements.d], Stats.functionalElementUpperBounds[Elements.catalyst] * .99 - Stats.elementAmounts[Elements.catalyst]))
                     gameState.incoming.add(elementStackOf(Elements.catalyst to catalysts))
                 }
             },
@@ -129,7 +130,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 )
             },
             effects = {
-                Stats.elementCapMultipliers[Elements.heat] += 0.2
+                Stats.elementUpperBoundMultipliers[Elements.heat] += 0.2
             },
             stringEffects = {
                 "Heat cap x${(1 + (it - 1) * 0.2).roundToOneDecimalPlace()} → x${(1 + it * 0.2).roundToOneDecimalPlace()}"
@@ -142,15 +143,19 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heat Sink",
             {
                 elementStackOf(
-                    Elements.d to 4.0 + 2.0 * it,
-                    Elements.heat to 8.0 + 2.0 * it
+                    Elements.d to 4.0 + it * it,
+                    Elements.heat to 2.0 * (it + 1) * (it + 1)
                 )
             },
             effects = {
-                NormalReactions.cminglyOp.inputs += elementStackOf(Elements.heat to 2.0)
+                NormalReactions.cminglyOp.apply {
+                    inputs = inputs.mutateDefaulted { map ->
+                        map[Elements.heat] = 2.0 * (it + 2) * (it + 2)
+                    }
+                }
             },
             stringEffects = {
-                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${6 + 2 * it} → ${8 + 2 * it}"
+                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${2 * it * it} → ${2 * (it + 1) * (it + 1)}"
             },
             usageCap = 100
         )
@@ -166,15 +171,32 @@ object SpecialReactions: Library<SpecialReaction>() {
             },
             effects = {
                 val multiplier = it.squared()
-                GameTimer.registerNamedTicker("double_b_cap") {
-                    Stats.elementCapMultipliers[Elements.b] = (Stats.elementAmounts[Elements.e] + 1) * multiplier
+                GameTimer.registerTicker("double_b_cap") {
+                    Stats.elementUpperBoundMultipliers[Elements.b] = (Stats.elementAmounts[Elements.e] + 1) * multiplier
                 }
             },
             stringEffects = {
                 if (it == 1) "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1)"
-                else "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count ( + 1) x${(it - 1).squared()} → x${it.squared()}"
+                else "Multiplier to \"${Elements.b.symbol}\" cap equal to \"${Elements.e.symbol}\" count (+ 1) x${(it - 1).squared()} → x${it.squared()}"
             },
             usageCap = 100
+        )
+    )
+    val infoNerd = register("info_nerd",
+        SpecialReaction(
+            "Info Nerd",
+            {
+                elementStackOf(
+                    Elements.heat to 20.0,
+                    Elements.b to 2000.0
+                )
+            },
+            effects = {
+                DynamicHTMLManager.addElementClass("heat-element", "shown")
+            },
+            stringEffects = {
+                "Shows numeric values for heat"
+            }
         )
     )
 //    val onEfficiency = register("on_efficiency",
@@ -320,6 +342,8 @@ object NormalReactions: Library<Reaction>() {
 }
 
 object Elements: Library<ElementType>() {
+    val symbolMap get() = values.associateBy { it.symbol }
+
     val catalyst = register("catalyst", ElementType("Catalyst", Symbols.catalyst))
     val a = register("element_a", ElementType("Element A", Symbols.a))
     val b = register("element_b", ElementType("Element B", Symbols.b))
@@ -351,18 +375,22 @@ object Options {
 
 object Stats {
     val elementMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val elementCaps = Elements.values.associateWith { 1000.0 }.toMutableMap().also {
+    val baseElementUpperBounds = Elements.values.associateWith { 1000.0 }.toMutableMap().also {
         it[Elements.catalyst] = 100000.0
         it[Elements.heat] = 10.0
     }.toMutableDefaultedMap(Double.POSITIVE_INFINITY)
-    val elementCapMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val functionalElementCaps get() = Elements.values.associateWith { elementCaps[it] * elementCapMultipliers[it] }.toDefaultedMap(Double.POSITIVE_INFINITY)
+    val elementUpperBoundMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
+    val functionalElementUpperBounds get() = Elements.values.associateWith { baseElementUpperBounds[it] * elementUpperBoundMultipliers[it] }.toDefaultedMap(Double.POSITIVE_INFINITY)
+    val baseElementLowerBounds = Elements.values.associateWith { 0.0 }.toMutableMap().toMutableDefaultedMap(Double.POSITIVE_INFINITY)
+    val elementLowerBoundMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
+    val functionalElementLowerBounds get() = Elements.values.associateWith { baseElementLowerBounds[it] * elementLowerBoundMultipliers[it] }.toDefaultedMap(Double.NEGATIVE_INFINITY)
     val reactionEfficiencies = mutableMapOf<Reaction, Double>().toMutableDefaultedMap(1.0)
     var gameSpeed = 0.0
     val elementAmounts: MutableElementStack = defaultElements
-    var elementAmountsLastTick: ElementStack = defaultElements
-    var elementDeltas: ElementStack = defaultedMapOf(0.0)
-    var elementDeltasUnspent: ElementStack = defaultedMapOf(0.0)
+    var elementAmountsCached: MutableList<ElementStack> = mutableListOf()
+    var elementDeltas: MutableElementStack = mutableDefaultedMapOf(0.0)
+    var elementRates: MutableElementStack = mutableDefaultedMapOf(0.0)
+    var elementDeltasUnspent: MutableElementStack = mutableDefaultedMapOf(0.0)
     var lastTickDt = 0.0
 
     fun resetDeltas() {
@@ -412,6 +440,7 @@ class MutableDefaultedMap<K, V>(private val backingMap: MutableMap<K, V>, defaul
 
 fun <K, V> Map<K, V>.toDefaultedMap(value: V) = DefaultedMap(this, value)
 fun <K, V> MutableMap<K, V>.toMutableDefaultedMap(value: V) = MutableDefaultedMap(this, value)
+fun <K, V> DefaultedMap<K, V>.toMutableDefaultedMap() = MutableDefaultedMap(toMutableMap(), defaultValue)
 
 fun Double.roundToOneDecimalPlace() = (this * 10).roundToInt() / 10.0
 fun Double.roundTo(places: Int) = (this * 10.0.pow(places)).roundToInt() / 10.0.pow(places)
@@ -473,7 +502,10 @@ fun saveLocalStorage() {
         localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
         localStorage["timestamp"] = Date().toDateString()
         localStorage["timeSpent"] = gameState.timeSpent.toString()
-        localStorage["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.x},${clicker.htmlElement.y}"}" }.joinToString(separator = ";")
+        localStorage["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.x.pxToVw},${clicker.htmlElement.y.pxToVw}"}" }.joinToString(separator = ";")
+        localStorage["elementDeltas"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltas[v]}" }.joinToString(separator = ",")
+        localStorage["elementDeltasUnspent"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltasUnspent[v]}" }.joinToString(separator = ",")
+        localStorage["autoclickerSettings"] = gameState.clickersById.map { (id, clicker) -> "${id}:(${clicker.mode},${Input.keybinds["keyclicker-$id"]!!.key.key})" }.joinToString(separator = ";")
     }
 }
 
@@ -502,13 +534,34 @@ fun loadLocalStorage() {
             gameState.clickersById.forEach { (id, it) ->
                 val pos = positions[id]
                 if (pos != null) {
-                    it.htmlElement.x = pos.first.toDouble()
-                    it.htmlElement.y = pos.second.toDouble()
+                    it.htmlElement.style.left = pos.first
+                    it.htmlElement.style.top = pos.second
                     it.docked = false
-                    it.canvasParent.x = pos.first.toDouble()
-                    it.canvasParent.y = pos.second.toDouble()
+                    it.canvasParent.style.left = pos.first
+                    it.canvasParent.style.top = pos.second
                 } else {
                     it.moveToDock(force = true)
+                }
+            }
+            localStorage["elementDeltas"].split(',').forEach {
+                val pair = it.split(':')
+                val element = Elements.map[pair[0]]
+                if (element != null) Stats.elementDeltas[element] = pair[1].toDouble()
+            }
+            localStorage["elementDeltasUnspent"].split(',').forEach {
+                val pair = it.split(':')
+                val element = Elements.map[pair[0]]
+                if (element != null) Stats.elementDeltasUnspent[element] = pair[1].toDouble()
+            }
+            localStorage["autoclickerSettings"].split(';').forEach {
+                val pair = it.split(':')
+                if (pair.size == 2) {
+                    val pair2 = pair[1].trim('(', ')').split(',')
+                    val clicker = gameState.clickersById[pair[0].toInt()]
+                    if (clicker != null) {
+                        clicker.setMode(ClickerMode.valueOf(pair2[0]))
+                        Input.keybinds["keyclicker-${pair[0]}"]!!.key = Key(pair2[1])
+                    }
                 }
             }
         }
@@ -516,7 +569,7 @@ fun loadLocalStorage() {
 }
 
 fun simulateTime(dt: Double) {
-    gameState.tick(dt, firstTick = true)
+    gameState.tick(dt, offline = true)
     GameTimer.tick(dt)
 }
 
@@ -525,5 +578,5 @@ data class Page(val name: String)
 object Pages: Library<Page>() {
     val elementsPage = register("elements", Page("Elements"))
     val optionsPage = register("options", Page("Options"))
-    val capsPage = register("caps", Page("Caps"))
+    val capsPage = register("duality", Page("Duality"))
 }

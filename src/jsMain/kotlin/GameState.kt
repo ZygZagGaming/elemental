@@ -9,13 +9,10 @@ class GameState {
     var lastReaction = hoveredReaction
     var timeSpent: Double = 0.0
     val clickersById = mutableMapOf<Int, Clicker>()
+    val timeBetweenRateTicks = 0.25
 
-    fun tick(dt: Double, firstTick: Boolean = false) {
+    fun tick(dt: Double, offline: Boolean = false) {
         Input.tick(dt)
-        Stats.elementDeltas = Elements.values.associateWith { k ->
-            max(if (Stats.elementDeltas[k].isNaN()) Double.NEGATIVE_INFINITY else Stats.elementDeltas[k], (Stats.elementAmounts[k] - Stats.elementAmountsLastTick[k]) / Stats.lastTickDt)
-        }.toDefaultedMap(0.0)
-        console.log((Stats.elementAmounts[Elements.b] - Stats.elementAmountsLastTick[Elements.b]))
 
         lastReaction = hoveredReaction
         timeSpent += dt
@@ -23,13 +20,25 @@ class GameState {
         clickersById.values.forEach { if (DynamicHTMLManager.shownPage == Pages.id(it.page)) it.tick(dt) }
 
         Stats.elementAmounts.deduct(Elements.heat.withCount(Stats.elementAmounts[Elements.heat] * 0.1 * dt * Stats.gameSpeed))
-        if (!firstTick) for ((key, value) in incoming) Stats.elementAmounts[key] = min(
-            Stats.functionalElementCaps[key], max(
-                0.0,
-                Stats.elementAmounts[key].plus(value)
+        if (!offline) {
+            for ((key, value) in incoming) Stats.elementAmounts[key] = min(
+                Stats.functionalElementUpperBounds[key], max(
+                    0.0,
+                    Stats.elementAmounts[key].plus(value)
+                )
             )
-        )
-        Stats.elementAmountsLastTick = Stats.elementAmounts.copy()
+        }
+        if ((timeSpent - dt).mod(timeBetweenRateTicks) > timeSpent.mod(timeBetweenRateTicks) || offline) {
+            if (!offline) Elements.values.forEach {
+                Stats.elementRates[it] = (Stats.elementAmounts[it] - Stats.elementAmountsCached.first()[it]) / (timeBetweenRateTicks * 16)
+                Stats.elementDeltas[it] = max(
+                    Stats.elementDeltas[it],
+                    Stats.elementRates[it]
+                )
+            }
+            Stats.elementAmountsCached.add(Stats.elementAmounts.copy())
+            if (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()
+        }
         incoming = defaultMutableStack
         Stats.lastTickDt = dt
     }
@@ -37,7 +46,7 @@ class GameState {
     fun canDoReaction(reaction: Reaction) =
         ((reaction !is NullReaction)
                 && reaction.inputs.all { (k, v) -> v <= Stats.elementAmounts[k] }
-                && reaction.multipliedOutputs.none { (k, v) -> if (k == Elements.heat) v + Stats.elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementCaps[k] else v != 0.0 && Stats.elementAmounts[k] >= Stats.functionalElementCaps[k] })
+                && reaction.multipliedOutputs.none { (k, v) -> if (k == Elements.heat) v + Stats.elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementUpperBounds[k] else v != 0.0 && Stats.elementAmounts[k] >= Stats.functionalElementUpperBounds[k] })
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
@@ -47,17 +56,17 @@ class GameState {
         }
     }
 
-    override fun toString(): String {
-        return super.toString()
-    }
-
     fun addClicker(clicker: Clicker) {
         val old = clickersById[clicker.id]
+        val x = old?.htmlElement?.screenX ?: 0.0
+        val y = old?.htmlElement?.screenY ?: 0.0
         old?.deInit()
         clickersById[clicker.id] = clicker
         clicker.init()
         fixClickerDockOrder()
-        clicker.moveToDock(force = true)
+        clicker.htmlElement.screenX = x
+        clicker.htmlElement.screenY = y
+        //clicker.moveToDock(force = true)
     }
 
     fun fixClickerDockOrder() {
