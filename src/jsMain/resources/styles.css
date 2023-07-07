@@ -26,11 +26,14 @@ body {
     left: 35vw;
     top: 50vh;
     transform: translateY(-50%);
+    z-index: -2;
 }
 
 .alchemy-visuals {
     width: 30vw;
     height: 30vw;
+    z-index: -3;
+    position: relative;
 }
 
 .alchemy-element {
@@ -42,10 +45,28 @@ body {
     align-items: center;
 }
 
+.alchemy-element:not(.heat-element) {
+    z-index: 1;
+}
+
+.heat-element {
+    width: 2.2vw;
+    height: 1.5vw;
+    border-radius: 25%;
+    transition: top 0.5s ease-out, background-color 0.15s, border-color 0.15s, color 0.15s;
+    top: 14vw;
+    left: 13.65vw;
+    padding-bottom: 0px;
+}
+
+.heat-element.shown {
+    top: 16vw;
+}
+
 .alchemy-element-text {
     text-align: center;
     font-size: 1.25vw;
-    top: 0;
+    bottom: 0;
 }
 
 .alchemy-element-amount {
@@ -54,14 +75,33 @@ body {
     bottom: 0;
 }
 
+.heat-element > .alchemy-element-text {
+    text-align: center;
+    font-size: 0.75vw;
+    height: 1vw;
+    width: 0.5vw;
+}
+
+.heat-element > .alchemy-element-amount {
+    text-align: center;
+    font-size: 0.7vw;
+    width: 100%;
+    height: 70%;
+    position: absolute;
+}
+
 .grey-bkg-style {
-    border-width: 3px;
+    border-width: 0.25vw;
     border-color: white;
     border-style: solid;
     background-color: #909090;
     color: black;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    /*transition: background-color 0.15s, border-color 0.15s, color 0.15s;*/
     cursor: pointer;
+}
+
+.grey-bkg-style:not(.heat-element) {
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .grey-bkg-style:hover {
@@ -309,12 +349,16 @@ body {
 }
 
 .clicker-text {
-    color: white;
+    color: black;
     font-size: 0.65vw;
     text-align: center;
     width: 100%;
     top: 1.5vw;
     position: absolute;
+}
+
+.keyclicker > .clicker-text {
+    color: white;
 }
 
 .clicker-dock-container {
@@ -354,4 +398,67 @@ canvas {
 
 .options-button > div {
     font-size: 1vw;
+}
+
+#info-container {
+    position: absolute;
+    width: 30vw;
+    height: 10vw;
+    top: 0;
+    left: 35vw;
+    color: white;
+    text-align: center;
+    font-size: 2vw;
+}
+
+#context-menu {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    width: 15vw;
+    background-color: #7a7b7a;
+    border-radius: 0.5vw;
+    border-width: 0.2vw;
+    border-style: solid;
+    border-color: #4c4f4c;
+    padding: 0.5vw;
+    justify-content: space-between;
+    gap: 0.6vw;
+}
+
+#context-menu > div {
+    width: 100%;
+    height: 1.5vw;
+    font-size: 1.25vw;
+    color: #ccc;
+    display: flex;
+    justify-content: space-between;
+}
+
+#context-menu > div > div {
+    width: 30%;
+}
+
+.keyclicker-key-change {
+
+}
+
+.keyclicker-mode-change {
+    font-size: 1.15vw;
+}
+
+.keyclicker-key-change, .keyclicker-mode-change {
+    text-align: center;
+    border-style: solid;
+    border-width: 0.25vw;
+    border-radius: 0.75vw;
+    border-color: #666;
+    background-color: #888;
+    color: #4c4c4c;
+    height: 100%;
+}
+
+#context-menu > div.horizontal-line {
+    height: 0.25vw;
+    background-image: linear-gradient(0.25turn, #7a7b7a, white 40%, white 60%, #7a7b7a)
 }

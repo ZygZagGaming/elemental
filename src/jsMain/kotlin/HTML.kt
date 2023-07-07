@@ -1,5 +1,6 @@
 import kotlinx.browser.document
 import org.w3c.dom.*
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 object DynamicHTMLManager {
@@ -92,8 +93,8 @@ object DynamicHTMLManager {
                         x = it2.clientX
                         y = it2.clientY
 
-                        dyn.style.top = (dyn.offsetTop - dy).px
-                        dyn.style.left = (dyn.offsetLeft - dx).px
+                        dyn.style.top = (dyn.offsetTop - dy).pxToVw
+                        dyn.style.left = (dyn.offsetLeft - dx).pxToVw
 
                         Unit
                     }
@@ -125,7 +126,38 @@ object DynamicHTMLManager {
                 }
             }
         }
+
+        if (infoScreen) for (alchemyContainer in document.getElementsByClassName("alchemy-element")) {
+            alchemyContainer.onmouseenter = { _ ->
+                val symbol = (alchemyContainer.dataset["element"] ?: " ")[0]
+                val element = Elements.map.values.associateBy { it.symbol }[symbol]
+                if (element != null) {
+                    val line1 = document.createElement("div")
+                    val line2 = document.createElement("div")
+                    val line3 = document.createElement("div")
+                    line1.textContent = "${element.symbol} = ${
+                        if (element == Elements.heat) Stats.elementAmounts[element].roundTo(2) else floor(
+                            Stats.elementAmounts[element]
+                        )
+                    }"
+                    line2.innerHTML = "${element.capText} = ${Stats.functionalElementUpperBounds[element]}"
+                    line3.innerHTML = "${element.deltaText} = ${Stats.elementDeltas[element]}"
+                    info.appendChild(line1)
+                    info.appendChild(line2)
+                    info.appendChild(line3)
+                }
+                alchemyContainer.onmouseleave = { _ ->
+                    for (child in info.children) info.removeChild(child)
+                    alchemyContainer.onmouseleave = null
+
+                    Unit
+                }
+
+                Unit
+            }
+        }
     }
+    val info get() = document.getElementById("info-container")!!
 }
 
 val Int.px get() = "${this}px"
@@ -190,3 +222,5 @@ var HTMLElement.screenHeight
     set(value) {
         style.height = value.pxToVh
     }
+val Document.contextMenu get() = document.getElementById("context-menu") as HTMLElement
+val infoScreen = false

@@ -14,8 +14,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
     val elements = alchemyContainer.children
     val half = alchemyContainer.getBoundingClientRect().width / 2
     val radius = half * 0.8
-    val n = elements.length - 2
-    val portion = 2 * PI / n
+    val portion = 2 * PI / 7
     val visuals = elements.toList().last() as HTMLCanvasElement
     val middle = Vec2(half, half)
     val size = vw(30.0)
@@ -36,7 +35,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
         lineWidth = 3.0
         beginPath()
         moveTo(half, half + polygonRadius)
-        for (i in 1..n) {
+        for (i in 1..7) {
             lineTo(half + polygonRadius * sin(portion * i), half + polygonRadius * cos(portion * i))
         }
         stroke()
@@ -44,7 +43,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
         val k = 0.5
         val angle = graphicalHeatAmount * 2 * PI
         val strokeWidth = vw(0.75)
-        if (gameState.elementAmounts[Elements.heat] <= 1e-6) {
+        if (Stats.elementAmounts[Elements.heat] <= 1e-6) {
             lineWidth = strokeWidth
             beginPath()
             strokeStyle = "#cccccc"
@@ -120,13 +119,13 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
 }
 
 const val margin = 50.0
-val Clicker.color get() = if (this is Autoclicker) "#ffffff" else "#669"
+val Clicker.color get() = if (mode == ClickerMode.MANUAL) "#669" else "#ffffff"
 
 fun clickerVisuals(clicker: Clicker) {
     if (clicker.docked) drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, color = clicker.color)
     else {
-        val cps = if (clicker is Autoclicker) clicker.cps else if (clicker is Keyclicker) clicker.heldCps else 0.0
-        drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, clicker.timeSinceLastClick * cps, color = clicker.color)
+        val cps = clicker.cps
+        drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, if (clicker.timeSinceLastClick * cps < 0.5) clicker.timeSinceLastClick * cps + 0.5 else (clicker.timeSinceLastClick * cps - 0.5).clamp(0.0..0.5), color = clicker.color)
     }
     drawClickerToCanvas(clicker.dockCanvas, clicker.htmlElement.screenWidth, color = "#606060")
 }
@@ -183,7 +182,7 @@ fun CanvasRenderingContext2D.gradientLine(posA: Vec2, posB: Vec2, r: Int, g: Int
 
 }
 
-val graphicalHeatAmount get() = gameState.elementAmounts[Elements.heat] / Stats.functionalElementCaps[Elements.heat]
+val graphicalHeatAmount get() = Stats.elementAmounts[Elements.heat] / Stats.functionalElementUpperBounds[Elements.heat]
 fun CanvasRenderingContext2D.gradientLineColorBar(posA: Vec2, posB: Vec2, r: Int, g: Int, b: Int, a: Double, width: Double, colorBarPosition: Double, colorBarWidth: Double, colorBarOpacity: Double) {
     val len = (posA - posB).magnitude
     val avg = (posA + posB) / 2.0

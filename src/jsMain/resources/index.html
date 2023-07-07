@@ -3,14 +3,17 @@
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="styles.css">
-        <title>Elemental</title>
+        <title id="title">Elemental</title>
+        <script src="kotlin-kotlin-stdlib-js-ir.js"></script>
+        <script src="kotlinx-html.js"></script>
         <script src="elemental.js"></script>
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     </head>
     <body onload="elemental.loadGame()">
+        <div id="context-menu" class=""></div>
         <div id="navbar" class="no-highlight">
             <div id="navbar-element-1" class="navbar-element dynamic page-button active" data-page-id="elements"><div class="navbar-text page-text">Elements</div></div>
-            <div id="navbar-element-2" class="navbar-element dynamic page-button" data-page-id="dimensions"><div class="navbar-text page-text">???</div></div>
+            <div id="navbar-element-2" class="navbar-element dynamic page-button" data-page-id="duality"><div class="navbar-text page-text">???</div></div>
             <div id="navbar-element-3" class="navbar-element disabled"><div class="navbar-text">???</div></div>
         </div>
         <div id="options-button" class="dynamic page-button no-highlight" data-page-id="options"><div class="navbar-text page-text">Options</div></div>
@@ -24,8 +27,10 @@
                 <div class="alchemy-element grey-bkg-style" id="alchemy-element-5" data-element="e"><div class="alchemy-element-text">e</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-e-amount"></div></div>
                 <div class="alchemy-element grey-bkg-style" id="alchemy-element-6" data-element="f"><div class="alchemy-element-text">f</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-f-amount"></div></div>
                 <div class="alchemy-element grey-bkg-style" id="alchemy-element-7" data-element="g"><div class="alchemy-element-text">g</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-g-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style heat-element dynamic" id="alchemy-element-8" data-element="h"><div class="alchemy-element-amount dynamic" data-dynamic-id="element-h-amount"></div></div>
                 <canvas class="alchemy-visuals" width="500" height="500"></canvas>
             </div>
+            <div id="info-container" class="no-highlight"></div>
             <div id="reaction-container-title" class="reaction-container-title no-highlight">
                 Reactions
             </div>
@@ -64,18 +69,6 @@
                     <div class="reaction-option-title dynamic" data-dynamic-id="reaction-5-title"></div>
                     <div class="reaction-option-description-container">
                         <div class="reaction-option-description dynamic" data-dynamic-id="reaction-5-description"></div>
-                    </div>
-                </div>
-                <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-6" data-reaction-id="6">
-                    <div class="reaction-option-title dynamic" data-dynamic-id="reaction-6-title"></div>
-                    <div class="reaction-option-description-container">
-                        <div class="reaction-option-description dynamic" data-dynamic-id="reaction-6-description"></div>
-                    </div>
-                </div>
-                <div class="reaction-option no-highlight grey-bkg-style" id="reaction-option-7" data-reaction-id="7">
-                    <div class="reaction-option-title dynamic" data-dynamic-id="reaction-7-title"></div>
-                    <div class="reaction-option-description-container">
-                        <div class="reaction-option-description dynamic" data-dynamic-id="reaction-7-description"></div>
                     </div>
                 </div>
             </div>
@@ -139,13 +132,6 @@
                         <div class="reaction-option-description reaction-option-effects dynamic" data-dynamic-id="special-reaction-7-effects"></div>
                     </div>
                 </div>
-                <div class="reaction-option no-highlight grey-bkg-style" id="special-reaction-option-8" data-reaction-id="8">
-                    <div class="reaction-option-title dynamic" data-dynamic-id="special-reaction-8-title"></div>
-                    <div class="reaction-option-description-container">
-                        <div class="reaction-option-description dynamic" data-dynamic-id="special-reaction-8-description"></div>
-                        <div class="reaction-option-description reaction-option-effects dynamic" data-dynamic-id="special-reaction-8-effects"></div>
-                    </div>
-                </div>
             </div>
             <div class="clicker-dock-container">
 
@@ -181,6 +167,6 @@
                 <div class="options-column-content"></div>
             </div>
         </div>
-        <div id="dimensions-page" class="page hidden" data-page-id="elements"></div>
+        <div id="duality-page" class="page hidden" data-page-id="duality"></div>
     </body>
 </html>
