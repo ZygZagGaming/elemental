@@ -9,13 +9,14 @@ import kotlin.math.*
 
 fun main() {
     console.log("Hello!")
-    //val load = { load() }
+    console.log("You are currently playing Elemental $gameVersion!")
 }
 
 lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
+const val gameVersion = "v1.1.0"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -31,6 +32,7 @@ val notation = RateOfChangeNotation.MAXPERSEC
 @JsExport
 fun loadGame() {
     doCircleShit()
+    document.getElementById("title")?.textContent = "Elemental $gameVersion"
     ContextMenu.applyEventListeners()
 
     gameState = GameState()

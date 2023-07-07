@@ -502,7 +502,7 @@ fun saveLocalStorage() {
         localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
         localStorage["timestamp"] = Date().toDateString()
         localStorage["timeSpent"] = gameState.timeSpent.toString()
-        localStorage["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.x.pxToVw},${clicker.htmlElement.y.pxToVw}"}" }.joinToString(separator = ";")
+        localStorage["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.style.left},${clicker.htmlElement.style.top}"}" }.joinToString(separator = ";")
         localStorage["elementDeltas"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltas[v]}" }.joinToString(separator = ",")
         localStorage["elementDeltasUnspent"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltasUnspent[v]}" }.joinToString(separator = ",")
         localStorage["autoclickerSettings"] = gameState.clickersById.map { (id, clicker) -> "${id}:(${clicker.mode},${Input.keybinds["keyclicker-$id"]!!.key.key})" }.joinToString(separator = ";")
@@ -534,6 +534,7 @@ fun loadLocalStorage() {
             gameState.clickersById.forEach { (id, it) ->
                 val pos = positions[id]
                 if (pos != null) {
+                    console.log(pos.first)
                     it.htmlElement.style.left = pos.first
                     it.htmlElement.style.top = pos.second
                     it.docked = false
