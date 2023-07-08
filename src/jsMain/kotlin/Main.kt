@@ -16,7 +16,7 @@ lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
-const val gameVersion = "v1.1.1"
+const val gameVersion = "v1.1.2"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
