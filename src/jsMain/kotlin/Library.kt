@@ -51,7 +51,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Clockwork",
             {
                 elementStackOf(
-                    Elements.a to 60.0 + 60.0 * it
+                    Elements.a to 50.0 + 50.0 * it
                 )
             },
             effects = {
@@ -87,19 +87,19 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Massive Clock",
             {
                 elementStackOf(
-                    Elements.d to 4.0 * it
+                    Elements.d to 2.0 * it.squared()
                 )
             },
             effects = {
                 GameTimer.registerTicker("massiveClockTicker") { dt ->
-                    val multiplier = 0.2 * it
+                    val multiplier = 0.1 * it + 0.1
                     val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * Stats.elementAmounts[Elements.d], Stats.functionalElementUpperBounds[Elements.catalyst] * .99 - Stats.elementAmounts[Elements.catalyst]))
                     gameState.incoming.add(elementStackOf(Elements.catalyst to catalysts))
                 }
             },
             stringEffects = {
-                val multiplier = 0.2 * it
-                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.2).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second (until 99% of cap)"
+                val multiplier = 0.1 * it + 0.1
+                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.1).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second (until 99% of cap)"
             },
             usageCap = 100
         )
@@ -109,7 +109,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heating Up",
             {
                 elementStackOf(
-                    Elements.b to 1000.0 + if (it <= 5) 0.0 else if (it <= 10) 200.0 * (it - 5) else 200.0 * (it - 5) * (it - 10)
+                    Elements.b to 1000.0 + if (it <= 3) 0.0 else if (it <= 7) 200.0 * (it - 3) else 200.0 * (it - 3) * (it - 7)
                 )
             },
             effects = {
@@ -126,7 +126,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Overheat",
             {
                 elementStackOf(
-                    Elements.c to 4.0 * it
+                    Elements.c to 6.0 * it
                 )
             },
             effects = {
@@ -143,19 +143,19 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heat Sink",
             {
                 elementStackOf(
-                    Elements.d to 4.0 * it * it,
-                    Elements.heat to 2.0 * (it + 1) * (it + 1)
+                    Elements.d to 8.0 * it.squared(),
+                    Elements.heat to 2.0 * (it + 1).squared()
                 )
             },
             effects = {
                 NormalReactions.cminglyOp.apply {
                     inputs = inputs.mutateDefaulted { map ->
-                        map[Elements.heat] = 2.0 * (it + 2) * (it + 2)
+                        map[Elements.heat] = 2.0 * (it + 2).squared()
                     }
                 }
             },
             stringEffects = {
-                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${2 * (it + 1) * (it + 1)} → ${2 * (it + 2) * (it + 2)}"
+                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${2 * (it + 1).squared()} → ${2 * (it + 2).squared()}"
             },
             usageCap = 100
         )
@@ -166,7 +166,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             {
                 elementStackOf(
                     Elements.e to 2.0.pow(it),
-                    Elements.b to 250.0 * 4.0.pow(it)
+                    Elements.b to 500.0 * 4.0.pow(it)
                 )
             },
             effects = {
@@ -271,11 +271,11 @@ object NormalReactions: Library<Reaction>() {
             "ABCs",
             elementStackOf(
                 Elements.catalyst to 2.0,
-                Elements.b to 16.0,
+                Elements.b to 23.0,
             ),
             elementStackOf(
                 Elements.c to 1.0,
-                Elements.heat to 5.0
+                Elements.heat to 4.0
             )
         )
     )
@@ -319,7 +319,7 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "Over 900",
             elementStackOf(
-                Elements.b to 950.0,
+                Elements.b to 901.0,
             ),
             elementStackOf(
                 Elements.d to 3.0
@@ -330,8 +330,9 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "Exotherm",
             elementStackOf(
-                Elements.c to 20.0,
-                Elements.catalyst to 1000.0
+                Elements.c to 60.0,
+                Elements.a to 1000.0,
+                Elements.catalyst to 3000.0
             ),
             elementStackOf(
                 Elements.e to 1.0,

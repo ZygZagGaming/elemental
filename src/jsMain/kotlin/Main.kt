@@ -16,7 +16,7 @@ lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
-const val gameVersion = "v1.1.1"
+const val gameVersion = "v1.1.2"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -26,6 +26,8 @@ fun resetSave() {
 }
 
 val notation = RateOfChangeNotation.MAXPERSEC
+val htmlUpdateInterval = 5.0
+var lastHtmlUpdate = 0.0
 
 @OptIn(ExperimentalJsExport::class)
 @Suppress("RedundantUnitExpression")
@@ -40,10 +42,12 @@ fun loadGame() {
     GameTimer.registerTicker("HTML updates") {
         val prefix = notation.prefix
         val suffix = notation.suffix
+        val updateAll = GameTimer.timeSex() - lastHtmlUpdate > htmlUpdateInterval
+        if (updateAll) lastHtmlUpdate = GameTimer.timeSex()
         DynamicHTMLManager.apply {
             for ((name, element) in Elements.map) {
                 val symbol = element.symbol
-                if (Stats.elementAmounts.changed(element)) {
+                if (updateAll || Stats.elementAmounts.changed(element)) {
                     val displayText =
                         "${if (element.isDecimal) Stats.elementAmounts[element].roundTo(2) else floor(Stats.elementAmounts[element])}"
                     setVariable(
@@ -56,7 +60,7 @@ fun loadGame() {
                     )
                     Stats.elementAmounts.clearChanged(element)
                 }
-                if (Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(element)) {
+                if (updateAll || Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(element)) {
                     setVariable(
                         "$symbol-bounds-display",
                         "${Stats.functionalElementLowerBounds[element].roundTo(2)} ≤ $symbol ≤ ${
@@ -68,14 +72,14 @@ fun loadGame() {
                     Stats.functionalElementLowerBounds.clearChanged(element)
                     Stats.functionalElementUpperBounds.clearChanged(element)
                 }
-                if (Stats.elementRates.changed(element)) {
+                if (updateAll || Stats.elementRates.changed(element)) {
                     setVariable(
                         "$symbol-rate-display",
                         "current $symbol / s = ${Stats.elementRates[element].roundTo(2)}"
                     )
                     Stats.elementRates.clearChanged(element)
                 }
-                if (Stats.elementDeltas.changed(element)) {
+                if (updateAll || Stats.elementDeltas.changed(element)) {
                     setVariable(
                         "$symbol-max-rate-display",
                         "$prefix$symbol$suffix = ${Stats.elementDeltas[element].roundTo(2)}"
