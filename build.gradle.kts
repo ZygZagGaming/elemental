@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.zygzag"
-version = "0.0.1"
+version = "1.1.1"
 
 repositories {
     mavenCentral()

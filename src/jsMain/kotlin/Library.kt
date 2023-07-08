@@ -143,7 +143,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Heat Sink",
             {
                 elementStackOf(
-                    Elements.d to 4.0 + it * it,
+                    Elements.d to 4.0 * it * it,
                     Elements.heat to 2.0 * (it + 1) * (it + 1)
                 )
             },
@@ -155,7 +155,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                 }
             },
             stringEffects = {
-                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${2 * it * it} → ${2 * (it + 1) * (it + 1)}"
+                "Heat cost on \"${NormalReactions.cminglyOp.name}\" ${2 * (it + 1) * (it + 1)} → ${2 * (it + 2) * (it + 2)}"
             },
             usageCap = 100
         )
@@ -373,28 +373,110 @@ object Options {
     var autoclickerDockSnapDistance = 50.0
 }
 
+interface StatMap<K, V>: Indexable<K, V> {
+    val defaultValue: V
+    fun changed(): Boolean
+    fun changed(key: K): Boolean
+    fun clearChanged(key: K)
+    fun clearChanged()
+    fun clear()
+}
+
+interface MutableStatMap<K, V>: StatMap<K, V>, MutableIndexable<K, V>
+
+
+
+open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val defaultValue: V): MutableStatMap<K, V> {
+    private val backingMap = backingMap.toMutableMap()
+    private val changedSet = mutableSetOf<K>()
+    val asMap get() = backingMap
+
+    override fun get(key: K): V = backingMap[key] ?: defaultValue
+    override fun set(key: K, value: V) {
+        if (this[key] != value) {
+            backingMap[key] = value
+            changedSet.add(key)
+        }
+    }
+
+    override fun clearChanged() {
+        changedSet.clear()
+    }
+
+    override fun clearChanged(key: K) {
+        changedSet.remove(key)
+    }
+
+    override fun clear() {
+        backingMap.keys.forEach { backingMap[it] = defaultValue }
+        changedSet.addAll(backingMap.keys)
+    }
+
+    override fun changed(): Boolean = changedSet.isNotEmpty()
+
+    override fun changed(key: K): Boolean = key in changedSet
+}
+
+
+
+class ProductStatMap<K, V>(val a: StatMap<K, V>, val b: StatMap<K, V>, val multiplyFunction: (V, V) -> V): StatMap<K, V> {
+    private operator fun V.times(other: V) = multiplyFunction(this, other)
+    override fun get(key: K): V = a[key] * b[key]
+
+    override val defaultValue: V get() = a.defaultValue * b.defaultValue
+
+
+    override fun changed(): Boolean = a.changed() || b.changed()
+
+    override fun clearChanged() {
+        a.clearChanged()
+        b.clearChanged()
+    }
+
+    override fun clear() {
+        a.clear()
+        b.clear()
+    }
+
+    override fun clearChanged(key: K) {
+        a.clearChanged(key)
+        b.clearChanged(key)
+    }
+
+    override fun changed(key: K): Boolean = a.changed(key) || b.changed(key)
+}
+
+data class SimpleIndexable<K, V>(private val getter: (K) -> V): Indexable<K, V> {
+    override fun get(key: K): V = getter(key)
+}
+
+data class SimpleMutableIndexable<K, V>(private val getter: (K) -> V, private val setter: (K, V) -> Unit): MutableIndexable<K, V> {
+    override fun get(key: K): V = getter(key)
+    override fun set(key: K, value: V) {
+        setter(key, value)
+    }
+}
+
 object Stats {
     val elementMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val baseElementUpperBounds = Elements.values.associateWith { 1000.0 }.toMutableMap().also {
-        it[Elements.catalyst] = 100000.0
-        it[Elements.heat] = 10.0
-    }.toMutableDefaultedMap(Double.POSITIVE_INFINITY)
-    val elementUpperBoundMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val functionalElementUpperBounds get() = Elements.values.associateWith { baseElementUpperBounds[it] * elementUpperBoundMultipliers[it] }.toDefaultedMap(Double.POSITIVE_INFINITY)
-    val baseElementLowerBounds = Elements.values.associateWith { 0.0 }.toMutableMap().toMutableDefaultedMap(Double.POSITIVE_INFINITY)
-    val elementLowerBoundMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val functionalElementLowerBounds get() = Elements.values.associateWith { baseElementLowerBounds[it] * elementLowerBoundMultipliers[it] }.toDefaultedMap(Double.NEGATIVE_INFINITY)
-    val reactionEfficiencies = mutableMapOf<Reaction, Double>().toMutableDefaultedMap(1.0)
+    val baseElementUpperBounds = BasicMutableStatMap(mapOf(Elements.catalyst to 100000.0, Elements.heat to 10.0), 1000.0)
+    val elementUpperBoundMultipliers = BasicMutableStatMap<ElementType, Double>(emptyMap(), 1.0)
+    val functionalElementUpperBounds = ProductStatMap(baseElementUpperBounds, elementUpperBoundMultipliers, Double::times)
+    val baseElementLowerBounds = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
+    val elementLowerBoundMultipliers = BasicMutableStatMap<ElementType, Double>(emptyMap(), 1.0)
+    val functionalElementLowerBounds = ProductStatMap(baseElementLowerBounds, elementLowerBoundMultipliers, Double::times)
     var gameSpeed = 0.0
-    val elementAmounts: MutableElementStack = defaultElements
-    var elementAmountsCached: MutableList<ElementStack> = mutableListOf()
-    var elementDeltas: MutableElementStack = mutableDefaultedMapOf(0.0)
-    var elementRates: MutableElementStack = mutableDefaultedMapOf(0.0)
-    var elementDeltasUnspent: MutableElementStack = mutableDefaultedMapOf(0.0)
+    val elementAmounts = BasicMutableStatMap(defaultElements, 0.0)
+    var elementAmountsCached: MutableList<Map<ElementType, Double>> = mutableListOf()
+    var elementDeltas = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
+    var elementRates = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
+    var elementDeltasUnspent = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
     var lastTickDt = 0.0
 
     fun resetDeltas() {
-        elementDeltasUnspent = elementDeltas
+        Elements.values.forEach {
+            elementDeltasUnspent[it] = elementDeltas[it]
+        }
     }
 }
 

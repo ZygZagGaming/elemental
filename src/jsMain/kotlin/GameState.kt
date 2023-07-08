@@ -19,7 +19,7 @@ class GameState {
 
         clickersById.values.forEach { if (DynamicHTMLManager.shownPage == Pages.id(it.page)) it.tick(dt) }
 
-        Stats.elementAmounts.deduct(Elements.heat.withCount(Stats.elementAmounts[Elements.heat] * 0.1 * dt * Stats.gameSpeed))
+        Stats.elementAmounts[Elements.heat] *= (1 - 0.1 * dt * Stats.gameSpeed)
         if (!offline) {
             for ((key, value) in incoming) Stats.elementAmounts[key] = min(
                 Stats.functionalElementUpperBounds[key], max(
@@ -30,13 +30,13 @@ class GameState {
         }
         if ((timeSpent - dt).mod(timeBetweenRateTicks) > timeSpent.mod(timeBetweenRateTicks) || offline) {
             if (!offline) Elements.values.forEach {
-                Stats.elementRates[it] = (Stats.elementAmounts[it] - Stats.elementAmountsCached.first()[it]) / (timeBetweenRateTicks * 16)
+                Stats.elementRates[it] = (Stats.elementAmounts[it] - (Stats.elementAmountsCached.first()[it] ?: 0.0)) / (timeBetweenRateTicks * 16)
                 Stats.elementDeltas[it] = max(
                     Stats.elementDeltas[it],
                     Stats.elementRates[it]
                 )
             }
-            Stats.elementAmountsCached.add(Stats.elementAmounts.copy())
+            Stats.elementAmountsCached.add(Stats.elementAmounts.asMap)
             if (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()
         }
         incoming = defaultMutableStack
@@ -50,7 +50,9 @@ class GameState {
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
-            Stats.elementAmounts.deduct(reaction.multipliedInputs)
+            Elements.values.forEach {
+                Stats.elementAmounts[it] -= reaction.multipliedInputs[it]
+            }
             incoming.add(reaction.multipliedOutputs)
             if (reaction is SpecialReaction) reaction.execute()
         }

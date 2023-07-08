@@ -16,7 +16,7 @@ lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
-const val gameVersion = "v1.1.0"
+const val gameVersion = "v1.1.1"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -40,60 +40,92 @@ fun loadGame() {
     GameTimer.registerTicker("HTML updates") {
         val prefix = notation.prefix
         val suffix = notation.suffix
-        for ((name, element) in Elements.map) {
-            val symbol = element.symbol
-            DynamicHTMLManager.setVariable(
-                "element-$symbol-amount",
-                "${if (element.isDecimal) Stats.elementAmounts[element].roundTo(2) else floor(Stats.elementAmounts[element])}"
-            )
-            DynamicHTMLManager.setVariable(
-                "$symbol-amount-display",
-                "$symbol = ${floor(Stats.elementAmounts[element])}"
-            )
-            DynamicHTMLManager.setVariable(
-                "$symbol-bounds-display",
-                "${Stats.functionalElementLowerBounds[element].roundTo(2)} ≤ $symbol ≤ ${Stats.functionalElementUpperBounds[element].roundTo(2)}"
-            )
-            DynamicHTMLManager.setVariable(
-                "$symbol-rate-display",
-                "current $symbol / s = ${Stats.elementRates[element].roundTo(2)}"
-            )
-            DynamicHTMLManager.setVariable(
-                "$symbol-max-rate-display",
-                "$prefix$symbol$suffix = ${Stats.elementDeltas[element].roundTo(2)}"
-            )
-        }
+        DynamicHTMLManager.apply {
+            for ((name, element) in Elements.map) {
+                val symbol = element.symbol
+                if (Stats.elementAmounts.changed(element)) {
+                    val displayText =
+                        "${if (element.isDecimal) Stats.elementAmounts[element].roundTo(2) else floor(Stats.elementAmounts[element])}"
+                    setVariable(
+                        "element-$symbol-amount",
+                        displayText
+                    )
+                    setVariable(
+                        "$symbol-amount-display",
+                        "$symbol = $displayText"
+                    )
+                    Stats.elementAmounts.clearChanged(element)
+                }
+                if (Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(element)) {
+                    setVariable(
+                        "$symbol-bounds-display",
+                        "${Stats.functionalElementLowerBounds[element].roundTo(2)} ≤ $symbol ≤ ${
+                            Stats.functionalElementUpperBounds[element].roundTo(
+                                2
+                            )
+                        }"
+                    )
+                    Stats.functionalElementLowerBounds.clearChanged(element)
+                    Stats.functionalElementUpperBounds.clearChanged(element)
+                }
+                if (Stats.elementRates.changed(element)) {
+                    setVariable(
+                        "$symbol-rate-display",
+                        "current $symbol / s = ${Stats.elementRates[element].roundTo(2)}"
+                    )
+                    Stats.elementRates.clearChanged(element)
+                }
+                if (Stats.elementDeltas.changed(element)) {
+                    setVariable(
+                        "$symbol-max-rate-display",
+                        "$prefix$symbol$suffix = ${Stats.elementDeltas[element].roundTo(2)}"
+                    )
+                    Stats.elementDeltas.clearChanged(element)
+                }
+            }
 
-        for ((id, keybind) in Input.keybinds) {
-            DynamicHTMLManager.setVariable(
-                "keybind-$id-key",
-                keybind.key.key
-            )
-        }
+            for ((id, keybind) in Input.keybinds) {
+                setVariable(
+                    "keybind-$id-key",
+                    keybind.key.key
+                )
+            }
 
-        for ((id, clicker) in gameState.clickersById) {
-            DynamicHTMLManager.setVariable(
-                "clicker-$id-mode",
-                clicker.mode.pretty
-            )
-        }
+            for ((id, clicker) in gameState.clickersById) {
+                setVariable(
+                    "clicker-$id-mode",
+                    clicker.mode.pretty
+                )
+            }
 
-        for ((i, entry) in NormalReactions.map.entries.withIndex()) {
-            val (backendId, reaction) = entry
-            DynamicHTMLManager.setVariable("reaction-$i-title", reaction.name)
-            DynamicHTMLManager.setVariable("reaction-$i-description", reaction.toString())
-            DynamicHTMLManager.idSetClassPresence("reaction-option-$i", "disabled", !gameState.canDoReaction(reaction))
-            DynamicHTMLManager.idSetDataVariable("reaction-option-$i", "backendReactionId", backendId)
-        }
+            for ((i, entry) in NormalReactions.map.entries.withIndex()) {
+                val (backendId, reaction) = entry
+                setVariable("reaction-$i-title", reaction.name)
+                setVariable("reaction-$i-description", reaction.toString())
+                idSetClassPresence(
+                    "reaction-option-$i",
+                    "disabled",
+                    !gameState.canDoReaction(reaction)
+                )
+                idSetDataVariable("reaction-option-$i", "backendReactionId", backendId)
+            }
 
-        for ((i, entry) in SpecialReactions.map.entries.withIndex()) {
-            val (backendId, reaction) = entry
-            DynamicHTMLManager.setVariable("special-reaction-$i-title", reaction.name)
-            DynamicHTMLManager.setVariable("special-reaction-$i-description", reaction.toString())
-            DynamicHTMLManager.setVariable("special-reaction-$i-effects", reaction.stringEffects(reaction.nTimesUsed + 1))
-            DynamicHTMLManager.idSetClassPresence("special-reaction-option-$i", "disabled", !gameState.canDoReaction(reaction) && !reaction.hasBeenUsed)
-            DynamicHTMLManager.idSetClassPresence("special-reaction-option-$i", "active", reaction.hasBeenUsed)
-            DynamicHTMLManager.idSetDataVariable("special-reaction-option-$i", "backendReactionId", backendId)
+            for ((i, entry) in SpecialReactions.map.entries.withIndex()) {
+                val (backendId, reaction) = entry
+                setVariable("special-reaction-$i-title", reaction.name)
+                setVariable("special-reaction-$i-description", reaction.toString())
+                setVariable(
+                    "special-reaction-$i-effects",
+                    reaction.stringEffects(reaction.nTimesUsed + 1)
+                )
+                idSetClassPresence(
+                    "special-reaction-option-$i",
+                    "disabled",
+                    !gameState.canDoReaction(reaction) && !reaction.hasBeenUsed
+                )
+                idSetClassPresence("special-reaction-option-$i", "active", reaction.hasBeenUsed)
+                idSetDataVariable("special-reaction-option-$i", "backendReactionId", backendId)
+            }
         }
 
         doCircleShit()

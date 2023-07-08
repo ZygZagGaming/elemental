@@ -1,8 +1,8 @@
 open class Reaction(val name: String) {
     open var inputs: ElementStack = defaultStack.toDefaultedMap(0.0)
     open var outputs: ElementStack = defaultStack.toDefaultedMap(0.0)
-    val multipliedInputs get() = inputs.entries.associate { (k, v) -> k to v * Stats.reactionEfficiencies[this] }.toDefaultedMap(0.0)
-    val multipliedOutputs get() = outputs.entries.associate { (k, v) -> k to v * Stats.elementMultipliers[k] * Stats.reactionEfficiencies[this] }.toDefaultedMap(0.0)
+    val multipliedInputs get() = inputs.toDefaultedMap(0.0)
+    val multipliedOutputs get() = outputs.entries.associate { (k, v) -> k to v * Stats.elementMultipliers[k] }.toDefaultedMap(0.0)
 
     companion object {
         operator fun invoke(name: String, inputs: ElementStack, outputs: ElementStack) = object : Reaction(name) {

@@ -11,6 +11,10 @@ interface Indexable<K, V> {
     operator fun get(key: K): V
 }
 
+interface MutableIndexable<K, V>: Indexable<K, V> {
+    operator fun set(key: K, value: V)
+}
+
 open class Keybind(val id: String, var key: Key, var down: (Double) -> Unit = { }, var up: (Double) -> Unit = { }, var tickDown: (Double, Double, Int) -> Unit) {
     val keyDown get() = Input.keyDownMap[key]
     val keyHoldLength get() = Input.keyHeldTimeMap[key]
