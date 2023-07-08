@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.8.20"
+    kotlin("multiplatform") version "1.9.0"
 }
 
 group = "com.zygzag"
@@ -7,21 +7,35 @@ version = "0.0.1"
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
 }
 
 kotlin {
     js(IR) {
         binaries.executable()
         browser {
-            commonWebpackConfig {
+            commonWebpackConfig(Action {
                 cssSupport {
                     enabled.set(true)
                 }
                 output?.libraryTarget = "umd"
+            } )
+        }
+
+        sourceSets {
+            val jsTest by getting {
+                dependencies {
+                    implementation(kotlin("test"))
+                }
+            }
+            val jsMain by getting {
+                dependencies {
+                    val kotlinxHtmlVersion = "0.9.0"
+                    implementation("org.jetbrains.kotlinx:kotlinx-html-js:$kotlinxHtmlVersion")
+                }
             }
         }
     }

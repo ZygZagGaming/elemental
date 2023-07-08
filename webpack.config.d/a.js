@@ -1,3 +1,5 @@
+var webpack = require('webpack');
+
 config.devtool = false;
 config.performance = {
     hints: false,
@@ -7,3 +9,5 @@ config.performance = {
 config.optimization = {
     minimize: false
 };
+
+config.plugins.push(new webpack.debug.ProfilingPlugin());

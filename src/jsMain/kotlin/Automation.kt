@@ -7,40 +7,8 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class Autoclicker(id: Int, page: Page, var cps: Double = 1.0): Clicker(id, page) {
-    override fun tick(dt: Double) {
-        if (!docked) clickPercent += dt * cps
-        super.tick(dt)
-    }
-}
-
-class Keyclicker(id: Int, page: Page, var key: Key): Clicker(id, page) {
-    val heldCps = 6.0
-    lateinit var text: HTMLElement
-    override fun tick(dt: Double) {
-        if (!docked) {
-            if (Input.keyPressedThisTick[key]) clickPercent = 1.0
-            else if (Input.keyDownMap[key]) clickPercent += heldCps * dt
-        }
-        super.tick(dt)
-    }
-
-    override fun init() {
-        super.init()
-        text = document.createElement("div") as HTMLElement
-        text.id = "clicker-$id-text"
-        text.textContent = key.key
-        text.classList.add("clicker-text")
-        canvasParent.appendChild(text)
-    }
-
-    override fun deInit() {
-        super.deInit()
-        text.remove()
-    }
-}
-
-open class Clicker(val id: Int, val page: Page) {
+class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: Double, val heldCps: Double) {
+    val cps get() = if (mode == ClickerMode.MANUAL) heldCps else autoCps
     var clickPercent = 0.0
     lateinit var htmlElement: HTMLElement
     lateinit var canvas: HTMLCanvasElement
@@ -54,16 +22,20 @@ open class Clicker(val id: Int, val page: Page) {
     set(value) {
         htmlElement.dataset["docked"] = value.toString()
     }
+    lateinit var text: HTMLElement
+    val modesUnlocked = defaultModes.toMutableSet()
 
-    open fun deInit() {
+    fun deInit() {
         htmlElement.remove()
         canvas.remove()
         canvasParent.remove()
         dock.remove()
         dockCanvas.remove()
+        text.remove()
+        Input.removeKeybind("keyclicker-$id")
     }
 
-    open fun init() {
+    fun init() {
         val parent = DynamicHTMLManager.getPageElement(page)!!
         htmlElement = document.createElement("div") as HTMLElement
         canvasParent = document.createElement("div") as HTMLElement
@@ -76,11 +48,13 @@ open class Clicker(val id: Int, val page: Page) {
             width = vw(3.0).roundToInt()
             height = vw(3.0).roundToInt()
             style.position = "relative"
+            dataset["autoclickerId"] = this@Clicker.id.toString()
             classList.add("no-autoclick")
         }
         canvasParent.apply {
             style.position = "absolute"
             classList.add("no-autoclick")
+            dataset["autoclickerId"] = this@Clicker.id.toString()
         }
         htmlElement.apply {
             classList.apply {
@@ -90,6 +64,7 @@ open class Clicker(val id: Int, val page: Page) {
                 add("no-autoclick")
             }
             id = "autoclicker-${this@Clicker.id}"
+            dataset["autoclickerId"] = this@Clicker.id.toString()
             style.apply {
                 position = "absolute"
                 top = "50vh"
@@ -116,9 +91,30 @@ open class Clicker(val id: Int, val page: Page) {
                 height = vw(3.0).roundToInt()
                 style.position = "absolute"
                 classList.add("no-autoclick")
+                dataset["autoclickerId"] = this@Clicker.id.toString()
             }
+            dataset["autoclickerId"] = this@Clicker.id.toString()
         }
+        text = document.createElement("div") as HTMLElement
+        text.id = "clicker-$id-text"
+        text.textContent = id.toString()
+        text.classList.add("clicker-text")
+        text.dataset["autoclickerId"] = this@Clicker.id.toString()
+        canvasParent.appendChild(text)
+
+        if (mode == ClickerMode.MANUAL) canvasParent.classList.add("keyclicker")
+        Input.addKeybind(KeyclickerKeybind(this))
     }
+
+    fun setMode(newMode: ClickerMode) {
+        if (newMode == ClickerMode.MANUAL) {
+            canvasParent.classList.add("keyclicker")
+        } else if (newMode == ClickerMode.AUTO) {
+            canvasParent.classList.remove("keyclicker")
+        }
+        mode = newMode
+    }
+
     fun click() {
         //console.log(document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().yMiddle))
         val element = document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().top).firstOrNull { !it.classList.contains("no-autoclick") }
@@ -127,7 +123,8 @@ open class Clicker(val id: Int, val page: Page) {
         }
     }
 
-    open fun tick(dt: Double) {
+    fun tick(dt: Double) {
+        if (!docked && mode == ClickerMode.AUTO) clickPercent += dt * cps
         if (!docked) {
             timeSinceLastClick += dt
             while (clickPercent > 1) {
@@ -184,3 +181,11 @@ open class Clicker(val id: Int, val page: Page) {
         }
     }
 }
+
+enum class ClickerMode(val pretty: String) {
+    AUTO("Auto"),
+    MANUAL("Manual")
+}
+
+typealias ModesUnlocked = MutableSet<ClickerMode>
+val defaultModes: ModesUnlocked get() = mutableSetOf(ClickerMode.MANUAL)
