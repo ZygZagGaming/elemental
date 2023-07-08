@@ -144,7 +144,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             {
                 elementStackOf(
                     Elements.d to 8.0 * it.squared(),
-                    Elements.heat to 2.0 * (it + 1).squared()
+                    Elements.heat to 2.0 * (it + 2).squared()
                 )
             },
             effects = {
