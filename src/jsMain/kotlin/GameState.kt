@@ -30,7 +30,7 @@ class GameState {
         }
         if ((timeSpent - dt).mod(timeBetweenRateTicks) > timeSpent.mod(timeBetweenRateTicks) || offline) {
             if (!offline) Elements.values.forEach {
-                Stats.elementRates[it] = (Stats.elementAmounts[it] - (Stats.elementAmountsCached.first()[it] ?: 0.0)) / (timeBetweenRateTicks * 16)
+                Stats.elementRates[it] = (Stats.elementAmounts[it] - (Stats.elementAmountsCached.firstOrNull()?.get(it) ?: 0.0)) / (timeBetweenRateTicks * 16)
                 Stats.elementDeltas[it] = max(
                     Stats.elementDeltas[it],
                     Stats.elementRates[it]

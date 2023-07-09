@@ -473,12 +473,20 @@ object Stats {
     var elementRates = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
     var elementDeltasUnspent = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
     var lastTickDt = 0.0
+    val flags = mutableSetOf<String>()
 
     fun resetDeltas() {
         Elements.values.forEach {
             elementDeltasUnspent[it] = elementDeltas[it]
         }
     }
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun setElementAmount(elementId: String, amount: Double) {
+    val element = Elements.map[elementId]
+    if (element != null) Stats.elementAmounts[element] = amount
 }
 
 open class DefaultedMap<K, V>(private val backingMap: Map<K, V>, val defaultValue: V): Map<K, V> {
@@ -589,6 +597,7 @@ fun saveLocalStorage() {
         localStorage["elementDeltas"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltas[v]}" }.joinToString(separator = ",")
         localStorage["elementDeltasUnspent"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltasUnspent[v]}" }.joinToString(separator = ",")
         localStorage["autoclickerSettings"] = gameState.clickersById.map { (id, clicker) -> "${id}:(${clicker.mode},${Input.keybinds["keyclicker-$id"]!!.key.key})" }.joinToString(separator = ";")
+        localStorage["flags"] = Stats.flags.joinToString(separator = ",")
     }
 }
 
@@ -648,6 +657,7 @@ fun loadLocalStorage() {
                     }
                 }
             }
+            Stats.flags.addAll(localStorage["flags"].split(','))
         }
     }
 }
@@ -663,4 +673,65 @@ object Pages: Library<Page>() {
     val elementsPage = register("elements", Page("Elements"))
     val optionsPage = register("options", Page("Options"))
     val capsPage = register("duality", Page("Duality"))
+}
+
+object TutorialPages: Library<TutorialPage>() {
+    val titleScreenPage = register(
+        "titleScreenPage",
+        ImageTitleTutorialPage(
+            image = "images/goober.png",
+            imageAlt = "goober",
+            titleText = "Elemental",
+            subTitleText = "Made by ZygZag"
+        )
+    )
+    val elementsPage = register(
+        "elementsPage",
+        ImageTextTutorialPage(
+            image = "images/elements.png",
+            imageAlt = "elements",
+            headerText = "Elements",
+            text = "These are your Elements. Most Elements have a bubble showing the Element's symbol and count. You can right-click on Element bubbles to show additional information like bounds and rates."
+        )
+    )
+    val reactionsPage = register(
+        "reactionsPage",
+        ImageTextTutorialPage(
+            image = "images/normalreactions.png",
+            imageAlt = "goober",
+            headerText = "Reactions",
+            text = "These are your Normal Reactions. Each one shows the Elements they consume on the left of the arrow, and the Elements they produce on the right. Normal Reactions can be used as many times as you can afford."
+        )
+    )
+    val specialReactionsPage = register(
+        "specialReactionsPage",
+        ImageTextTutorialPage(
+            image = "images/specialreactions.png",
+            imageAlt = "goober",
+            headerText = "Special Reactions",
+            text = "These are your Special Reactions. They consume and produce Elements like Normal Reactions, but also have an alternative effect. Special Reactions' cost and effect usually increase each time they are used."
+        )
+    )
+    val heatPage = register(
+        "heatPage",
+        ImageTextTutorialPage(
+            image = "images/heat.png",
+            imageAlt = "goober",
+            headerText = "Heat",
+            text = "Heat (h) is an Element that is shown visually around the ϟ bubble. Unlike other elements, heat dissipates over time, and has a maximum of 10h. You cannot use reactions that would take you over the maximum."
+        )
+    )
+}
+
+object Tutorials: Library<Tutorial>() {
+    val welcome = register(
+        "welcome",
+        listOf(
+            TutorialPages.titleScreenPage,
+            TutorialPages.elementsPage,
+            TutorialPages.reactionsPage,
+            TutorialPages.specialReactionsPage,
+            TutorialPages.heatPage
+        )
+    )
 }

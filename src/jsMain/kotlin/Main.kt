@@ -16,7 +16,7 @@ lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
-const val gameVersion = "v1.1.3"
+const val gameVersion = "v1.2.0"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -218,6 +218,20 @@ fun loadGame() {
     }
     GameTimer.registerTicker("gameState tick", gameState::tick)
     GameTimer.beginTicking()
+
+    val tutorialWrapper = document.getElementById("tutorial-box-wrapper")!!
+    tutorialWrapper.addEventListener("click", {
+        DynamicHTMLManager.clearTutorial()
+        if (DynamicHTMLManager.currentTutorial == Tutorials.welcome) Stats.flags.add("seenTutorial")
+    })
+    val tutorialBox = document.getElementById("tutorial-box")!!
+    tutorialBox.addEventListener("click", {
+        it.stopPropagation()
+    })
+
+    if ("seenTutorial" !in Stats.flags) {
+        DynamicHTMLManager.showTutorial(Tutorials.welcome)
+    }
 }
 
 fun getAlchemyElementPos(symbol: Char): Vec2 {

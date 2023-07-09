@@ -158,6 +158,23 @@ object DynamicHTMLManager {
         }
     }
     val info get() = document.getElementById("info-container")!!
+
+    var currentTutorial: Tutorial? = null
+    var currentTutorialPage: Int? = null
+    fun showTutorial(tutorial: Tutorial, page: Int = 0) {
+        val tutorialBox = document.getElementById("tutorial-box")!!
+        tutorialBox.parentElement!!.classList.remove("hidden")
+        js("tutorialBox.replaceChildren()")
+        tutorialBox.appendChild(tutorial.getAsHTML(page))
+        currentTutorial = tutorial
+        currentTutorialPage = page
+    }
+
+    fun clearTutorial() {
+        val tutorialBox = document.getElementById("tutorial-box")!!
+        tutorialBox.parentElement!!.classList.add("hidden")
+        js("tutorialBox.replaceChildren()")
+    }
 }
 
 val Int.px get() = "${this}px"

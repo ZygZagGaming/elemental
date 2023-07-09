@@ -236,6 +236,7 @@ body {
     border-color: white;
     border-top-style: solid;
     overflow: hidden;
+    z-index: 1;
 }
 
 .navbar-element, #options-button {
@@ -275,8 +276,14 @@ body {
 .page {
     width: 100vw;
     height: 100vh;
+    top: 0;
+    left: 0;
     z-index: -2;
     position: absolute;
+}
+
+.page:not(.hidden) {
+    display: inline-block;
 }
 
 .page-button > .page-text {
@@ -461,4 +468,125 @@ canvas {
 #context-menu > div.horizontal-line {
     height: 0.25vw;
     background-image: linear-gradient(0.25turn, #7a7b7a, white 40%, white 60%, #7a7b7a)
+}
+
+#tutorial-box {
+  background-color: #44d;
+  height: 85vmin;
+  width: 100vmin;
+  border-radius: 7vmin;
+  border-style: solid;
+  border-width: 0.5vmin;
+  border-color: #99e;
+  box-shadow: 0 0 3vmin #99e;
+  margin: auto;
+  position: absolute;
+}
+
+.tutorial-image {
+  position: absolute;
+  width: 80vmin;
+  height: 45vmin;
+  left: 9.75vmin;
+  top: 9.75vmin;
+  border-radius: 2vmin;
+  border-style: solid;
+  border-width: 0.5vmin;
+  border-color: #99e;
+  box-shadow: 0 0 1vmin #99e;
+}
+
+.tutorial-title, .tutorial-subtitle, .tutorial-header, .tutorial-text {
+  text-align: center;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.tutorial-title, .tutorial-subtitle, .tutorial-header {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.tutorial-subtitle {
+  top: 70vmin;
+  font-size: 5vmin;
+  text-shadow: 0 0 1vmin #88e;
+  color: #88e;
+}
+
+.tutorial-title {
+  top: 57.5vmin;
+  font-size: 7.5vmin;
+  text-shadow: 0 0 1.5vmin #bbf;
+  color: #bbf;
+}
+
+
+.tutorial-subtitle {
+  top: 70vmin;
+  font-size: 5vmin;
+  text-shadow: 0 0 1vmin #88e;
+  color: #88e;
+}
+
+.tutorial-header {
+  top: 57vmin;
+  font-size: 5vmin;
+  text-shadow: 0 0 1vmin #bbf;
+  color: #bbf;
+}
+
+.tutorial-text {
+  top: 65vmin;
+  font-size: 3vmin;
+  text-shadow: 0 0 1vmin #88e;
+  color: #99e;
+  position: absolute;
+  left: 7.5%;
+  width: 85%;
+}
+
+#tutorial-box-wrapper {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, .7);
+  position: absolute;
+  z-index: 2;
+}
+
+#tutorial-box-wrapper:not(.hidden) {
+  display: flex;
+}
+
+.left-arrow, .right-arrow {
+  width: 7vmin;
+  height: 7vmin;
+  position: absolute;
+  top: 37.5vmin;
+  cursor: pointer;
+  -webkit-filter: drop-shadow(0 0 0.5vmin #fff);
+  filter: drop-shadow(0 0 0.5vmin #fff);
+}
+
+.right-arrow {
+  right: 1.5vmin;
+}
+
+.left-arrow {
+  left: 1.5vmin;
+}
+
+.tutorial-x {
+  width: 4vmin;
+  height: 4vmin;
+  top: 4vmin;
+  right: 4vmin;
+  position: absolute;
+  cursor: pointer;
+  -webkit-filter: drop-shadow(0 0 0.5vmin #fff);
+  filter: drop-shadow(0 0 0.5vmin #fff);
 }
