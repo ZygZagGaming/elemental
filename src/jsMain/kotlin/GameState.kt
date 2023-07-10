@@ -31,10 +31,12 @@ class GameState {
         if ((timeSpent - dt).mod(timeBetweenRateTicks) > timeSpent.mod(timeBetweenRateTicks) || offline) {
             if (!offline) Elements.values.forEach {
                 Stats.elementRates[it] = (Stats.elementAmounts[it] - (Stats.elementAmountsCached.firstOrNull()?.get(it) ?: 0.0)) / (timeBetweenRateTicks * 16)
+                val old = Stats.elementDeltas[it]
                 Stats.elementDeltas[it] = max(
                     Stats.elementDeltas[it],
                     Stats.elementRates[it]
                 )
+                Stats.elementDeltasUnspent[it] += Stats.elementDeltas[it] - old
             }
             Stats.elementAmountsCached.add(Stats.elementAmounts.asMap)
             if (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()

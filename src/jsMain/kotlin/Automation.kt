@@ -104,10 +104,6 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
 
         if (mode == ClickerMode.MANUAL) canvasParent.classList.add("keyclicker")
         Input.addKeybind(KeyclickerKeybind(this))
-
-        GameTimer.nextTick {
-            moveToDock(true)
-        }
     }
 
     fun setMode(newMode: ClickerMode) {

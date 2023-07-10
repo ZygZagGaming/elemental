@@ -158,8 +158,12 @@ fun drawClickerToCanvas(canvas: HTMLCanvasElement, size: Double, animationProgre
 }
 
 fun elementsPageVisuals(gameState: GameState) {
-    val alchemyContainers = document.getElementsByClassName("alchemy-container")
-    for (alchemyContainer in alchemyContainers) alchemyContainerVisuals(gameState, alchemyContainer)
+    document.getElementById("elements-alchemy-container")!!.also { alchemyContainerVisuals(gameState, it as HTMLElement) }
+    for (clicker in gameState.clickersById.values) clickerVisuals(clicker)
+}
+
+fun dualityPageVisuals(gameState: GameState) {
+    document.getElementById("delta-alchemy-container")!!.also { alchemyContainerVisuals(gameState, it as HTMLElement) }
     for (clicker in gameState.clickersById.values) clickerVisuals(clicker)
 }
 

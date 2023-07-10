@@ -57,7 +57,13 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = {
                 when (it) {
                     1 -> {
-                        repeat(5) { n -> gameState.addClicker(Clicker(n + 1, Pages.elementsPage, ClickerMode.MANUAL, 4.0, 6.0)) }
+                        repeat(5) { n ->
+                            val clicker = Clicker(n + 1, Pages.elementsPage, ClickerMode.MANUAL, 4.0, 6.0)
+                            gameState.addClicker(clicker)
+                            GameTimer.nextTick {
+                                clicker.moveToDock(true)
+                            }
+                        }
                     }
                     2 -> {
                         gameState.clickersById[1]!!.modesUnlocked.add(ClickerMode.AUTO)
@@ -390,7 +396,7 @@ interface MutableStatMap<K, V>: StatMap<K, V>, MutableIndexable<K, V>
 open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val defaultValue: V): MutableStatMap<K, V> {
     private val backingMap = backingMap.toMutableMap()
     private val changedSet = mutableSetOf<K>()
-    val asMap get() = backingMap
+    val asMap get() = backingMap.toMap()
 
     override fun get(key: K): V = backingMap[key] ?: defaultValue
     override fun set(key: K, value: V) {
@@ -626,12 +632,13 @@ fun loadLocalStorage() {
             gameState.clickersById.forEach { (id, it) ->
                 val pos = positions[id]
                 if (pos != null) {
-                    console.log(pos.first)
-                    it.htmlElement.style.left = pos.first
-                    it.htmlElement.style.top = pos.second
-                    it.docked = false
-                    it.canvasParent.style.left = pos.first
-                    it.canvasParent.style.top = pos.second
+                    GameTimer.nextTick { _ ->
+                        it.docked = false
+                        it.htmlElement.style.left = pos.first
+                        it.htmlElement.style.top = pos.second
+                        it.canvasParent.style.left = pos.first
+                        it.canvasParent.style.top = pos.second
+                    }
                 } else {
                     it.moveToDock(force = true)
                 }
@@ -672,7 +679,7 @@ data class Page(val name: String)
 object Pages: Library<Page>() {
     val elementsPage = register("elements", Page("Elements"))
     val optionsPage = register("options", Page("Options"))
-    val capsPage = register("duality", Page("Duality"))
+    val dualityPage = register("duality", Page("Duality"))
 }
 
 object TutorialPages: Library<TutorialPage>() {

@@ -16,7 +16,7 @@ lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
-const val gameVersion = "v1.2.0"
+const val gameVersion = "v1.2.1"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -85,6 +85,13 @@ fun loadGame() {
                         "$prefix$symbol$suffix = ${Stats.elementDeltas[element].roundTo(2)}"
                     )
                     Stats.elementDeltas.clearChanged(element)
+                }
+                if (updateAll || Stats.elementDeltasUnspent.changed(element)) {
+                    setVariable(
+                        "delta-$symbol-amount",
+                        "${Stats.elementDeltasUnspent[element].roundTo(2)}"
+                    )
+                    Stats.elementDeltasUnspent.clearChanged(element)
                 }
             }
 
