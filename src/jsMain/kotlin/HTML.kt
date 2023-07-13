@@ -1,7 +1,16 @@
 import kotlinx.browser.document
+import kotlinx.html.HTML
+import kotlinx.html.dom.append
+import kotlinx.html.dom.create
+import kotlinx.html.id
+import kotlinx.html.js.div
 import org.w3c.dom.*
 import kotlin.math.floor
 import kotlin.math.roundToInt
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun getDynamicVariable(id: String) = DynamicHTMLManager.variables[id]
 
 object DynamicHTMLManager {
     val variables = mutableMapOf<String, String>()
@@ -126,38 +135,7 @@ object DynamicHTMLManager {
                 }
             }
         }
-
-        if (infoScreen) for (alchemyContainer in document.getElementsByClassName("alchemy-element")) {
-            alchemyContainer.onmouseenter = { _ ->
-                val symbol = (alchemyContainer.dataset["element"] ?: " ")[0]
-                val element = Elements.map.values.associateBy { it.symbol }[symbol]
-                if (element != null) {
-                    val line1 = document.createElement("div")
-                    val line2 = document.createElement("div")
-                    val line3 = document.createElement("div")
-                    line1.textContent = "${element.symbol} = ${
-                        if (element == Elements.heat) Stats.elementAmounts[element].roundTo(2) else floor(
-                            Stats.elementAmounts[element]
-                        )
-                    }"
-                    line2.innerHTML = "${element.capText} = ${Stats.functionalElementUpperBounds[element]}"
-                    line3.innerHTML = "${element.deltaText} = ${Stats.elementDeltas[element]}"
-                    info.appendChild(line1)
-                    info.appendChild(line2)
-                    info.appendChild(line3)
-                }
-                alchemyContainer.onmouseleave = { _ ->
-                    for (child in info.children) info.removeChild(child)
-                    alchemyContainer.onmouseleave = null
-
-                    Unit
-                }
-
-                Unit
-            }
-        }
     }
-    val info get() = document.getElementById("info-container")!!
 
     var currentTutorial: Tutorial? = null
     var currentTutorialPage: Int? = null
@@ -174,6 +152,55 @@ object DynamicHTMLManager {
         val tutorialBox = document.getElementById("tutorial-box")!!
         tutorialBox.parentElement!!.classList.add("hidden")
         js("tutorialBox.replaceChildren()")
+    }
+
+    fun setupHTML() {
+        doCircleShit()
+        run { //navbar
+            val navbar = document.getElementById("navbar")!!
+            var n = 0
+            for (page in Pages.values) if (page != Pages.optionsPage) {
+                n++
+                val text = (document.createElement("div") as HTMLElement).apply {
+                    classList.add("navbar-text", "page-text")
+                }
+                val element = (document.createElement("div") as HTMLElement).apply {
+                    id = "navbar-element-$n"
+                    classList.add("navbar-element", "dynamic", "page-button")
+                    if (page == Pages.elementsPage) classList.add("active")
+                    dataset["pageId"] = Pages.id(page) ?: ""
+                    appendChild(text)
+                }
+                navbar.appendChild(element)
+            }
+        }
+        setupReactionContainerContents(NormalReactions.values.size)
+        setupReactionContainerContents(SpecialReactions.values.size, "special-")
+    }
+
+    fun setupReactionContainerContents(amount: Int, prefix: String = "") {
+        val reactionContainer = document.getElementById("${prefix}reaction-container")!!
+        for (n in 0 until amount) {
+            reactionContainer.append {
+                div("reaction-option no-highlight grey-bkg-style") {
+                    id = "${prefix}reaction-option-$n"
+                    attributes["data-reaction-id"] = "$n"
+                    div("reaction-option-title dynamic") {
+                        attributes["data-dynamic-id"] = "${prefix}reaction-$n-title"
+                    }
+                    div("reaction-option-description-container") {
+                        div("reaction-option-description dynamic") {
+                            attributes["data-dynamic-id"] = "${prefix}reaction-$n-description"
+                        }
+                        if (prefix != "") {
+                            div("reaction-option-description reaction-option-effects dynamic") {
+                                attributes["data-dynamic-id"] = "${prefix}reaction-$n-effects"
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -240,4 +267,3 @@ var HTMLElement.screenHeight
         style.height = value.pxToVh
     }
 val Document.contextMenu get() = document.getElementById("context-menu") as HTMLElement
-val infoScreen = false

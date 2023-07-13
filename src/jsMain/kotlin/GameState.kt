@@ -17,7 +17,7 @@ class GameState {
         lastReaction = hoveredReaction
         timeSpent += dt
 
-        clickersById.values.forEach { if (DynamicHTMLManager.shownPage == Pages.id(it.page)) it.tick(dt) }
+        clickersById.values.forEach { /*if (DynamicHTMLManager.shownPage == Pages.id(it.page))*/ it.tick(dt) }
 
         Stats.elementAmounts[Elements.heat] *= (1 - 0.1 * dt * Stats.gameSpeed)
         if (!offline) {
@@ -28,7 +28,7 @@ class GameState {
                 )
             )
         }
-        if ((timeSpent - dt).mod(timeBetweenRateTicks) > timeSpent.mod(timeBetweenRateTicks) || offline) {
+        if (GameTimer.every(timeBetweenRateTicks, dt) || offline) {
             if (!offline) Elements.values.forEach {
                 Stats.elementRates[it] = (Stats.elementAmounts[it] - (Stats.elementAmountsCached.firstOrNull()?.get(it) ?: 0.0)) / (timeBetweenRateTicks * 16)
                 val old = Stats.elementDeltas[it]
@@ -36,7 +36,7 @@ class GameState {
                     Stats.elementDeltas[it],
                     Stats.elementRates[it]
                 )
-                Stats.elementDeltasUnspent[it] += Stats.elementDeltas[it] - old
+                if (it.isBasic) Stats.elementAmounts[it.delta] += Stats.elementDeltas[it] - old
             }
             Stats.elementAmountsCached.add(Stats.elementAmounts.asMap)
             if (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()

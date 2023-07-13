@@ -71,7 +71,7 @@ body {
 
 .alchemy-element-amount {
     text-align: center;
-    font-size: 0.75vw;
+    font-size: 0.65vw;
     bottom: 0;
 }
 
@@ -142,11 +142,11 @@ body {
     justify-content: center;
 }
 
-#reaction-container {
+#reaction-container, #duality-reaction-container {
     left: 0vw;
 }
 
-#special-reaction-container {
+#special-reaction-container, #delta-reaction-container {
     left: 65vw;
 }
 
@@ -191,16 +191,16 @@ body {
     justify-content: center;
 }
 
-.reaction-option-effects {
-    /*height: 60px;*/
-}
-
 .hidden {
     display: none;
 }
 
-#reaction-container-title {
+#reaction-container-title, #duality-container-title {
     left: 0vw;
+}
+
+#special-container-title, #delta-container-title {
+    left: 65vw;
 }
 
 .reaction-container-title {
@@ -212,14 +212,6 @@ body {
     width: 35vw;
     height: 15vw;
     top: 10px;
-}
-
-#special-container-title {
-    left: 65vw;
-}
-
-#special-reaction-container > .reaction-option .active {
-    cursor: pointer;
 }
 
 #navbar {

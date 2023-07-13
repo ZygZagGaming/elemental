@@ -1,11 +1,6 @@
-@file:Suppress("unused")
-
-import kotlinx.browser.document
-import kotlinx.browser.localStorage
-import kotlinx.browser.window
-import org.w3c.dom.Storage
-import kotlin.js.Date
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
 
 open class Library<T> {
     val map get() = backingMap.toMap()
@@ -22,6 +17,7 @@ open class Library<T> {
     }
 }
 
+@Suppress("unused")
 object SpecialReactions: Library<SpecialReaction>() {
     val clockStarted = register("clock_started",
         SpecialReaction(
@@ -98,14 +94,24 @@ object SpecialReactions: Library<SpecialReaction>() {
             },
             effects = {
                 GameTimer.registerTicker("massiveClockTicker") { dt ->
-                    val multiplier = 0.1 * it + 0.1
-                    val catalysts = max(0.0, min(dt * Stats.gameSpeed * multiplier * Stats.elementAmounts[Elements.d], Stats.functionalElementUpperBounds[Elements.catalyst] * .99 - Stats.elementAmounts[Elements.catalyst]))
+                    val multiplier = 0.15 * it
+                    val catalysts = max(
+                        0.0,
+                        min(
+                            dt * Stats.gameSpeed * multiplier * Stats.elementAmounts[Elements.d],
+                            Stats.functionalElementUpperBounds[Elements.catalyst] * .99 - Stats.elementAmounts[Elements.catalyst]
+                        )
+                    )
                     gameState.incoming.add(elementStackOf(Elements.catalyst to catalysts))
                 }
             },
             stringEffects = {
-                val multiplier = 0.1 * it + 0.1
-                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${(multiplier - 0.1).roundToOneDecimalPlace()} → ${multiplier.roundToOneDecimalPlace()} per second (until 99% of cap)"
+                val multiplier = 0.15 * it
+                "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${
+                    (multiplier - 0.15).roundTo(
+                        2
+                    )
+                } → ${multiplier.roundTo(2)} per second (until 99% of cap)"
             },
             usageCap = 100
         )
@@ -172,7 +178,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             {
                 elementStackOf(
                     Elements.e to 2.0.pow(it),
-                    Elements.b to 500.0 * 4.0.pow(it)
+                    Elements.b to 250.0 * 4.0.pow(it)
                 )
             },
             effects = {
@@ -242,9 +248,6 @@ object SpecialReactions: Library<SpecialReaction>() {
 //        )
 //    )
 }
-
-fun Double.squared() = this * this
-fun Int.squared() = this * this
 
 object NormalReactions: Library<Reaction>() {
     val aToB = register("a_to_b",
@@ -322,15 +325,15 @@ object NormalReactions: Library<Reaction>() {
 //        )
 //    )
     val over900 = register("over900",
-        Reaction(
-            "Over 900",
-            elementStackOf(
-                Elements.b to 901.0,
-            ),
-            elementStackOf(
-                Elements.d to 3.0
-            )
+    Reaction(
+        "Over 900",
+        elementStackOf(
+            Elements.b to 901.0,
+        ),
+        elementStackOf(
+            Elements.d to 3.0
         )
+    )
     )
     val exotherm = register("exotherm",
         Reaction(
@@ -352,15 +355,28 @@ object Elements: Library<ElementType>() {
     val symbolMap get() = values.associateBy { it.symbol }
 
     val catalyst = register("catalyst", ElementType("Catalyst", Symbols.catalyst))
-    val a = register("element_a", ElementType("Element A", Symbols.a))
-    val b = register("element_b", ElementType("Element B", Symbols.b))
-    val c = register("element_c", ElementType("Element C", Symbols.c))
-    val d = register("element_d", ElementType("Element D", Symbols.d))
-    val e = register("element_e", ElementType("Element E", Symbols.e))
-    val f = register("element_f", ElementType("Element F", Symbols.f))
-    val g = register("element_g", ElementType("Element G", Symbols.g))
+    val a = register("element_a", ElementType("A", Symbols.a))
+    val b = register("element_b", ElementType("B", Symbols.b))
+    val c = register("element_c", ElementType("C", Symbols.c))
+    val d = register("element_d", ElementType("D", Symbols.d))
+    val e = register("element_e", ElementType("E", Symbols.e))
+    val f = register("element_f", ElementType("F", Symbols.f))
+    val g = register("element_g", ElementType("G", Symbols.g))
     val heat = register("heat", ElementType("Heat", Symbols.heat, isDecimal = true))
+
+    val deltaCatalyst = register("delta_catalyst", ElementType("Delta Catalyst", "${Symbols.delta}${Symbols.catalyst}"))
+    val deltaA = register("delta_element_a", ElementType("Delta A", "${Symbols.delta}${Symbols.a}"))
+    val deltaB = register("delta_element_b", ElementType("Delta B", "${Symbols.delta}${Symbols.b}"))
+    val deltaC = register("delta_element_c", ElementType("Delta C", "${Symbols.delta}${Symbols.c}"))
+    val deltaD = register("delta_element_d", ElementType("Delta D", "${Symbols.delta}${Symbols.d}"))
+    val deltaE = register("delta_element_e", ElementType("Delta E", "${Symbols.delta}${Symbols.e}"))
+    val deltaF = register("delta_element_f", ElementType("Delta F", "${Symbols.delta}${Symbols.f}"))
+    val deltaG = register("delta_element_g", ElementType("Delta G", "${Symbols.delta}${Symbols.g}"))
+    val deltaHeat = register("delta_heat", ElementType("Delta Heat", "${Symbols.delta}${Symbols.heat}", isDecimal = true))
 }
+
+val ElementType.isBasic get() = symbol.length == 1
+val ElementType.delta get() = Elements.symbolMap["${Symbols.delta}$symbol"]!!
 
 object Symbols: Library<Char>() {
     val catalyst = register("catalyst", 'ϟ')
@@ -372,309 +388,8 @@ object Symbols: Library<Char>() {
     val f = register("f", 'f')
     val g = register("g", 'g')
     val heat = register("heat", 'h')
+    val delta = register("delta", 'Δ')
 }
-
-object Options {
-    var saveInterval = 5.0
-    var saveMode = SaveMode.LOCAL_STORAGE
-    var autoclickerDockSnapDistance = 50.0
-}
-
-interface StatMap<K, V>: Indexable<K, V> {
-    val defaultValue: V
-    fun changed(): Boolean
-    fun changed(key: K): Boolean
-    fun clearChanged(key: K)
-    fun clearChanged()
-    fun clear()
-}
-
-interface MutableStatMap<K, V>: StatMap<K, V>, MutableIndexable<K, V>
-
-
-
-open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val defaultValue: V): MutableStatMap<K, V> {
-    private val backingMap = backingMap.toMutableMap()
-    private val changedSet = mutableSetOf<K>()
-    val asMap get() = backingMap.toMap()
-
-    override fun get(key: K): V = backingMap[key] ?: defaultValue
-    override fun set(key: K, value: V) {
-        if (this[key] != value) {
-            backingMap[key] = value
-            changedSet.add(key)
-        }
-    }
-
-    override fun clearChanged() {
-        changedSet.clear()
-    }
-
-    override fun clearChanged(key: K) {
-        changedSet.remove(key)
-    }
-
-    override fun clear() {
-        backingMap.keys.forEach { backingMap[it] = defaultValue }
-        changedSet.addAll(backingMap.keys)
-    }
-
-    override fun changed(): Boolean = changedSet.isNotEmpty()
-
-    override fun changed(key: K): Boolean = key in changedSet
-}
-
-
-
-class ProductStatMap<K, V>(val a: StatMap<K, V>, val b: StatMap<K, V>, val multiplyFunction: (V, V) -> V): StatMap<K, V> {
-    private operator fun V.times(other: V) = multiplyFunction(this, other)
-    override fun get(key: K): V = a[key] * b[key]
-
-    override val defaultValue: V get() = a.defaultValue * b.defaultValue
-
-
-    override fun changed(): Boolean = a.changed() || b.changed()
-
-    override fun clearChanged() {
-        a.clearChanged()
-        b.clearChanged()
-    }
-
-    override fun clear() {
-        a.clear()
-        b.clear()
-    }
-
-    override fun clearChanged(key: K) {
-        a.clearChanged(key)
-        b.clearChanged(key)
-    }
-
-    override fun changed(key: K): Boolean = a.changed(key) || b.changed(key)
-}
-
-data class SimpleIndexable<K, V>(private val getter: (K) -> V): Indexable<K, V> {
-    override fun get(key: K): V = getter(key)
-}
-
-data class SimpleMutableIndexable<K, V>(private val getter: (K) -> V, private val setter: (K, V) -> Unit): MutableIndexable<K, V> {
-    override fun get(key: K): V = getter(key)
-    override fun set(key: K, value: V) {
-        setter(key, value)
-    }
-}
-
-object Stats {
-    val elementMultipliers = mutableMapOf<ElementType, Double>().toMutableDefaultedMap(1.0)
-    val baseElementUpperBounds = BasicMutableStatMap(mapOf(Elements.catalyst to 100000.0, Elements.heat to 10.0), 1000.0)
-    val elementUpperBoundMultipliers = BasicMutableStatMap<ElementType, Double>(emptyMap(), 1.0)
-    val functionalElementUpperBounds = ProductStatMap(baseElementUpperBounds, elementUpperBoundMultipliers, Double::times)
-    val baseElementLowerBounds = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
-    val elementLowerBoundMultipliers = BasicMutableStatMap<ElementType, Double>(emptyMap(), 1.0)
-    val functionalElementLowerBounds = ProductStatMap(baseElementLowerBounds, elementLowerBoundMultipliers, Double::times)
-    var gameSpeed = 0.0
-    val elementAmounts = BasicMutableStatMap(defaultElements, 0.0)
-    var elementAmountsCached: MutableList<Map<ElementType, Double>> = mutableListOf()
-    var elementDeltas = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
-    var elementRates = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
-    var elementDeltasUnspent = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
-    var lastTickDt = 0.0
-    val flags = mutableSetOf<String>()
-
-    fun resetDeltas() {
-        Elements.values.forEach {
-            elementDeltasUnspent[it] = elementDeltas[it]
-        }
-    }
-}
-
-@OptIn(ExperimentalJsExport::class)
-@JsExport
-fun setElementAmount(elementId: String, amount: Double) {
-    val element = Elements.map[elementId]
-    if (element != null) Stats.elementAmounts[element] = amount
-}
-
-open class DefaultedMap<K, V>(private val backingMap: Map<K, V>, val defaultValue: V): Map<K, V> {
-    override val entries: Set<Map.Entry<K, V>> get() = backingMap.entries
-    override val keys: Set<K> get() = backingMap.keys
-    override val size: Int get() = backingMap.size
-    override val values: Collection<V> get() = backingMap.values
-    override fun isEmpty(): Boolean = backingMap.isEmpty()
-
-    override operator fun get(key: K): V = backingMap[key] ?: defaultValue
-
-    override fun containsValue(value: V): Boolean = backingMap.containsValue(value) || value == defaultValue
-
-    override fun containsKey(key: K): Boolean = backingMap.containsKey(key)
-}
-
-class MutableDefaultedMap<K, V>(private val backingMap: MutableMap<K, V>, defaultValue: V): DefaultedMap<K, V>(backingMap, defaultValue), MutableMap<K, V> {
-    override val entries: MutableSet<MutableMap.MutableEntry<K, V>> get() = backingMap.entries
-    override val keys: MutableSet<K> get() = backingMap.keys
-    override val values: MutableCollection<V> get() = backingMap.values
-
-    override fun clear() {
-        backingMap.clear()
-    }
-
-    override fun remove(key: K): V {
-        val value = this[key]
-        this[key] = defaultValue
-        return value
-    }
-
-    override fun putAll(from: Map<out K, V>) {
-        for (key in from.keys) this[key] = from[key] ?: defaultValue
-    }
-
-    override fun put(key: K, value: V): V {
-        return backingMap.put(key, value) ?: defaultValue
-    }
-
-    fun unmutable(): DefaultedMap<K, V> = toMap().toDefaultedMap(defaultValue)
-}
-
-fun <K, V> Map<K, V>.toDefaultedMap(value: V) = DefaultedMap(this, value)
-fun <K, V> MutableMap<K, V>.toMutableDefaultedMap(value: V) = MutableDefaultedMap(this, value)
-fun <K, V> DefaultedMap<K, V>.toMutableDefaultedMap() = MutableDefaultedMap(toMutableMap(), defaultValue)
-
-fun Double.roundToOneDecimalPlace() = (this * 10).roundToInt() / 10.0
-fun Double.roundTo(places: Int) = (this * 10.0.pow(places)).roundToInt() / 10.0.pow(places)
-
-fun <K, V> defaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mapOf(*values).toDefaultedMap(defaultValue)
-fun <K, V> mutableDefaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mutableMapOf(*values).toMutableDefaultedMap(defaultValue)
-fun elementStackOf(vararg values: Pair<ElementType, Double>, defaultValue: Double = 0.0): ElementStack = defaultedMapOf(defaultValue, *values)
-
-operator fun ElementStack.plus(other: ElementStack): ElementStack = entries.associate { (k, v) -> k to (v + other[k]) }.toDefaultedMap(0.0)
-
-fun Map<ElementType, Double>.toElementStack(): ElementStack = toDefaultedMap(0.0)
-
-fun vh(percent: Double): Double {
-    val h = max(document.documentElement!!.clientHeight, window.innerHeight)
-    return (percent * h) / 100.0
-}
-
-fun vw(percent: Double): Double {
-    val w = max(document.documentElement!!.clientWidth, window.innerWidth)
-    return (percent * w) / 100.0
-}
-
-fun vmin(percent: Double): Double {
-    return min(vh(percent), vw(percent))
-}
-
-fun vmax(percent: Double): Double {
-    return max(vh(percent), vw(percent))
-}
-
-operator fun Storage.set(name: String, value: String) {
-    setItem(name, value)
-}
-
-operator fun Storage.get(name: String): String {
-    return getItem(name) ?: ""
-}
-
-enum class SaveMode {
-    LOCAL_STORAGE
-}
-
-fun save(saveMode: SaveMode = Options.saveMode) {
-    when (saveMode) {
-        SaveMode.LOCAL_STORAGE -> saveLocalStorage()
-    }
-}
-
-fun load(saveMode: SaveMode = Options.saveMode) {
-    when (saveMode) {
-        SaveMode.LOCAL_STORAGE -> loadLocalStorage()
-    }
-}
-
-fun saveLocalStorage() {
-    console.log("Saving game to local storage...")
-    document.apply {
-        localStorage["elementAmts"] = Elements.map.map { (k, v) -> "$k:${Stats.elementAmounts[v]}" }.joinToString(separator = ",")
-        localStorage["reactionAmts"] = SpecialReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
-        localStorage["timestamp"] = Date().toDateString()
-        localStorage["timeSpent"] = gameState.timeSpent.toString()
-        localStorage["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.style.left},${clicker.htmlElement.style.top}"}" }.joinToString(separator = ";")
-        localStorage["elementDeltas"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltas[v]}" }.joinToString(separator = ",")
-        localStorage["elementDeltasUnspent"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltasUnspent[v]}" }.joinToString(separator = ",")
-        localStorage["autoclickerSettings"] = gameState.clickersById.map { (id, clicker) -> "${id}:(${clicker.mode},${Input.keybinds["keyclicker-$id"]!!.key.key})" }.joinToString(separator = ";")
-        localStorage["flags"] = Stats.flags.joinToString(separator = ",")
-    }
-}
-
-fun loadLocalStorage() {
-    console.log("Loading game from local storage...")
-    document.apply {
-        val timestamp = localStorage["timestamp"]
-        if (timestamp != "") {
-            localStorage["reactionAmts"].split(',').forEach {
-                val pair = it.split(':')
-                val reaction = SpecialReactions.map[pair[0]]
-                if (reaction != null) repeat(pair[1].toInt()) { reaction.execute() }
-            }
-            localStorage["elementAmts"].split(',').forEach {
-                val pair = it.split(':')
-                val element = Elements.map[pair[0]]
-                if (element != null) Stats.elementAmounts[element] = pair[1].toDouble()
-            }
-            gameState.timeSpent = localStorage["timeSpent"].toDouble()
-            simulateTime((Date().getUTCMilliseconds() - Date(timestamp).getUTCMilliseconds()) / 1000.0)
-            val positions = localStorage["autoclickerPositions"].split(";").filter { it != "" }.associate {
-                val pair = it.split(":")
-                val pair2 = pair[1].split(",")
-                pair[0].toInt() to (if (pair2.size == 2) pair2[0] to pair2[1] else null)
-            }
-            gameState.clickersById.forEach { (id, it) ->
-                val pos = positions[id]
-                if (pos != null) {
-                    GameTimer.nextTick { _ ->
-                        it.docked = false
-                        it.htmlElement.style.left = pos.first
-                        it.htmlElement.style.top = pos.second
-                        it.canvasParent.style.left = pos.first
-                        it.canvasParent.style.top = pos.second
-                    }
-                } else {
-                    it.moveToDock(force = true)
-                }
-            }
-            localStorage["elementDeltas"].split(',').forEach {
-                val pair = it.split(':')
-                val element = Elements.map[pair[0]]
-                if (element != null) Stats.elementDeltas[element] = pair[1].toDouble()
-            }
-            localStorage["elementDeltasUnspent"].split(',').forEach {
-                val pair = it.split(':')
-                val element = Elements.map[pair[0]]
-                if (element != null) Stats.elementDeltasUnspent[element] = pair[1].toDouble()
-            }
-            localStorage["autoclickerSettings"].split(';').forEach {
-                val pair = it.split(':')
-                if (pair.size == 2) {
-                    val pair2 = pair[1].trim('(', ')').split(',')
-                    val clicker = gameState.clickersById[pair[0].toInt()]
-                    if (clicker != null) {
-                        clicker.setMode(ClickerMode.valueOf(pair2[0]))
-                        Input.keybinds["keyclicker-${pair[0]}"]!!.key = Key(pair2[1])
-                    }
-                }
-            }
-            Stats.flags.addAll(localStorage["flags"].split(','))
-        }
-    }
-}
-
-fun simulateTime(dt: Double) {
-    gameState.tick(dt, offline = true)
-    GameTimer.tick(dt)
-}
-
-data class Page(val name: String)
 
 object Pages: Library<Page>() {
     val elementsPage = register("elements", Page("Elements"))
@@ -742,3 +457,4 @@ object Tutorials: Library<Tutorial>() {
         )
     )
 }
+

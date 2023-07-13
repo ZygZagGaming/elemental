@@ -32,6 +32,17 @@ class SpecialReaction(name: String, val inputsSupplier: (Int) -> ElementStack, v
     }
 }
 
+class MilestoneReaction(
+    name: String,
+    val inputs: ElementStack,
+    val outputs: ElementStack,
+    val effects: () -> Unit,
+    val stringEffects: (Int) -> String = { "" },
+    val usageCap: Int = 1
+) {
+
+}
+
 object NullReaction: Reaction("") {
     override var inputs: ElementStack = defaultStack
     override var outputs: ElementStack = defaultStack

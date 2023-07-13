@@ -55,6 +55,8 @@ object GameTimer {
     fun nextTick(ticker: Ticker) {
         tempTickers += ticker
     }
+
+    fun every(interval: Double, dt: Double) = (gameState.timeSpent - dt).mod(interval) > gameState.timeSpent.mod(interval)
 }
 
 typealias Ticker = (Double) -> Unit

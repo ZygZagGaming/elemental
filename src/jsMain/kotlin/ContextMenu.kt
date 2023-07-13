@@ -62,7 +62,7 @@ object ContextMenu {
                     val actualElementCircle = target.closest(".alchemy-element") as HTMLElement?
                     val autoclickerId = target.dataset["autoclickerId"]?.toIntOrNull()
                     if (actualElementCircle != null) {
-                        val symbol = actualElementCircle.dataset["element"]?.get(0)
+                        val symbol = actualElementCircle.dataset["element"]
                         div("dynamic") {
                             attributes["data-dynamic-id"] = "$symbol-amount-display"
                         }

@@ -115,15 +115,21 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
         mode = newMode
     }
 
+    var hoveredElement: HTMLElement? = null
     fun click() {
-        //console.log(document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().yMiddle))
-        val element = document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().top).firstOrNull { !it.classList.contains("no-autoclick") }
-        if (element is HTMLElement) {
-            element.click()
-        }
+        hoveredElement?.click()
     }
 
+    val recheckHoveringInterval = 1.0
     fun tick(dt: Double) {
+        if (dragging || (DynamicHTMLManager.shownPage == Pages.id(page) && GameTimer.every(
+                recheckHoveringInterval,
+                dt
+            ))
+        ) hoveredElement = document.elementsFromPoint(
+            htmlElement.getBoundingClientRect().xMiddle,
+            htmlElement.getBoundingClientRect().top
+        ).firstOrNull { !it.classList.contains("no-autoclick") } as HTMLElement?
         if (!docked && mode == ClickerMode.AUTO) clickPercent += dt * cps
         if (!docked) {
             timeSinceLastClick += dt
@@ -133,40 +139,43 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
                 timeSinceLastClick = 0.0
             }
         }
-        canvasParent.apply {
-            val pixels = 10000 * dt
-            val dx = htmlElement.screenX - screenX
-            val dy = htmlElement.screenY - screenY
-            val totalDistance = sqrt(dx * dx + dy * dy + 0.0)
-            if (totalDistance > 1e-6) {
-                if (totalDistance < pixels) {
-                    screenX = htmlElement.screenX
-                    screenY = htmlElement.screenY
-                } else {
-                    screenX += dx * pixels / totalDistance
-                    screenY += dy * pixels / totalDistance
+        if (DynamicHTMLManager.shownPage == Pages.id(page)) {
+            canvasParent.apply {
+                val pixels = 10000 * dt
+                val dx = htmlElement.screenX - screenX
+                val dy = htmlElement.screenY - screenY
+                val totalDistance = sqrt(dx * dx + dy * dy + 0.0)
+                if (totalDistance > 1e-6) {
+                    if (totalDistance < pixels) {
+                        screenX = htmlElement.screenX
+                        screenY = htmlElement.screenY
+                    } else {
+                        screenX += dx * pixels / totalDistance
+                        screenY += dy * pixels / totalDistance
+                    }
                 }
+                if (abs(screenWidth - htmlElement.screenWidth) > 0.5) screenWidth = htmlElement.screenWidth
+                if (abs(screenHeight - htmlElement.screenHeight) > 0.5) screenHeight = htmlElement.screenHeight
             }
-            if (abs(screenWidth - htmlElement.screenWidth) > 0.5) screenWidth = htmlElement.screenWidth
-            if (abs(screenHeight - htmlElement.screenHeight) > 0.5) screenHeight = htmlElement.screenHeight
+            canvas.apply {
+                if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
+                if (abs(height - dock.screenHeight) > 0.5) height = dock.screenHeight.roundToInt()
+                if (abs(screenWidth - dock.screenWidth) > 0.5) screenWidth = dock.screenWidth
+                if (abs(screenHeight - dock.screenHeight) > 0.5) screenHeight = dock.screenHeight
+            }
+            dockCanvas.apply {
+                if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
+                if (abs(height - dock.screenHeight) > 0.5) height = dock.screenHeight.roundToInt()
+                if (abs(screenWidth - dock.screenWidth) > 0.5) screenWidth = dock.screenWidth
+                if (abs(screenHeight - dock.screenHeight) > 0.5) screenHeight = dock.screenHeight
+            }
+            if (!dragging && wasDragging) docked = false
+            if (!dragging && !docked
+                && (htmlElement.screenMiddleX - dock.screenMiddleX).squared() + (htmlElement.screenMiddleY - dock.screenMiddleY).squared() <= Options.autoclickerDockSnapDistance.squared()
+            )
+                moveToDock()
+            wasDragging = dragging
         }
-        canvas.apply {
-            if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
-            if (abs(height - dock.screenHeight) > 0.5) height = dock.screenHeight.roundToInt()
-            if (abs(screenWidth - dock.screenWidth) > 0.5) screenWidth = dock.screenWidth
-            if (abs(screenHeight - dock.screenHeight) > 0.5) screenHeight = dock.screenHeight
-        }
-        dockCanvas.apply {
-            if (abs(width - dock.screenWidth) > 0.5) width = dock.screenWidth.roundToInt()
-            if (abs(height - dock.screenHeight) > 0.5) height = dock.screenHeight.roundToInt()
-            if (abs(screenWidth - dock.screenWidth) > 0.5) screenWidth = dock.screenWidth
-            if (abs(screenHeight - dock.screenHeight) > 0.5) screenHeight = dock.screenHeight
-        }
-        if (!dragging && wasDragging) docked = false
-        if (!dragging && !docked
-            && (htmlElement.screenMiddleX - dock.screenMiddleX).squared() + (htmlElement.screenMiddleY - dock.screenMiddleY).squared() <= Options.autoclickerDockSnapDistance.squared())
-            moveToDock()
-        wasDragging = dragging
     }
 
     fun moveToDock(force: Boolean = false) {

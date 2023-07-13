@@ -7,6 +7,7 @@ import kotlin.math.*
 fun visuals(gameState: GameState) {
     when (DynamicHTMLManager.shownPage) {
         "elements" -> elementsPageVisuals(gameState)
+        "duality" -> dualityPageVisuals(gameState)
     }
 }
 
@@ -40,40 +41,49 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
         }
         stroke()
 
-        val k = 0.5
-        val angle = graphicalHeatAmount * 2 * PI
-        val strokeWidth = vw(0.75)
-        if (Stats.elementAmounts[Elements.heat] <= 1e-6) {
-            lineWidth = strokeWidth
-            beginPath()
-            strokeStyle = "#cccccc"
-            arc(half, half, elementRadius + strokeWidth / 2, 0.0, 2 * PI)
-            stroke()
-        } else {
-            val big = graphicalHeatAmount > 0.75
-            lineWidth = strokeWidth * (if (big) 3.0 / 2 else 1.0)
-            beginPath()
-            strokeStyle = if (big) createRadialGradient(half, half, elementRadius, half, half, elementRadius + strokeWidth * 3 / 2 - 2).apply {
-                addColorStop(0.0, "rgba(255, 0, 0, 1)")
-                addColorStop(0.66, "rgba(255, 0, 0, 1)")
-                addColorStop(1.0, "rgba(255, 0, 0, 0)")
-            } else "#ff0000"
-            arc(half, half, elementRadius + strokeWidth * (if (big) 1.5 else 1.0) / 2, k * PI, k * PI + angle)
-            stroke()
+        if (DynamicHTMLManager.shownPage == Pages.id(Pages.elementsPage)) {
+            val k = 0.5
+            val angle = graphicalHeatAmount * 2 * PI
+            val strokeWidth = vw(0.75)
+            if (Stats.elementAmounts[Elements.heat] <= 1e-6) {
+                lineWidth = strokeWidth
+                beginPath()
+                strokeStyle = "#cccccc"
+                arc(half, half, elementRadius + strokeWidth / 2, 0.0, 2 * PI)
+                stroke()
+            } else {
+                val big = graphicalHeatAmount > 0.75
+                lineWidth = strokeWidth * (if (big) 3.0 / 2 else 1.0)
+                beginPath()
+                strokeStyle = if (big) createRadialGradient(
+                    half,
+                    half,
+                    elementRadius,
+                    half,
+                    half,
+                    elementRadius + strokeWidth * 3 / 2 - 2
+                ).apply {
+                    addColorStop(0.0, "rgba(255, 0, 0, 1)")
+                    addColorStop(0.66, "rgba(255, 0, 0, 1)")
+                    addColorStop(1.0, "rgba(255, 0, 0, 0)")
+                } else "#ff0000"
+                arc(half, half, elementRadius + strokeWidth * (if (big) 1.5 else 1.0) / 2, k * PI, k * PI + angle)
+                stroke()
 
-            lineWidth = strokeWidth
-            beginPath()
-            strokeStyle = "#cccccc"
-            arc(half, half, elementRadius + strokeWidth / 2, k * PI + angle, (k + 2) * PI)
-            stroke()
+                lineWidth = strokeWidth
+                beginPath()
+                strokeStyle = "#cccccc"
+                arc(half, half, elementRadius + strokeWidth / 2, k * PI + angle, (k + 2) * PI)
+                stroke()
+            }
         }
 
         val reaction = gameState.hoveredReaction
         val canDoReaction = gameState.canDoReaction(reaction)
         for ((element, _) in reaction.inputs) {
-            if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat) && reaction.inputs[element] != 0.0) {
+            if (element.symbol !in listOf(Symbols.catalyst.toString(), Symbols.heat.toString()) && reaction.inputs[element] != 0.0) {
                 lineWidth = 10.0
-                val relative = getAlchemyElementPos(element.symbol) * radius
+                val relative = getAlchemyElementPos(element.symbol.last()) * radius
                 if (canDoReaction) {
                     gradientLineColorBar(
                         middle,
@@ -94,9 +104,9 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
         }
 
         for ((element, _) in reaction.outputs) {
-            if (element.symbol !in listOf(Symbols.catalyst, Symbols.heat) && reaction.outputs[element] != 0.0) {
+            if (element.symbol !in listOf(Symbols.catalyst.toString(), Symbols.heat.toString()) && reaction.outputs[element] != 0.0) {
                 lineWidth = 10.0
-                val relative = getAlchemyElementPos(element.symbol) * radius
+                val relative = getAlchemyElementPos(element.symbol.last()) * radius
                 if (canDoReaction) {
                     gradientLineColorBar(
                         middle,
@@ -159,12 +169,12 @@ fun drawClickerToCanvas(canvas: HTMLCanvasElement, size: Double, animationProgre
 
 fun elementsPageVisuals(gameState: GameState) {
     document.getElementById("elements-alchemy-container")!!.also { alchemyContainerVisuals(gameState, it as HTMLElement) }
-    for (clicker in gameState.clickersById.values) clickerVisuals(clicker)
+    for (clicker in gameState.clickersById.values) if (clicker.page == Pages.elementsPage) clickerVisuals(clicker)
 }
 
 fun dualityPageVisuals(gameState: GameState) {
     document.getElementById("delta-alchemy-container")!!.also { alchemyContainerVisuals(gameState, it as HTMLElement) }
-    for (clicker in gameState.clickersById.values) clickerVisuals(clicker)
+    for (clicker in gameState.clickersById.values) if (clicker.page == Pages.dualityPage) clickerVisuals(clicker)
 }
 
 fun CanvasRenderingContext2D.gradientLine(posA: Vec2, posB: Vec2, r: Int, g: Int, b: Int, a: Double, width: Double) {

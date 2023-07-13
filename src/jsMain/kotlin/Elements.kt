@@ -16,10 +16,10 @@ fun MutableElementStack.add(other: ElementStack) {
 val defaultStack get() = Elements.values.associateWith { 0.0 }.toDefaultedMap(0.0)
 val defaultMutableStack get() = defaultStack.toMutableMap().toMutableDefaultedMap(0.0)
 
-data class ElementType(val name: String, val symbol: Char, val isDecimal: Boolean = false) {
+data class ElementType(val name: String, val symbol: String, val isDecimal: Boolean = false) {
+    constructor(name: String, symbol: Char, isDecimal: Boolean = false): this(name, symbol.toString(), isDecimal)
     fun withCount(n: Double): ElementStack = mapOf(this to n).toDefaultedMap(0.0)
     val capText = "<u>$symbol</u>"
-    val deltaText = "$symbol'"
 }
 
 typealias ElementStack = DefaultedMap<ElementType, Double>
