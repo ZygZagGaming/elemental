@@ -1,11 +1,11 @@
+package core
+
 import kotlinx.browser.document
-import kotlinx.html.HTML
 import kotlinx.html.dom.append
-import kotlinx.html.dom.create
 import kotlinx.html.id
 import kotlinx.html.js.div
+import libraries.*
 import org.w3c.dom.*
-import kotlin.math.floor
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalJsExport::class)
@@ -14,16 +14,32 @@ fun getDynamicVariable(id: String) = DynamicHTMLManager.variables[id]
 
 object DynamicHTMLManager {
     val variables = mutableMapOf<String, String>()
-    var shownPage = "elements"
+    var shownPage = Pages.elementsPage
     set (value) {
         field = value
         pages.toList().forEach {
-            if (it.dataset["pageId"] == shownPage) it.classList.remove("hidden")
+            if (it.dataset["pageId"] == Pages.id(value)) it.classList.remove("hidden")
             else it.classList.add("hidden")
         }
         pageButtons.toList().forEach {
-            if (it.dataset["pageId"] == shownPage) it.classList.add("active")
+            if (it.dataset["pageId"] == Pages.id(value)) it.classList.add("active")
             else it.classList.remove("active")
+        }
+        gameState.clickersByPage.forEach { (page, clickers) ->
+            if (page == value) {
+                val dockContainer = getPageElement(page)!!.children.toList().first { it.classList.contains("clicker-dock-container") }
+                if (clickers.isEmpty()) dockContainer.style.display = "none"
+                else dockContainer.style.display = "flex"
+                for (clicker in clickers) {
+                    clicker.dock.style.display = "block"
+                    clicker.canvasParent.style.display = "block"
+                    clicker.htmlElement.style.display = "block"
+                }
+            } else for (clicker in clickers) {
+                clicker.dock.style.display = "none"
+                clicker.canvasParent.style.display = "none"
+                clicker.htmlElement.style.display = "none"
+            }
         }
     }
     fun setVariable(id: String, value: String) {
@@ -129,7 +145,7 @@ object DynamicHTMLManager {
                     child.textContent = page.name
                 }
                 pageButton.onclick = {
-                    shownPage = pageId
+                    shownPage = page
 
                     Unit
                 }
@@ -139,19 +155,64 @@ object DynamicHTMLManager {
 
     var currentTutorial: Tutorial? = null
     var currentTutorialPage: Int? = null
-    fun showTutorial(tutorial: Tutorial, page: Int = 0) {
-        val tutorialBox = document.getElementById("tutorial-box")!!
-        tutorialBox.parentElement!!.classList.remove("hidden")
-        js("tutorialBox.replaceChildren()")
-        tutorialBox.appendChild(tutorial.getAsHTML(page))
-        currentTutorial = tutorial
-        currentTutorialPage = page
+    fun showTutorial(tutorial: Tutorial, page: Int = 0, onClose: () -> Unit = DynamicHTMLManager::clearModal, force: Boolean = false) {
+        if (force || tutorial !in Stats.tutorialsSeen) {
+            val modal = document.getElementById("modal")!!
+            modal.parentElement!!.classList.remove("hidden")
+            js("modal.replaceChildren()")
+            modal.appendChild(tutorial.getAsHTML(page, onClose = onClose, force = force))
+            currentTutorial = tutorial
+            currentTutorialPage = page
+        }
     }
 
-    fun clearTutorial() {
-        val tutorialBox = document.getElementById("tutorial-box")!!
-        tutorialBox.parentElement!!.classList.add("hidden")
-        js("tutorialBox.replaceChildren()")
+    fun showTutorialListModal() {
+        val modal = document.getElementById("modal")!!
+        modal.parentElement!!.classList.remove("hidden")
+        js("modal.replaceChildren()")
+        val fragment = document.createDocumentFragment()
+
+        //generate tutorial list
+        val tutorials = Stats.tutorialsSeen.toMutableList()
+        val list = document.createElement("div")
+        list.classList.add("tutorial-list")
+        fragment.appendChild(list)
+        for (tutorial in tutorials) {
+            val row = document.createElement("div")
+            row.classList.add("tutorial-list-row")
+            row.classList.add("no-autoclick")
+
+            val text = document.createElement("div")
+            text.classList.add("tutorial-list-row-text")
+            text.classList.add("no-autoclick")
+            text.textContent = tutorial.name
+            row.appendChild(text)
+            row.addEventListener("click", {
+                showTutorial(tutorial, onClose = DynamicHTMLManager::showTutorialListModal, force = true)
+            })
+            list.appendChild(row)
+        }
+        val x = document.createElement("img")
+        fragment.appendChild(x)
+        x.setAttribute("alt", "x button")
+        x.setAttribute("src", "images/x.png")
+        x.classList.add("tutorial-x")
+        GameTimer.nextTick {
+            x.addEventListener("click", {
+                clearModal()
+
+                Unit
+            })
+        }
+
+        modal.appendChild(fragment)
+    }
+
+    fun clearModal() {
+        if (currentTutorial != null) Stats.tutorialsSeen.add(currentTutorial!!)
+        val modal = document.getElementById("modal")!!
+        modal.parentElement!!.classList.add("hidden")
+        js("modal.replaceChildren()")
     }
 
     fun setupHTML() {
@@ -176,13 +237,27 @@ object DynamicHTMLManager {
         }
         setupReactionContainerContents(NormalReactions.values.size)
         setupReactionContainerContents(SpecialReactions.values.size, "special-")
+        setupReactionContainerContents(DualityMilestones.values.size, "duality-", "yellow-bkg-style")
+        setupReactionContainerContents(DeltaReactions.values.size, "delta-")
+        document.getElementById("duality-button")?.let {
+            it.addEventListener("click", {
+                duality()
+
+                Unit
+            })
+        }
+        document.getElementById("help-button")?.let {
+            it.addEventListener("click", {
+                showTutorialListModal()
+            })
+        }
     }
 
-    fun setupReactionContainerContents(amount: Int, prefix: String = "") {
+    fun setupReactionContainerContents(amount: Int, prefix: String = "", extraClasses: String = "grey-bkg-style") {
         val reactionContainer = document.getElementById("${prefix}reaction-container")!!
         for (n in 0 until amount) {
             reactionContainer.append {
-                div("reaction-option no-highlight grey-bkg-style") {
+                div("reaction-option no-highlight $extraClasses") {
                     id = "${prefix}reaction-option-$n"
                     attributes["data-reaction-id"] = "$n"
                     div("reaction-option-title dynamic") {

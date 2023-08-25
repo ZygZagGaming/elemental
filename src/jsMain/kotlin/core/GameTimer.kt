@@ -1,5 +1,7 @@
 @file:OptIn(ExperimentalStdlibApi::class)
 
+package core
+
 import kotlin.js.Date
 
 object GameTimer {
@@ -10,6 +12,9 @@ object GameTimer {
     private val tempTickers = mutableListOf<Ticker>()
     fun registerTicker(name: String, ticker: Ticker) {
         tickers[name] = ticker
+    }
+    fun removeTicker(name: String) {
+        tickers.remove(name)
     }
     var lastTick = timeSex()
     var profiling = false

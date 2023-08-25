@@ -1,4 +1,9 @@
+package core
+
 import kotlinx.browser.document
+import libraries.Elements
+import libraries.Pages
+import libraries.Symbols
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
@@ -6,8 +11,8 @@ import kotlin.math.*
 
 fun visuals(gameState: GameState) {
     when (DynamicHTMLManager.shownPage) {
-        "elements" -> elementsPageVisuals(gameState)
-        "duality" -> dualityPageVisuals(gameState)
+        Pages.elementsPage -> elementsPageVisuals(gameState)
+        Pages.dualityPage -> dualityPageVisuals(gameState)
     }
 }
 
@@ -23,7 +28,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
     visuals.height = size.roundToInt()
     val elementRadius = vw(1.5)
     (visuals.getContext("2d") as CanvasRenderingContext2D).apply {
-        strokeStyle = "#000000"
+        strokeStyle = "rgba(0, 0, 0, 0)"
         beginPath()
         moveTo(0.0, 0.0)
         lineTo(size, 0.0)
@@ -41,7 +46,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
         }
         stroke()
 
-        if (DynamicHTMLManager.shownPage == Pages.id(Pages.elementsPage)) {
+        if (DynamicHTMLManager.shownPage == Pages.elementsPage) {
             val k = 0.5
             val angle = graphicalHeatAmount * 2 * PI
             val strokeWidth = vw(0.75)
@@ -76,52 +81,60 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
                 arc(half, half, elementRadius + strokeWidth / 2, k * PI + angle, (k + 2) * PI)
                 stroke()
             }
-        }
 
-        val reaction = gameState.hoveredReaction
-        val canDoReaction = gameState.canDoReaction(reaction)
-        for ((element, _) in reaction.inputs) {
-            if (element.symbol !in listOf(Symbols.catalyst.toString(), Symbols.heat.toString()) && reaction.inputs[element] != 0.0) {
-                lineWidth = 10.0
-                val relative = getAlchemyElementPos(element.symbol.last()) * radius
-                if (canDoReaction) {
-                    gradientLineColorBar(
-                        middle,
-                        middle + relative,
-                        255,
-                        255,
-                        0,
-                        1.0,
-                        10.0,
-                        (-(gameState.timeSpent * 200 + element.hashCode() * 800) / relative.magnitude).mod(1.0),
-                        0.2,
-                        0.65
-                    )
-                } else {
-                    gradientLine(middle, middle + relative, 255, 255, 0, 0.5, 10.0)
+            val reaction = gameState.hoveredReaction
+            val canDoReaction = gameState.canDoReaction(reaction)
+            for ((element, _) in reaction.inputs) {
+                if (element.symbol !in listOf(
+                        Symbols.catalyst.toString(),
+                        Symbols.heat.toString()
+                    ) && reaction.inputs[element] != 0.0
+                ) {
+                    lineWidth = 10.0
+                    val relative = getAlchemyElementPos(element.symbol.last()) * radius
+                    if (canDoReaction) {
+                        gradientLineColorBar(
+                            middle,
+                            middle + relative,
+                            255,
+                            255,
+                            0,
+                            1.0,
+                            10.0,
+                            (-(gameState.timeSpent * 200 + element.hashCode() * 800) / relative.magnitude).mod(1.0),
+                            0.2,
+                            0.65
+                        )
+                    } else {
+                        gradientLine(middle, middle + relative, 255, 255, 0, 0.5, 10.0)
+                    }
                 }
             }
-        }
 
-        for ((element, _) in reaction.outputs) {
-            if (element.symbol !in listOf(Symbols.catalyst.toString(), Symbols.heat.toString()) && reaction.outputs[element] != 0.0) {
-                lineWidth = 10.0
-                val relative = getAlchemyElementPos(element.symbol.last()) * radius
-                if (canDoReaction) {
-                    gradientLineColorBar(
-                        middle,
-                        middle + relative,
-                        255,
-                        0,
-                        255,
-                        1.0,
-                        10.0,
-                        ((gameState.timeSpent * 200 + element.hashCode() * 225) / relative.magnitude).mod(1.0),
-                        0.2,
-                        0.65
-                    )
-                } else {
-                    gradientLine(middle, middle + relative, 255, 0, 255, 0.5, 10.0)
+            for ((element, _) in reaction.outputs) {
+                if (element.symbol !in listOf(
+                        Symbols.catalyst.toString(),
+                        Symbols.heat.toString()
+                    ) && reaction.outputs[element] != 0.0
+                ) {
+                    lineWidth = 10.0
+                    val relative = getAlchemyElementPos(element.symbol.last()) * radius
+                    if (canDoReaction) {
+                        gradientLineColorBar(
+                            middle,
+                            middle + relative,
+                            255,
+                            0,
+                            255,
+                            1.0,
+                            10.0,
+                            ((gameState.timeSpent * 200 + element.hashCode() * 225) / relative.magnitude).mod(1.0),
+                            0.2,
+                            0.65
+                        )
+                    } else {
+                        gradientLine(middle, middle + relative, 255, 0, 255, 0.5, 10.0)
+                    }
                 }
             }
         }
@@ -129,18 +142,23 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
 }
 
 const val margin = 50.0
-val Clicker.color get() = if (mode == ClickerMode.MANUAL) "#669" else "#ffffff"
-
-fun clickerVisuals(clicker: Clicker) {
-    if (clicker.docked) drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, color = clicker.color)
-    else {
-        val cps = clicker.cps
-        drawClickerToCanvas(clicker.canvas, clicker.htmlElement.screenWidth, if (clicker.timeSinceLastClick * cps < 0.5) clicker.timeSinceLastClick * cps + 0.5 else (clicker.timeSinceLastClick * cps - 0.5).clamp(0.0..0.5), color = clicker.color)
-    }
-    drawClickerToCanvas(clicker.dockCanvas, clicker.htmlElement.screenWidth, color = "#606060")
+val Clicker.color get() = when (mode) {
+    ClickerMode.MANUAL -> "#669"
+    ClickerMode.DISABLED -> "#444"
+    ClickerMode.AUTO -> "#fff"
 }
 
-fun drawClickerToCanvas(canvas: HTMLCanvasElement, size: Double, animationProgress: Double = 0.5, color: String = "#ffffff") {
+fun clickerVisuals(clicker: Clicker) {
+    if (clicker.docked) drawDeactivatedClickerToCanvas(clicker)
+    else drawClickerToCanvas(clicker)
+    drawDeactivatedClickerToCanvas(clicker, canvas = clicker.dockCanvas, color = "#606060")
+}
+
+@OptIn(ExperimentalStdlibApi::class)
+fun drawClickerToCanvas(clicker: Clicker, canvas: HTMLCanvasElement = clicker.canvas, color: String = clicker.color, blurry: Boolean = false) {
+    val size = clicker.htmlElement.screenWidth
+    val timeSinceLastClick = clicker.timeSinceLastVisualClick
+    val cps = clicker.visualCps
     (canvas.getContext("2d") as CanvasRenderingContext2D).apply {
         fillStyle = "rgba(255, 255, 255, 0)"
         clearRect(-margin, -margin, size + margin, size + margin)
@@ -156,8 +174,67 @@ fun drawClickerToCanvas(canvas: HTMLCanvasElement, size: Double, animationProgre
         arc(size / 2, size * (1 - 0.35), size * 0.15, 0.0, 2 * PI)
         fill()
 
-        val arrowHeightAmount = (if (animationProgress < 0.5) 1 - (2 * animationProgress).squared() else (1 - 2 * animationProgress).squared()).clamp(0.0..1.0)
+        val arrowHeightAmount = when (timeSinceLastClick * cps) {
+            in 0.0..0.5 -> {
+                4 * cps.squared() * timeSinceLastClick.squared()
+            }
+            in 0.5..1.0 -> {
+                4 * cps * timeSinceLastClick * (1 - cps * timeSinceLastClick)
+            }
+            else -> 0.0
+        }
         val arrowHeight = size * 0.2 * (1 - arrowHeightAmount)
+        if (blurry) {
+            val blurAmount = floor(log(cps, 2.5)).roundToInt()
+            var n = blurAmount
+            while (n-- != 0) {
+                val opacity = 1.0 / n
+                val opacityHex = (opacity * 255).roundToInt().toHexString(HexFormat.UpperCase)
+
+                fillStyle = "$color$opacityHex"
+                beginPath()
+                moveTo(size / 2, arrowHeight + n * 2)
+                lineTo(size * 0.2, arrowHeight + size * 0.3 + n * 2)
+                lineTo(size / 2, arrowHeight + size * 0.1 + n * 2)
+                lineTo(size * 0.8, arrowHeight + size * 0.3 + n * 2)
+                fill()
+
+                beginPath()
+                moveTo(size / 2, arrowHeight - n * 2)
+                lineTo(size * 0.2, arrowHeight + size * 0.3 - n * 2)
+                lineTo(size / 2, arrowHeight + size * 0.1 - n * 2)
+                lineTo(size * 0.8, arrowHeight + size * 0.3 - n * 2)
+                fill()
+            }
+        } else {
+            beginPath()
+            moveTo(size / 2, arrowHeight)
+            lineTo(size * 0.2, arrowHeight + size * 0.3)
+            lineTo(size / 2, arrowHeight + size * 0.1)
+            lineTo(size * 0.8, arrowHeight + size * 0.3)
+            fill()
+        }
+    }
+}
+
+fun drawDeactivatedClickerToCanvas(clicker: Clicker, canvas: HTMLCanvasElement = clicker.canvas, color: String = clicker.color) {
+    val size = clicker.htmlElement.screenWidth
+    (canvas.getContext("2d") as CanvasRenderingContext2D).apply {
+        fillStyle = "rgba(255, 255, 255, 0)"
+        clearRect(-margin, -margin, size + margin, size + margin)
+
+        strokeStyle = color
+        fillStyle = color
+        lineWidth = 3.0
+        beginPath()
+        arc(size / 2, size * (1 - 0.35), size * 0.35 - lineWidth / 2, 0.0, 2 * PI)
+        stroke()
+
+        beginPath()
+        arc(size / 2, size * (1 - 0.35), size * 0.15, 0.0, 2 * PI)
+        fill()
+
+        val arrowHeight = size * 0.2
         beginPath()
         moveTo(size / 2, arrowHeight)
         lineTo(size * 0.2, arrowHeight + size * 0.3)
@@ -178,7 +255,7 @@ fun dualityPageVisuals(gameState: GameState) {
 }
 
 fun CanvasRenderingContext2D.gradientLine(posA: Vec2, posB: Vec2, r: Int, g: Int, b: Int, a: Double, width: Double) {
-    val len = (posA - posB).magnitude
+    //val len = (posA - posB).magnitude
     val avg = (posA + posB) / 2.0
     val diff = posA - posB
     val transpose = Vec2(-diff.y, diff.x).normalized * width// / 2.0

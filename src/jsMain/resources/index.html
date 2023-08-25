@@ -7,26 +7,27 @@
         <script src="elemental.js"></script>
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     </head>
-    <body onload="elemental.loadGame()">
+    <body onload="elemental.core.loadGame()">
         <div id="context-menu" class=""></div>
-        <div id="tutorial-box-wrapper" class="no-highlight hidden">
-            <div id="tutorial-box">
+        <div id="modal-wrapper" class="no-highlight hidden no-autoclick">
+            <div id="modal">
 
             </div>
         </div>
         <div id="navbar" class="no-highlight"></div>
         <div id="options-button" class="dynamic page-button no-highlight" data-page-id="options"><div class="navbar-text page-text">Options</div></div>
+        <div id="help-button" class="dynamic no-highlight"><div id="help-button-text">Tutorials</div></div>
         <div id="elements-page" class="page" data-page-id="elements">
             <div class="alchemy-container" id="elements-alchemy-container">
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-0" data-element="ϟ"><div class="alchemy-element-text">ϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-ϟ-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-1" data-element="a"><div class="alchemy-element-text">a</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-a-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-2" data-element="b"><div class="alchemy-element-text">b</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-b-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-3" data-element="c"><div class="alchemy-element-text">c</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-c-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-4" data-element="d"><div class="alchemy-element-text">d</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-d-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-5" data-element="e"><div class="alchemy-element-text">e</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-e-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-6" data-element="f"><div class="alchemy-element-text">f</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-f-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="alchemy-element-7" data-element="g"><div class="alchemy-element-text">g</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-g-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style heat-element dynamic" id="alchemy-element-8" data-element="h"><div class="alchemy-element-amount dynamic" data-dynamic-id="element-h-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-0" data-element="ϟ"><div class="alchemy-element-text">ϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-ϟ-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-1" data-element="a"><div class="alchemy-element-text">a</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-a-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-2" data-element="b"><div class="alchemy-element-text">b</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-b-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-3" data-element="c"><div class="alchemy-element-text">c</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-c-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-4" data-element="d"><div class="alchemy-element-text">d</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-d-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-5" data-element="e"><div class="alchemy-element-text">e</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-e-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-6" data-element="f"><div class="alchemy-element-text">f</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-f-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-7" data-element="g"><div class="alchemy-element-text">g</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-g-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable heat-element dynamic" id="alchemy-element-8" data-element="h"><div class="alchemy-element-amount dynamic" data-dynamic-id="element-h-amount"></div></div>
                 <canvas class="alchemy-visuals" width="500" height="500"></canvas>
             </div>
             <div id="reaction-container-title" class="reaction-container-title no-highlight">
@@ -41,18 +42,21 @@
         </div>
         <div id="duality-page" class="page hidden" data-page-id="duality">
             <div class="alchemy-container" id="delta-alchemy-container">
-                <div class="alchemy-element grey-bkg-style" id="delta-element-0" data-element="Δϟ"><div class="alchemy-element-text">Δϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δϟ-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-1" data-element="Δa"><div class="alchemy-element-text">Δa</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δa-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-2" data-element="Δb"><div class="alchemy-element-text">Δb</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δb-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-3" data-element="Δc"><div class="alchemy-element-text">Δc</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δc-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-4" data-element="Δd"><div class="alchemy-element-text">Δd</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δd-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-5" data-element="Δe"><div class="alchemy-element-text">Δe</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δe-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-6" data-element="Δf"><div class="alchemy-element-text">Δf</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δf-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style" id="delta-element-7" data-element="Δg"><div class="alchemy-element-text">Δg</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δg-amount"></div></div>
-                <div class="alchemy-element grey-bkg-style heat-element dynamic" id="delta-element-8" data-element="Δh"><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δh-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-0" data-element="Δϟ"><div class="alchemy-element-text">Δϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δϟ-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-1" data-element="Δa"><div class="alchemy-element-text">Δa</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δa-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-2" data-element="Δb"><div class="alchemy-element-text">Δb</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δb-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-3" data-element="Δc"><div class="alchemy-element-text">Δc</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δc-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-4" data-element="Δd"><div class="alchemy-element-text">Δd</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δd-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-5" data-element="Δe"><div class="alchemy-element-text">Δe</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δe-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-6" data-element="Δf"><div class="alchemy-element-text">Δf</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δf-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-7" data-element="Δg"><div class="alchemy-element-text">Δg</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δg-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable heat-element dynamic" id="delta-element-8" data-element="Δh"><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δh-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="omega" data-element="ω"><div class="alchemy-element-text">ω</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-ω-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style nonclickable" id="alpha" data-element="α"><div class="alchemy-element-text">α</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-α-amount"></div></div>
+                <div id="duality-button" class="duality-button yellow-bkg-style no-highlight dynamic">Duality</div>
                 <canvas class="alchemy-visuals" width="500" height="500"></canvas>
             </div>
-            <div id="duality-reaction-container-title" class="reaction-container-title no-highlight">
+            <div id="duality-container-title" class="reaction-container-title no-highlight">
                 Duality Milestones
             </div>
             <div class="reaction-container" id="duality-reaction-container"></div>
@@ -67,14 +71,30 @@
                 <div class="options-column-line"></div>
                 <div class="options-column-content">
                     <div class="options-column-element">
-                        <div class="options-text">Saving</div>
+                        <div class="options-text">Autosaving</div>
                         <div class="on-off-switch"></div>
                     </div>
                     <div class="options-column-element">
-                        <div class="options-text">Reset Save (FOR DEBUG ONLY)</div>
-                        <div class="options-button grey-bkg-style" onclick="elemental.resetSave()">
+                        <div class="options-text">Reset save (FOR DEBUG ONLY)</div>
+                        <div class="options-button grey-bkg-style" onclick="elemental.core.resetSave()">
                             <div>
                                 RESET
+                            </div>
+                        </div>
+                    </div>
+                    <div class="options-column-element">
+                        <div class="options-text">Copy file to clipboard</div>
+                        <div class="options-button grey-bkg-style" onclick="elemental.core.saveToClipboard()">
+                            <div>
+                                Copy
+                            </div>
+                        </div>
+                    </div>
+                    <div class="options-column-element">
+                        <div class="options-text">Save file from clipboard</div>
+                        <div class="options-button grey-bkg-style" onclick="elemental.core.loadSaveFromClipboard()">
+                            <div>
+                                Save
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,7 @@
 @file:Suppress("ObjectPropertyName")
 
+package core
+
 import kotlinx.browser.document
 import org.w3c.dom.events.KeyboardEvent
 

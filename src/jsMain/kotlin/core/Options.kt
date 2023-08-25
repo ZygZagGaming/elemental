@@ -1,3 +1,5 @@
+package core
+
 object Options {
     var saveInterval = 5.0
     var saveMode = SaveMode.LOCAL_STORAGE

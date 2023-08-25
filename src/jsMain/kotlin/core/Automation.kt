@@ -1,14 +1,13 @@
-import kotlinx.browser.document
-import org.w3c.dom.HTMLCanvasElement
-import org.w3c.dom.HTMLElement
-import org.w3c.dom.get
-import org.w3c.dom.set
-import kotlin.math.abs
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
+package core
 
-class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: Double, val heldCps: Double) {
-    val cps get() = if (mode == ClickerMode.MANUAL) heldCps else autoCps
+import kotlinx.browser.document
+import org.w3c.dom.*
+import kotlin.math.*
+
+class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: Double, val heldCps: Double) {
+    val cps get() = if (mode == ClickerMode.MANUAL) heldCps else autoCpsModifiers.appliedTo(autoCps)
+    val clickPower get() = visualClickBase.toDouble().pow(floor(log(cps, visualClickBase.toDouble()))).roundToInt()
+    val visualCps get() = cps / clickPower
     var clickPercent = 0.0
     lateinit var htmlElement: HTMLElement
     lateinit var canvas: HTMLCanvasElement
@@ -16,7 +15,11 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
     lateinit var dock: HTMLElement
     lateinit var dockCanvas: HTMLCanvasElement
     var timeSinceLastClick = 0.0
+    var timeSinceLastVisualClick = 0.0
+    var clicksSinceLastVisualClick = 0
+    val visualClickBase = 7
     var wasDragging = false
+    val autoCpsModifiers = basicMultiplierStack
     val dragging get() = htmlElement.dataset["dragging"] == "true"
     var docked get() = htmlElement.dataset["docked"] == "true"
     set(value) {
@@ -107,10 +110,9 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
     }
 
     fun setMode(newMode: ClickerMode) {
-        if (newMode == ClickerMode.MANUAL) {
-            canvasParent.classList.add("keyclicker")
-        } else if (newMode == ClickerMode.AUTO) {
-            canvasParent.classList.remove("keyclicker")
+        canvasParent.classList.apply {
+            setPresence("keyclicker", newMode == ClickerMode.MANUAL)
+            setPresence("off", newMode == ClickerMode.DISABLED)
         }
         mode = newMode
     }
@@ -122,7 +124,8 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
 
     val recheckHoveringInterval = 1.0
     fun tick(dt: Double) {
-        if (dragging || (DynamicHTMLManager.shownPage == Pages.id(page) && GameTimer.every(
+        if (mode !in modesUnlocked) setMode(ClickerMode.DISABLED)
+        if (dragging || (DynamicHTMLManager.shownPage == page && GameTimer.every(
                 recheckHoveringInterval,
                 dt
             ))
@@ -133,13 +136,19 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
         if (!docked && mode == ClickerMode.AUTO) clickPercent += dt * cps
         if (!docked) {
             timeSinceLastClick += dt
+            timeSinceLastVisualClick += dt
             while (clickPercent > 1) {
                 clickPercent--
                 click()
                 timeSinceLastClick = 0.0
+                clicksSinceLastVisualClick++
+                if (clicksSinceLastVisualClick > clickPower) {
+                    clicksSinceLastVisualClick -= clickPower
+                    timeSinceLastVisualClick = 0.0
+                }
             }
         }
-        if (DynamicHTMLManager.shownPage == Pages.id(page)) {
+        if (DynamicHTMLManager.shownPage == page) {
             canvasParent.apply {
                 val pixels = 10000 * dt
                 val dx = htmlElement.screenX - screenX
@@ -193,8 +202,14 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, var autoCps: D
 
 enum class ClickerMode(val pretty: String) {
     AUTO("Auto"),
-    MANUAL("Manual")
+    MANUAL("Manual"),
+    DISABLED("Disabled")
 }
 
 typealias ModesUnlocked = MutableSet<ClickerMode>
-val defaultModes: ModesUnlocked get() = mutableSetOf(ClickerMode.MANUAL)
+val defaultModes: ModesUnlocked get() = mutableSetOf(ClickerMode.DISABLED)
+
+fun DOMTokenList.setPresence(str: String, bool: Boolean) {
+    if (bool) add(str)
+    else remove(str)
+}

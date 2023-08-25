@@ -1,5 +1,8 @@
+package core
+
 import kotlinx.browser.document
 import kotlinx.browser.window
+import libraries.Elements
 import org.w3c.dom.Storage
 import kotlin.math.*
 
@@ -63,8 +66,10 @@ open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val default
     override fun get(key: K): V = backingMap[key] ?: defaultValue
     override fun set(key: K, value: V) {
         if (this[key] != value) {
+            val old = backingMap[key]
             backingMap[key] = value
             changedSet.add(key)
+            //if (this == core.Stats.elementAmounts) console.log("value of $key changed from $old to $value")
         }
     }
 
@@ -84,14 +89,19 @@ open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val default
     override fun changed(): Boolean = changedSet.isNotEmpty()
 
     override fun changed(key: K): Boolean = key in changedSet
+
+    fun setValues(newValues: Map<K, V>) {
+        clear()
+        for (key in newValues.keys) set(key, newValues[key]!!)
+    }
 }
 
-class ProductStatMap<K, V>(val a: StatMap<K, V>, val b: StatMap<K, V>, val multiplyFunction: (V, V) -> V):
-    StatMap<K, V> {
-    private operator fun V.times(other: V) = multiplyFunction(this, other)
-    override fun get(key: K): V = a[key] * b[key]
+class ProductStatMap<K, V1, V2, V3>(val a: StatMap<K, V1>, val b: StatMap<K, V2>, val multiplyFunction: (V1, V2) -> V3):
+    StatMap<K, V3> {
+    private operator fun V1.times(other: V2): V3 = multiplyFunction(this, other)
+    override fun get(key: K): V3 = a[key] * b[key]
 
-    override val defaultValue: V get() = a.defaultValue * b.defaultValue
+    override val defaultValue: V3 get() = a.defaultValue * b.defaultValue
 
 
     override fun changed(): Boolean = a.changed() || b.changed()
@@ -131,6 +141,13 @@ data class SimpleMutableIndexable<K, V>(private val getter: (K) -> V, private va
 fun setElementAmount(elementId: String, amount: Double) {
     val element = Elements.map[elementId]
     if (element != null) Stats.elementAmounts[element] = amount
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun setElementBaseCap(elementId: String, amount: Double) {
+    val element = Elements.map[elementId]
+    if (element != null) Stats.baseElementUpperBounds[element] = amount
 }
 
 open class DefaultedMap<K, V>(private val backingMap: Map<K, V>, val defaultValue: V): Map<K, V> {
@@ -178,6 +195,16 @@ fun <K, V> MutableMap<K, V>.toMutableDefaultedMap(value: V) = MutableDefaultedMa
 fun <K, V> DefaultedMap<K, V>.toMutableDefaultedMap() = MutableDefaultedMap(toMutableMap(), defaultValue)
 fun Double.roundToOneDecimalPlace() = (this * 10).roundToInt() / 10.0
 fun Double.roundTo(places: Int) = (this * 10.0.pow(places)).roundToInt() / 10.0.pow(places)
+fun Double.toString(places: Int): String {
+    val power = 10.0.pow(-places)
+    if (places == 0) return roundToInt().toString()
+    return if (places < 0) (roundToInt() - (roundToInt() % power.roundToInt())).toString() else {
+        val k = (power * (this / power).roundToInt()).toString().split('.')
+        val second = if (k.size >= 2) k[1].substring(0, places) else ""
+        val k2 = k[0] + '.' + second
+        k2 + "0".repeat(places - second.length)
+    }
+}
 fun <K, V> defaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mapOf(*values).toDefaultedMap(defaultValue)
 fun <K, V> mutableDefaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mutableMapOf(*values).toMutableDefaultedMap(defaultValue)
 fun elementStackOf(vararg values: Pair<ElementType, Double>, defaultValue: Double = 0.0): ElementStack =
@@ -215,3 +242,17 @@ enum class SaveMode {
 }
 
 data class Page(val name: String)
+
+fun interpolationFunction(f: (Double) -> Double): (Double) -> Double {
+    val zero = f(0.0)
+    val normalization = 1.0 / (f(1.0) - zero)
+    return { t -> (f(t) - zero) * normalization }
+}
+
+fun interpolationFunctionForwardsBackwards(f: (Double) -> Double): (Double) -> Double {
+    val zero = f(0.0)
+    val normalization = 1.0 / (f(1.0) - zero)
+    return { t -> if (t <= 0.5) (f(2 * t) - zero) * normalization else 1 - (f(2 * t - 1) - zero) * normalization }
+}
+
+fun <T> List<T>.firstTwo(): Pair<T, T> = this[0] to this[1]
