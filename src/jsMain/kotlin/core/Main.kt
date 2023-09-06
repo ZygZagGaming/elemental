@@ -61,11 +61,23 @@ fun loadGame() {
                         "$symbol-amount-display",
                         "$symbol = $displayText"
                     )
-                    if (element == Elements.catalyst) idSetClassPresence(
+                    if (element == Elements.catalyst) setClassPresence(
                         "duality-button",
                         "disabled",
                         Stats.elementAmounts[Elements.catalyst] < Stats.dualityThreshold
                     )
+                    if (element == Elements.dualities) {
+                        idSetClassPresence(
+                            "big-duality-button",
+                            "hidden",
+                            Stats.elementAmounts[Elements.dualities] > 0
+                        )
+                        idSetClassPresence(
+                            "main-duality-page",
+                            "hidden",
+                            Stats.elementAmounts[Elements.dualities] <= 0
+                        )
+                    }
                     Stats.elementAmounts.clearChanged(element)
                 }
                 if (updateAll || Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(
@@ -179,6 +191,8 @@ fun loadGame() {
                 idSetClassPresence("delta-reaction-option-$i", "active", reaction.hasBeenUsed)
                 idSetDataVariable("delta-reaction-option-$i", "backendReactionId", backendId)
             }
+
+            setVariable("deltaReactionRespecToggleCheckbox", "${if (Stats.deltaReactionRespec) Symbols.xBox else Symbols.box}")
         }
 
         doCircleShit()
@@ -347,7 +361,7 @@ fun loadGame() {
         it.stopPropagation()
     })
 
-    if ("seenTutorial" !in Stats.flags) {
+    if (!Flags.seenTutorial.isUnlocked()) {
         DynamicHTMLManager.showTutorial(Tutorials.welcome)
     }
 }

@@ -26,7 +26,7 @@ object NormalReactions: Library<Reaction>() {
                         Elements.b to 1.0
                     )
                     1 -> elementStackOf(
-                        Elements.b to 3.0
+                        Elements.b to 2.0
                     )
                     else -> elementStackOf()
                 }
@@ -39,9 +39,9 @@ object NormalReactions: Library<Reaction>() {
                         Elements.heat to 0.5
                     )
                     1 -> elementStackOf(
-                        Elements.catalyst to 20.0,
-                        Elements.a to 1.0,
-                        Elements.heat to 2.0
+                        Elements.catalyst to 10.0,
+                        Elements.a to 4.0,
+                        Elements.heat to 1.0
                     )
                     else -> elementStackOf()
                 }
@@ -70,7 +70,7 @@ object NormalReactions: Library<Reaction>() {
             ),
             elementStackOf(
                 Elements.a to 10.0,
-                Elements.b to 10.0
+                Elements.b to 1.0
             )
         )
     )
@@ -98,26 +98,25 @@ object NormalReactions: Library<Reaction>() {
 //        )
 //    )
     val over900 = register("over900",
-    Reaction(
-        "Over 900",
-        elementStackOf(
-            Elements.a to 901.0,
-        ),
-        elementStackOf(
-            Elements.d to 1.0
+        Reaction(
+            "Over 900",
+            elementStackOf(
+                Elements.a to 901.0,
+            ),
+            elementStackOf(
+                Elements.d to 1.0
+            )
         )
-    )
     )
     val exotherm = register("exotherm",
         Reaction(
             "Exotherm",
             elementStackOf(
-                Elements.c to 60.0,
-                Elements.a to 1000.0,
-                Elements.catalyst to 10000.0
+                Elements.catalyst to 10000.0,
+                Elements.c to 120.0
             ),
             elementStackOf(
-                Elements.e to 2.0,
+                Elements.e to 1.0,
                 Elements.heat to 50.0
             )
         )

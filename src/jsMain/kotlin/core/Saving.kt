@@ -82,11 +82,12 @@ fun saveToMindexable(mutableIndexable: MutableIndexable<String, String>) {
         mutableIndexable["autoclickerPositions"] = gameState.clickersById.map { (id, clicker) -> "${id}:${if (clicker.docked) "docked" else "${clicker.htmlElement.style.left},${clicker.htmlElement.style.top}"}" }.joinToString(separator = ";")
         mutableIndexable["elementDeltas"] = Elements.map.map { (k, v) -> "$k:${Stats.elementDeltas[v]}" }.joinToString(separator = ",")
         mutableIndexable["autoclickerSettings"] = gameState.clickersById.map { (id, clicker) -> "${id}:(${clicker.mode},${Input.keybinds["keyclicker-$id"]!!.key.key})" }.joinToString(separator = ";")
-        mutableIndexable["flags"] = Stats.flags.joinToString(separator = ",")
+        mutableIndexable["flags"] = Stats.flags.map { it.name }.joinToString(separator = ",")
         mutableIndexable["page"] = Pages.id(DynamicHTMLManager.shownPage) ?: ""
         mutableIndexable["dualityMilestoneAmts"] = DualityMilestones.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
         mutableIndexable["timeSinceLastDuality"] = Stats.timeSinceLastDuality.toString()
         mutableIndexable["deltaReactionAmts"] = DeltaReactions.map.map { (k, v) -> "$k:${v.nTimesUsed}" }.joinToString(separator = ",")
+        mutableIndexable["game_version"] = gameVersion
     }
 }
 
@@ -133,9 +134,9 @@ fun loadIndexable(indexable: Indexable<String, String>) {
                     }
                 }
             }
-            Stats.flags.addAll(indexable["flags"].split(',') ?: emptyList())
+            Stats.flags.addAll(indexable["flags"].split(',').mapNotNull { Flags.map[it] })
             DynamicHTMLManager.shownPage = Pages.map[indexable["page"]]!!
-            if ("clickersUnlocked" in Stats.flags) {
+            if (Flags.clickersUnlocked.isUnlocked()) {
                 var n = 1
                 while (gameState.clickersById.size < 5) {
                     val clicker = Clicker(n++, Pages.elementsPage, ClickerMode.DISABLED, 4.0, 6.0)

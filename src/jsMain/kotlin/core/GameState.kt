@@ -1,7 +1,9 @@
 package core
 
 import kotlinx.browser.document
+import libraries.DeltaReactions
 import libraries.Elements
+import libraries.Flags
 import libraries.SpecialReactions
 import org.w3c.dom.get
 import kotlin.math.abs
@@ -29,7 +31,7 @@ class GameState {
 
         clickersById.values.forEach { /*if (core.DynamicHTMLManager.shownPage == libraries.Pages.id(it.page))*/ it.tick(dt) }
 
-        Stats.elementAmounts[Elements.heat] *= (1 - 0.1 * dt * Stats.gameSpeed)
+        Stats.elementAmounts[Elements.heat] = max(0.0, Stats.elementAmounts[Elements.heat] * (1 - 0.1 * dt * Stats.gameSpeed))
         if (!offline) {
             for ((key, value) in incoming) {
                 //if (key.name.contains("Delta") && core.Stats.functionalElementUpperBounds[key] < core.Stats.elementAmounts[key]) console.log(core.Stats.functionalElementUpperBounds[key])
@@ -119,14 +121,20 @@ class GameState {
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 fun duality() {
-    Stats.elementAmounts[Elements.catalyst]
     val omega = Elements.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementLowerBounds[it]) <= epsilon }
     val alpha = Elements.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementUpperBounds[it]) <= epsilon }
     Elements.basicElements.forEach { Stats.elementAmounts[it] = defaultStartingElements[it] }
-    SpecialReactions.values.forEach { if ((it != SpecialReactions.massiveClock && it != SpecialReactions.infoNerd) || "escapism" !in Stats.flags) it.undoEffects() }
+    SpecialReactions.values.forEach { if (!((it == SpecialReactions.massiveClock || it == SpecialReactions.infoNerd) && Flags.escapism1.isUnlocked())) {
+        it.undoEffects()
+    } }
+    if (Stats.deltaReactionRespec) {
+        Stats.deltaReactionRespec = false
+        DeltaReactions.values.forEach { it.undoEffects(refund = true) }
+    }
     Stats.elementAmounts[Elements.omega] += omega.toDouble()
     Stats.elementAmounts[Elements.alpha] += alpha.toDouble()
     Stats.timeSinceLastDuality = 0.0
+    Stats.elementAmounts[Elements.dualities]++
 }
 
 val epsilon = 1e-7

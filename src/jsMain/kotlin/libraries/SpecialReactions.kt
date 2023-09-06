@@ -1,6 +1,7 @@
 package libraries
 
 import core.*
+import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -44,19 +45,21 @@ object SpecialReactions: Library<SpecialReaction>() {
             effects = { it, offline ->
                 when (it) {
                     1 -> {
-                        var n = 1
-                        while (n <= 5) {
-                            val clicker = Clicker(n++, Pages.elementsPage, ClickerMode.MANUAL, 4.0, 6.0)
-                            gameState.addClicker(clicker)
-                            GameTimer.nextTick {
-                                clicker.moveToDock(true)
+                        if (!Flags.clickersUnlocked.isUnlocked()) {
+                            var n = 1
+                            while (n <= 5) {
+                                val clicker = Clicker(n++, Pages.elementsPage, ClickerMode.MANUAL, 4.0, 6.0)
+                                gameState.addClicker(clicker)
+                                GameTimer.nextTick {
+                                    clicker.moveToDock(true)
+                                }
                             }
                         }
                         gameState.clickersById.values.forEach {
                             it.modesUnlocked.add(ClickerMode.MANUAL)
                             it.setMode(ClickerMode.MANUAL)
                         }
-                        Stats.flags.add("clickersUnlocked")
+                        Flags.clickersUnlocked.add()
                         DynamicHTMLManager.showTutorial(Tutorials.clickers)
                     }
                     2 -> {
@@ -74,7 +77,7 @@ object SpecialReactions: Library<SpecialReaction>() {
                             modesUnlocked.add(ClickerMode.AUTO)
                             setMode(ClickerMode.AUTO)
                         }
-                        if ("automagic" in Stats.flags) {
+                        if (Flags.automagic.isUnlocked()) {
                             gameState.clickersById[4]!!.apply {
                                 modesUnlocked.add(ClickerMode.AUTO)
                                 setMode(ClickerMode.AUTO)
@@ -88,31 +91,32 @@ object SpecialReactions: Library<SpecialReaction>() {
                     else -> {
                         val shift = (it - 3) * 0.5
                         if (shift >= 3) DynamicHTMLManager.showTutorial(Tutorials.superclickers)
-                        repeat(5) { n ->
-                            gameState.clickersById[n + 1]!!.autoCpsModifiers.setShift("clockwork", shift)
-                        }
+                        gameState.clickersByPage[Pages.elementsPage]!!.map { it.autoCpsModifiers.setShift("clockwork", shift) }
                     }
                 }
             },
             undo = {
                 // keep autoclickers but restrict modes
                 gameState.clickersById.values.forEach {
-                    it.modesUnlocked.removeAll(
-                        setOf(
-                            ClickerMode.AUTO,
-                            ClickerMode.MANUAL
+                    if (it.id in 1..5) {
+                        it.modesUnlocked.removeAll(
+                            setOf(
+                                ClickerMode.AUTO,
+                                ClickerMode.MANUAL
+                            )
                         )
-                    )
+                    }
+                    it.autoCpsModifiers.removeShift("clockwork")
                 }
             },
             stringEffects = {
                 when (it) {
                     1 -> {
-                        if ("clickersUnlocked" in Stats.flags) "Unlock Manual Mode on Clickers 1-5"
+                        if (Flags.clickersUnlocked.isUnlocked()) "Unlock Manual Mode on Clickers 1-5"
                         else "Unlock Clickers 1-5"
                     }
                     2 -> "Unlock Auto Mode on Clicker 1 with a click rate of 4 Hz"
-                    3 -> if ("automagic" in Stats.flags) "Unlock Auto Mode on Clickers 2-5 with click rates of 4 Hz" else "Unlock Auto Mode on Clickers 2 and 3 with click rates of 4 Hz"
+                    3 -> if (Flags.automagic.isUnlocked()) "Unlock Auto Mode on Clickers 2-5 with click rates of 4 Hz" else "Unlock Auto Mode on Clickers 2 and 3 with click rates of 4 Hz"
                     else -> "All Clicker base autoclick rates ${(it - 4) * 0.5 + 4.0} → ${(it - 4) * 0.5 + 4.5} Hz"
                 }
             },
@@ -124,12 +128,12 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Massive Clock",
             {
                 elementStackOf(
-                    Elements.d to 2.0 * it.squared()
+                    Elements.d to 2.0 * it * (if (it > 5) it - 5.0 else 1.0)
                 )
             },
             effects = { it, offline ->
                 GameTimer.registerTicker("massiveClockTicker") { dt ->
-                    val multiplier = 0.15 * it
+                    val multiplier = 0.06 * it
                     val catalysts = max(
                         0.0,
                         min(
@@ -144,9 +148,9 @@ object SpecialReactions: Library<SpecialReaction>() {
                 GameTimer.removeTicker("massiveClockTicker")
             },
             stringEffects = {
-                val multiplier = 0.15 * it
+                val multiplier = 0.06 * it
                 "Each \"${Elements.d.symbol}\" generates \"${Elements.catalyst.symbol}\" at ${
-                    (multiplier - 0.15).roundTo(
+                    (multiplier - 0.06).roundTo(
                         2
                     )
                 } → ${multiplier.roundTo(2)} per second (until 99% of cap)"
@@ -179,17 +183,17 @@ object SpecialReactions: Library<SpecialReaction>() {
             "Overheat",
             {
                 elementStackOf(
-                    Elements.c to 6.0 * it
+                    Elements.c to 24.0 * it
                 )
             },
             effects = { it, offline ->
-                Stats.elementUpperBoundMultipliers[Elements.heat].setMultiplier("overheat", 1.0 + it * 0.2)
+                Stats.elementUpperBoundMultipliers[Elements.heat].setMultiplier("overheat", 1.0 + it * 0.6)
             },
             undo = {
                 Stats.elementUpperBoundMultipliers[Elements.heat].removeMultiplier("overheat")
             },
             stringEffects = {
-                "Heat cap x${(1 + (it - 1) * 0.2).roundToOneDecimalPlace()} → x${(1 + it * 0.2).roundToOneDecimalPlace()}"
+                "Heat cap x${(1 + (it - 1) * 0.6).roundToOneDecimalPlace()} → x${(1 + it * 0.6).roundToOneDecimalPlace()}"
             },
             usageCap = 100
         )
@@ -228,20 +232,17 @@ object SpecialReactions: Library<SpecialReaction>() {
             "ExponEntial",
             {
                 elementStackOf(
-                    Elements.e to 2.0.pow(it - 1),
-                    Elements.a to 250.0 * 4.0.pow(it)
+                    Elements.e to 2.0.pow(it - 1)
                 )
             },
             effects = { it, offline ->
-                val multiplier = it.squared()
-                Stats.elementUpperBoundMultipliers[Elements.a].setMultiplier("expon_ential") { (Stats.elementAmounts[Elements.e] + 1) * multiplier }
+                Stats.elementUpperBoundMultipliers[Elements.a].setMultiplier("expon_ential") { 1.05.pow(it) }
             },
             undo = {
                 Stats.elementUpperBoundMultipliers[Elements.a].removeMultiplier("expon_ential")
             },
             stringEffects = {
-                if (it == 1) "Multiplier to \"${Elements.a.symbol}\" cap equal to \"${Elements.e.symbol}\" count (plus 1)"
-                else "Multiplier to \"${Elements.a.symbol}\" cap equal to \"${Elements.e.symbol}\" count (+ 1) x${(it - 1).squared()} → x${it.squared()}"
+                "+5% to \"${Elements.a.symbol}\" cap, currently x${1.05.pow(it - 1).roundTo(3)}"
             },
             usageCap = 100
         )
@@ -312,15 +313,17 @@ object SpecialReactions: Library<SpecialReaction>() {
             },
             effects = { _, _ ->
                 Stats.elementMultipliers[Elements.catalyst].setMultiplier("money_up") {
-                    1.0 + 0.1 * Stats.elementAmounts[Elements.heat]
+                    val heat = Stats.elementAmounts[Elements.heat]
+                    log(heat + 1.0, 4.0) / 3.0 + 1 + if (heat > 50) log(heat - 49, 4.0) else 0.0
                 }
             },
             undo = {
                 Stats.elementMultipliers[Elements.catalyst].removeMultiplier("money_up")
             },
             stringEffects = {
-                val multiplier = (1.0 + 0.1 * Stats.elementAmounts[Elements.heat]).toString(3)
-                "Multiplier to \"${Elements.catalyst.symbol}\" gain based on \"${Elements.heat.symbol}\" amount, currently x$multiplier"
+                val heat = max(0.0, Stats.elementAmounts[Elements.heat])
+                val multiplier = log(heat + 1.0, 4.0) / 3.0 + 1 + if (heat > 50) log(heat - 49, 4.0) else 0.0
+                "Multiplier to \"${Elements.catalyst.symbol}\" gain based on \"${Elements.heat.symbol}\" amount, currently x${multiplier.roundTo(3)}"
             }
         )
     )

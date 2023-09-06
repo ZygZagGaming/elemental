@@ -360,7 +360,7 @@ body {
 }
 
 .options-column-element {
-    height: 2vw;
+    height: 2.5vw;
     display: flex;
     justify-content: space-between;
 }
@@ -440,6 +440,7 @@ canvas {
     display: flex;
     justify-content: space-around;
     flex-direction: column;
+    height: 1.5vw;
 }
 
 .options-button > div {
@@ -638,7 +639,7 @@ canvas {
   cursor: pointer;
 }
 
-.duality-button {
+#duality-button {
     position: absolute;
     width: 6.5vw;
     height: 3.5vw;
@@ -648,6 +649,27 @@ canvas {
     left: 11.5vw;
     bottom: 7.5vw;
     font-size: 1.25vw;
+}
+
+#big-duality-button {
+    border-radius: 2.5vw;
+    font-size: 2.25vw;
+    position: absolute;
+    width: 15vw;
+    height: 8vw;
+    left: 50vw;
+    top: 50vh;
+    transform: translateX(-50%) translateY(-50%);
+    text-align: center;
+    line-height: 7vw;
+}
+
+.duality-button-line {
+    position: absolute;
+    font-size: 0.9vw;
+    top: 2.5vw;
+    text-align: center;
+    width: 15vw;
 }
 
 .duality-button.disabled {
@@ -746,4 +768,27 @@ canvas {
 
 .tutorial-list-row:hover > .tutorial-list-row-text {
     color: white;
+}
+
+#duality-respec-container {
+    position: absolute;
+    color: white;
+    filter: drop-shadow(0 0 0.5vmin #fff);
+    width: 5vw;
+    top: 23.5vw;
+    left: 12.5vw;
+    font-size: 1vw;
+    cursor: pointer;
+}
+
+#duality-respec-checkbox {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+#duality-respec-text {
+    position: absolute;
+    left: 0;
+    top: 0;
 }

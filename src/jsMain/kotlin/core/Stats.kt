@@ -1,6 +1,7 @@
 package core
 
 import libraries.Elements
+import libraries.Flag
 import kotlin.math.pow
 
 object Stats {
@@ -12,6 +13,7 @@ object Stats {
             when (it) {
                 Elements.catalyst, Elements.omega, Elements.alpha -> 100000.0
                 Elements.heat -> 10.0
+                Elements.dualities -> Double.MAX_VALUE
                 else -> if (it.isBasic) 1000.0 else 0.0
             }
         }, 1000.0)
@@ -30,14 +32,27 @@ object Stats {
     val tutorialsSeen = mutableSetOf<Tutorial>()
     //var elementDeltasUnspent = core.BasicMutableStatMap<core.ElementType, Double>(emptyMap(), 0.0)
     var lastTickDt = 0.0
-    val flags = mutableSetOf<String>()
+    val flags = mutableSetOf<Flag>()
     val dualityThreshold = 100000
     var timeSinceLastDuality = 0.0
+    var deltaReactionRespec = false
 
     fun resetDeltas() {
         Elements.values.forEach {
             if (it.isBasic) elementAmounts[it.delta] = functionalElementUpperBounds[it]
         }
+    }
+
+    fun addFlag(flag: Flag) {
+        flags.add(flag)
+    }
+
+    fun removeFlag(flag: Flag) {
+        flags.remove(flag)
+    }
+
+    fun hasFlag(flag: Flag): Boolean {
+        return flag in flags
     }
 }
 
@@ -81,4 +96,22 @@ class MultiplierStack {
         val mult = multipliers.values.fold(shift) { acc, d -> acc * d() }
         return mult.pow(powers.values.fold(1.0) { acc, d -> acc * d() })
     }
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun toggleDeltaReactionRespec() {
+    Stats.deltaReactionRespec = !Stats.deltaReactionRespec
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun getFlags(): Array<String> {
+    return Stats.flags.map { it.name }.toTypedArray()
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun willRespecDeltaReactions(): Boolean {
+    return Stats.deltaReactionRespec
 }

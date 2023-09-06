@@ -1,6 +1,7 @@
 package libraries
 
 import core.ElementType
+import org.w3c.dom.Element
 
 object Elements: Library<ElementType>() {
     val symbolMap by lazy {
@@ -34,4 +35,6 @@ object Elements: Library<ElementType>() {
 
     val omega = register("omega", ElementType("Omega", Symbols.omega))
     val alpha = register("alpha", ElementType("Alpha", Symbols.alpha))
+
+    val dualities = register("dualities", ElementType("Dualities", Symbols.mu))
 }

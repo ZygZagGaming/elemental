@@ -1,6 +1,8 @@
 package core
 
-open class Reaction(var name: String, val consumesElements: Boolean = true) {
+import libraries.Elements
+
+open class Reaction(open var name: String, val consumesElements: Boolean = true) {
     open var inputs: ElementStack = emptyStack.toDefaultedMap(0.0)
     open var outputs: ElementStack = emptyStack.toDefaultedMap(0.0)
     val multipliedInputs get() = inputs.toDefaultedMap(0.0)
@@ -36,6 +38,13 @@ class AlterableReaction(name: String, val inputsSupplier: (Int) -> ElementStack,
     override var outputs: ElementStack
         get() = outputsSupplier(alterations)
         set(_) { }
+
+    var baseName = name
+    override var name: String
+        get() = baseName + "*".repeat(alterations)
+        set(value) {
+            baseName = value
+        }
 }
 
 open class SpecialReaction(
@@ -61,9 +70,18 @@ open class SpecialReaction(
         effects(nTimesUsed, offline)
     }
 
-    fun undoEffects() {
+    fun undoEffects(refund: Boolean = false) {
         undo(nTimesUsed)
-        nTimesUsed = 0
+        if (refund) while (nTimesUsed > 0) {
+            val inputs = inputsSupplier(nTimesUsed)
+            val outputs = outputsSupplier(nTimesUsed)
+            for (element in Elements.values) {
+                Stats.elementAmounts[element] += outputs[element] - inputs[element]
+            }
+            nTimesUsed--
+        } else {
+            nTimesUsed = 0
+        }
     }
 }
 

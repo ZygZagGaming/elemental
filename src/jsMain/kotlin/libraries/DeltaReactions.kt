@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_ANONYMOUS_PARAMETER")
+
 package libraries
 
 import core.*
@@ -10,8 +12,8 @@ object DeltaReactions: Library<SpecialReaction>() {
             "Overclocking",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.deltaA to 50.0 * 2.0.pow(it),
-                    Elements.deltaB to 15.0 * 4.0.pow(it)
+                    Elements.deltaA to 60.0 * 2.0.pow(it),
+                    Elements.deltaB to 15.0 * 2.0.pow(it)
                 )
             },
             effects = { it, offline ->
@@ -39,20 +41,31 @@ object DeltaReactions: Library<SpecialReaction>() {
         SpecialReaction(
             "Escapism",
             inputsSupplier = {
-                elementStackOf(
+                if (it >= 2) elementStackOf(
+                    Elements.deltaCatalyst to 1000.0
+                )
+                else elementStackOf(
                     Elements.deltaCatalyst to 250.0 * 2.0.pow(it)
                 )
             },
             effects = { it, offline ->
-                Stats.flags.add("escapism")
+                when (it) {
+                    1 -> Flags.escapism1.add()
+                    2 -> Flags.escapism2.add()
+                }
             },
             undo = {
-                Stats.flags.remove("escapism")
+                Flags.escapism1.remove()
+                Flags.escapism2.remove()
             },
             stringEffects = {
-                "Duality no longer resets ${SpecialReactions.massiveClock.name} or ${SpecialReactions.infoNerd.name} purchases"
+                when (it) {
+                    1 -> "Duality no longer resets ${SpecialReactions.massiveClock.name} or ${SpecialReactions.infoNerd.name} purchases"
+                    2 -> "Duality no longer resets ${SpecialReactions.moneyUp.name} purchases"
+                    else -> "Duality no longer resets ${SpecialReactions.moneyUp.name} purchases"
+                }
             },
-            usageCap = 1
+            usageCap = 2
         )
     )
 
@@ -66,7 +79,10 @@ object DeltaReactions: Library<SpecialReaction>() {
                         Elements.deltaA to 200.0,
                         Elements.deltaC to 30.0
                     )
-                    else -> elementStackOf()
+                    else -> elementStackOf(
+                        Elements.deltaA to 200.0,
+                        Elements.deltaC to 30.0
+                    )
                 }
             },
             effects = { it, offline ->

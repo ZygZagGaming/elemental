@@ -74,7 +74,7 @@ object TutorialPages: Library<TutorialPage>() {
             image = "images/goober.png",
             imageAlt = "clickerTweaking",
             headerText = "Clicker Tweaking",
-            text = "Each Clicker can be right-clicked to bring up a menu where you can change the key it listens to, and which mode it's on. Currently, you can only use Manual and Disabled modes."
+            text = "Each Clicker can be right-clicked to bring up a menu where you can change the key it listens to, and which mode it's on. Currently, you only have Manual and Disabled modes unlocked."
         )
     )
     val superclickerPage = register(
@@ -101,7 +101,7 @@ object TutorialPages: Library<TutorialPage>() {
             image = "images/goober.png",
             imageAlt = "delta reaction respec",
             headerText = "Delta Reaction Respec",
-            text = "With the Duality Milestone Respect unlocked, you can check the \"Respec\" checkbox under the Duality button, and on your next Duality, of your Duality Reactions will be refunded at no additional cost."
+            text = "With the Duality Milestone Respect unlocked, you can check the \"Respec\" checkbox under the Duality button, and on your next Duality, all of your Duality Reactions will be refunded at no additional cost."
         )
     )
 }

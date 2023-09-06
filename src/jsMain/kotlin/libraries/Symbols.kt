@@ -13,4 +13,8 @@ object Symbols: Library<Char>() {
     val delta = register("libraries.getDelta", 'Δ')
     val omega = register("omega", 'ω')
     val alpha = register("alpha", 'α')
+    val xBox = register("xBox", '\u2612')
+    val checkBox = register("checkBox", '\u2611')
+    val box = register("box", '\u2610')
+    val mu = register("mu", 'μ')
 }

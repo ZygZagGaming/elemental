@@ -36,7 +36,7 @@ typealias MutableElementStack = MutableDefaultedMap<ElementType, Double>
 fun ElementStack.format(): String = filter { (_, v) ->
     v != 0.0
 }.map { (k, v) ->
-    "${if (v == 1.0) "" else if (k.isDecimal) v.toString(1) else floor(v).roundToInt().toString()}${k.symbol}"
+    "${if (v == 1.0 || (!k.isDecimal && floor(v).roundToInt() == 1)) "" else if (k.isDecimal) v.toString(1) else floor(v).roundToInt().toString()}${k.symbol}"
 }.joinToString(" + ")
 
 val ElementType.delta get() = Elements.symbolMap["${Symbols.delta}$symbol"]!!
