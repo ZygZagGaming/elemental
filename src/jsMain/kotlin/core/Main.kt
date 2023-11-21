@@ -1,9 +1,12 @@
 @file:Suppress("UNUSED_VARIABLE", "MemberVisibilityCanBePrivate", "MoveLambdaOutsideParentheses")
 
+package core
+
 import kotlinx.browser.document
 import kotlinx.browser.localStorage
 import kotlinx.browser.window
 import kotlinx.dom.hasClass
+import libraries.*
 import org.w3c.dom.*
 import kotlin.math.*
 
@@ -16,7 +19,7 @@ lateinit var gameState: GameState
 
 var reactionListScrollAmount = 0.0
 var reactionListScrollSens = 0.4
-const val gameVersion = "v1.2.1"
+const val gameVersion = "v2.0.0"
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -26,14 +29,14 @@ fun resetSave() {
 }
 
 val notation = RateOfChangeNotation.MAXPERSEC
-val htmlUpdateInterval = 5.0
+const val htmlUpdateInterval = 5.0
 var lastHtmlUpdate = 0.0
 
 @OptIn(ExperimentalJsExport::class)
 @Suppress("RedundantUnitExpression")
 @JsExport
 fun loadGame() {
-    doCircleShit()
+    DynamicHTMLManager.setupHTML()
     document.getElementById("title")?.textContent = "Elemental $gameVersion"
     ContextMenu.applyEventListeners()
 
@@ -45,7 +48,7 @@ fun loadGame() {
         val updateAll = GameTimer.timeSex() - lastHtmlUpdate > htmlUpdateInterval
         if (updateAll) lastHtmlUpdate = GameTimer.timeSex()
         DynamicHTMLManager.apply {
-            for ((name, element) in Elements.map) {
+            for ((name, element) in Resources.map) {
                 val symbol = element.symbol
                 if (updateAll || Stats.elementAmounts.changed(element)) {
                     val displayText =
@@ -58,9 +61,29 @@ fun loadGame() {
                         "$symbol-amount-display",
                         "$symbol = $displayText"
                     )
+                    if (element == Resources.catalyst) setClassPresence(
+                        "duality-button",
+                        "disabled",
+                        !Flags.reachedDuality.isUnlocked()
+                    )
+                    if (element == Resources.dualities) {
+                        idSetClassPresence(
+                            "big-duality-button",
+                            "hidden",
+                            Stats.elementAmounts[Resources.dualities] > 0
+                        )
+                        idSetClassPresence(
+                            "main-duality-page",
+                            "hidden",
+                            Stats.elementAmounts[Resources.dualities] <= 0
+                        )
+                    }
                     Stats.elementAmounts.clearChanged(element)
                 }
-                if (updateAll || Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(element)) {
+                if (updateAll || Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(
+                        element
+                    )
+                ) {
                     setVariable(
                         "$symbol-bounds-display",
                         "${Stats.functionalElementLowerBounds[element].roundTo(2)} ≤ $symbol ≤ ${
@@ -86,13 +109,6 @@ fun loadGame() {
                     )
                     Stats.elementDeltas.clearChanged(element)
                 }
-                if (updateAll || Stats.elementDeltasUnspent.changed(element)) {
-                    setVariable(
-                        "delta-$symbol-amount",
-                        "${Stats.elementDeltasUnspent[element].roundTo(2)}"
-                    )
-                    Stats.elementDeltasUnspent.clearChanged(element)
-                }
             }
 
             for ((id, keybind) in Input.keybinds) {
@@ -106,6 +122,10 @@ fun loadGame() {
                 setVariable(
                     "clicker-$id-mode",
                     clicker.mode.pretty
+                )
+                setVariable(
+                    "$id-clicker-cps-display",
+                    "Click rate = ${clicker.cps.roundTo(3)} Hz"
                 )
             }
 
@@ -137,6 +157,44 @@ fun loadGame() {
                 idSetClassPresence("special-reaction-option-$i", "active", reaction.hasBeenUsed)
                 idSetDataVariable("special-reaction-option-$i", "backendReactionId", backendId)
             }
+
+            for ((i, entry) in DualityMilestones.map.entries.withIndex()) {
+                val (backendId, reaction) = entry
+                setVariable("duality-reaction-$i-title", reaction.name)
+                setVariable("duality-reaction-$i-description", reaction.toString())
+                setVariable(
+                    "duality-reaction-$i-effects",
+                    reaction.stringEffects(reaction.nTimesUsed + 1)
+                )
+                idSetClassPresence(
+                    "duality-reaction-option-$i",
+                    "disabled",
+                    !gameState.canDoReaction(reaction) && !reaction.hasBeenUsed
+                )
+                idSetClassPresence("duality-reaction-option-$i", "active", reaction.hasBeenUsed)
+                idSetDataVariable("duality-reaction-option-$i", "backendReactionId", backendId)
+            }
+
+            for ((i, entry) in DeltaReactions.map.entries.withIndex()) {
+                val (backendId, reaction) = entry
+                setVariable("delta-reaction-$i-title", reaction.name)
+                setVariable("delta-reaction-$i-description", reaction.toString())
+                setVariable(
+                    "delta-reaction-$i-effects",
+                    reaction.stringEffects(reaction.nTimesUsed + 1)
+                )
+                idSetClassPresence(
+                    "delta-reaction-option-$i",
+                    "disabled",
+                    !gameState.canDoReaction(reaction) && !reaction.hasBeenUsed
+                )
+                idSetClassPresence("delta-reaction-option-$i", "active", reaction.hasBeenUsed)
+                idSetDataVariable("delta-reaction-option-$i", "backendReactionId", backendId)
+            }
+
+            setVariable("deltaReactionRespecToggleCheckbox", "${if (Stats.deltaReactionRespec) Symbols.xBox else Symbols.box}")
+            setVariable("autosaving", Options.autosaving.toStringOnOff())
+            idSetClassPresence("duality-respec-container", "hidden", !Flags.respecUnlocked.isUnlocked())
         }
 
         doCircleShit()
@@ -151,7 +209,7 @@ fun loadGame() {
     if (container1 is HTMLElement) container1.apply {
         onwheel = { evt ->
             val rows = ceil(container1.children.length / 3.0)
-            val maxScrollAmount = container1.children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px margin + 3px border on both sides*/ - container1.clientHeight
+            val maxScrollAmount = container1.children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px core.margin + 3px border on both sides*/ - container1.clientHeight
             reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY),
                 maxScrollAmount
             )
@@ -184,7 +242,7 @@ fun loadGame() {
     if (container2 is HTMLElement) container2.apply {
         onwheel = { evt ->
             val rows = ceil(children.length / 3.0)
-            val maxScrollAmount = children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px margin + 3px border on both sides*/ - container2.clientHeight
+            val maxScrollAmount = children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px core.margin + 3px border on both sides*/ - container2.clientHeight
             reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY),
                 maxScrollAmount
             )
@@ -215,28 +273,97 @@ fun loadGame() {
             }
         }
     }
+    val container3 = document.getElementById("duality-reaction-container")
+    if (container3 is HTMLElement) container3.apply {
+        onwheel = { evt ->
+            val rows = ceil(children.length / 3.0)
+            val maxScrollAmount = children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px core.margin + 3px border on both sides*/ - container3.clientHeight
+            reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY),
+                maxScrollAmount
+            )
+            children.iterator().forEach { it.style.top = (-reactionListScrollAmount).px }
+
+            Unit // not kotlin begging me for a return
+        }
+        for ((child, i) in children.indexed) {
+            child.onclick = { _ ->
+                val reaction = DualityMilestones.map[child.dataset["backendReactionId"]!!]!!
+                if (!reaction.hasBeenUsed) {
+                    gameState.attemptReaction(reaction)
+                }
+
+                Unit
+            }
+            child.onmouseenter = { _ ->
+                val reaction = DualityMilestones.map[child.dataset["backendReactionId"]!!]!!
+                gameState.hoveredReaction = reaction
+
+                Unit
+            }
+            child.onmouseleave = { _ ->
+                val reaction = DualityMilestones.map[child.dataset["backendReactionId"]!!]!!
+                gameState.hoveredReaction = NullReaction
+
+                Unit
+            }
+        }
+    }
+    val container4 = document.getElementById("delta-reaction-container")
+    if (container4 is HTMLElement) container4.apply {
+        onwheel = { evt ->
+            val rows = ceil(children.length / 3.0)
+            val maxScrollAmount = children.toList().sumOf { it.clientHeight } + rows * 16 + 6 /*10px core.margin + 3px border on both sides*/ - container4.clientHeight
+            reactionListScrollAmount = min(max(0.0, reactionListScrollAmount + reactionListScrollSens * evt.deltaY),
+                maxScrollAmount
+            )
+            children.iterator().forEach { it.style.top = (-reactionListScrollAmount).px }
+
+            Unit // not kotlin begging me for a return
+        }
+        for ((child, i) in children.indexed) {
+            child.onclick = { _ ->
+                val reaction = DeltaReactions.map[child.dataset["backendReactionId"]!!]!!
+                if (!reaction.hasBeenUsed) {
+                    gameState.attemptReaction(reaction)
+                }
+
+                Unit
+            }
+            child.onmouseenter = { _ ->
+                val reaction = DeltaReactions.map[child.dataset["backendReactionId"]!!]!!
+                gameState.hoveredReaction = reaction
+
+                Unit
+            }
+            child.onmouseleave = { _ ->
+                val reaction = DeltaReactions.map[child.dataset["backendReactionId"]!!]!!
+                gameState.hoveredReaction = NullReaction
+
+                Unit
+            }
+        }
+    }
     loadLocalStorage()
-    var lastSave = 0.0
+    var lastSave = 1.0
     GameTimer.registerTicker("Saving") {
-        if (GameTimer.timeSex() - lastSave >= Options.saveInterval) {
+        if (Options.autosaving && GameTimer.timeSex() - lastSave >= Options.saveInterval) {
             saveLocalStorage()
             lastSave = GameTimer.timeSex()
         }
     }
-    GameTimer.registerTicker("gameState tick", gameState::tick)
+    GameTimer.registerTicker("GameState tick", gameState::tick)
     GameTimer.beginTicking()
 
-    val tutorialWrapper = document.getElementById("tutorial-box-wrapper")!!
+    val tutorialWrapper = document.getElementById("modal-wrapper")!!
     tutorialWrapper.addEventListener("click", {
-        DynamicHTMLManager.clearTutorial()
-        if (DynamicHTMLManager.currentTutorial == Tutorials.welcome) Stats.flags.add("seenTutorial")
+        DynamicHTMLManager.clearModal()
     })
-    val tutorialBox = document.getElementById("tutorial-box")!!
+    val tutorialBox = document.getElementById("modal")!!
     tutorialBox.addEventListener("click", {
         it.stopPropagation()
     })
 
-    if ("seenTutorial" !in Stats.flags) {
+    if (!Flags.seenTutorial.isUnlocked()) {
         DynamicHTMLManager.showTutorial(Tutorials.welcome)
     }
 }
@@ -257,124 +384,17 @@ fun doCircleShit() {
         val radius = half * 0.8
         val elements = alchemyContainer.children
         for ((element, i) in elements.indexed) {
-            if (element.hasClass("alchemy-element")) {
+            if (i <= 7 && element.hasClass("alchemy-element")) {
                 val symbol = element.dataset["element"]
                 if (symbol != null && symbol != "h") {
                     val halfElem = element.getBoundingClientRect().width / 2
-                    val normalizedPos = getAlchemyElementPos(symbol[0]) // should only be 1 char
+                    val normalizedPos = getAlchemyElementPos(symbol.last())
                     val pos = Vec2(half - halfElem, half - halfElem) + normalizedPos * radius
                     element.style.left = pos.x.px
                     element.style.top = pos.y.px
                 }
             }
         }
-    }
-}
-
-open class MovableClicker(val id: Int, val page: Page) {
-    val htmlElement: HTMLElement
-    val canvas: HTMLCanvasElement
-    val dock: HTMLElement
-    var clickPercent = 0.0
-    var sinceLastClick = 0.0
-    init {
-        val parent = DynamicHTMLManager.getPageElement(page)!!
-        htmlElement = document.createElement("div") as HTMLElement
-        canvas = document.createElement("canvas") as HTMLCanvasElement
-        parent.appendChild(canvas)
-        parent.appendChild(htmlElement)
-        canvas.apply {
-            width = vw(3.0).roundToInt()
-            height = vw(3.0).roundToInt()
-            style.position = "absolute"
-            classList.add("no-autoclick")
-        }
-        htmlElement.apply {
-            classList.apply {
-                add("autoclicker")
-                add("draggable")
-                add("dynamic")
-                add("no-autoclick")
-            }
-            id = "autoclicker-${this@MovableClicker.id}"
-            style.apply {
-                position = "absolute"
-                top = "50vh"
-                left = "50vw"
-            }
-        }
-
-        dock = document.createElement("div") as HTMLElement
-        parent.children.toList().first { it.classList.contains("autoclicker-dock-container") }.appendChild(dock)
-        dock.apply {
-            id = "autoclicker-$id-dock"
-            classList.apply {
-                add("autoclicker-dock")
-            }
-            style.apply {
-                position = "absolute"
-                left = "0"
-                bottom = "0"
-            }
-            onclick = {
-                if (htmlElement.dataset["dragging"] != "true") {
-                    htmlElement.screenMiddleX = dock.screenMiddleX
-                    htmlElement.screenY = dock.screenY
-                }
-
-                Unit
-            }
-        }
-    }
-
-    fun click() {
-        //console.log(document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().yMiddle))
-        val element = document.elementsFromPoint(htmlElement.getBoundingClientRect().xMiddle, htmlElement.getBoundingClientRect().top).firstOrNull { !it.classList.contains("no-autoclick") }
-        if (element is HTMLElement) {
-            element.click()
-        }
-    }
-
-    open fun tick(dt: Double) {
-        sinceLastClick += dt
-        while (clickPercent > 1) {
-            clickPercent--
-            click()
-            sinceLastClick = 0.0
-        }
-        canvas.apply {
-            val pixels = 10000 * dt
-            val dx = htmlElement.screenX - screenX
-            val dy = htmlElement.screenY - screenY
-            val totalDistance = sqrt(dx * dx + dy * dy + 0.0)
-            if (totalDistance > 1e-6) {
-                if (totalDistance < pixels) {
-                    screenX = htmlElement.screenX
-                    screenY = htmlElement.screenY
-                } else {
-                    screenX += (dx * pixels / totalDistance).roundToInt()
-                    screenY += (dy * pixels / totalDistance).roundToInt()
-                }
-                style.width = htmlElement.clientWidth.px
-                style.height = htmlElement.clientHeight.px
-            }
-        }
-    }
-}
-
-class KeyClicker(id: Int, page: Page, var holdCps: Double, var key: Key): MovableClicker(id, page) {
-    override fun tick(dt: Double) {
-        if (Input.keyPressedThisTick[key]) clickPercent += 1.0
-        else if (Input.keyDownMap[key]) clickPercent += holdCps * dt
-        else clickPercent = 0.0
-        super.tick(dt)
-    }
-}
-
-class AutoClicker(id: Int, page: Page, var cps: Double = 2.0): MovableClicker(id, page) {
-    override fun tick(dt: Double) {
-        clickPercent += dt * cps
-        super.tick(dt)
     }
 }
 

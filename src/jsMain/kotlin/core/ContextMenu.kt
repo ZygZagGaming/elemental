@@ -1,6 +1,9 @@
+package core
+
 import kotlinx.browser.document
 import kotlinx.html.dom.append
 import kotlinx.html.js.div
+import libraries.Resources
 import org.w3c.dom.DocumentFragment
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
@@ -36,6 +39,14 @@ object ContextMenu {
         js("ctx.replaceChildren()")
         ctx.appendChild(getContextMenuContents(e.target!!))
 
+        //make sure its on the screen
+        if (ctx.screenY + ctx.screenHeight >= document.body!!.screenHeight) {
+            ctx.screenY = document.body!!.screenHeight - ctx.screenHeight
+        }
+        if (ctx.screenX + ctx.screenWidth >= document.body!!.screenWidth) {
+            ctx.screenX = document.body!!.screenWidth - ctx.screenWidth
+        }
+
         Unit
     }
 
@@ -54,6 +65,11 @@ object ContextMenu {
     }
 
     var changingKey: Keybind? = null
+    set(value) {
+        val oldValue = field
+        field = value
+        DynamicHTMLManager.updateKeybindDisplays(oldValue, value)
+    }
 
     private fun getContextMenuContents(target: EventTarget): DocumentFragment {
         val fragment = document.createDocumentFragment().apply {
@@ -62,7 +78,11 @@ object ContextMenu {
                     val actualElementCircle = target.closest(".alchemy-element") as HTMLElement?
                     val autoclickerId = target.dataset["autoclickerId"]?.toIntOrNull()
                     if (actualElementCircle != null) {
-                        val symbol = actualElementCircle.dataset["element"]?.get(0)
+                        val symbol = actualElementCircle.dataset["element"]
+                        val element = Resources.symbolMap[symbol]
+                        if (element != null) div {
+                            +"$symbol is called ${element.name}"
+                        }
                         div("dynamic") {
                             attributes["data-dynamic-id"] = "$symbol-amount-display"
                         }
@@ -75,19 +95,19 @@ object ContextMenu {
                         div("dynamic") {
                             attributes["data-dynamic-id"] = "$symbol-max-rate-display"
                         }
-                        /*if (element == Elements.catalyst) {
+                        /*if (element == libraries.Elements.catalyst) {
                             div("horizontal-line")
                             div {
-                                +"${Elements.heat.symbol} = ${Stats.elementAmounts[Elements.heat].roundTo(2)}"
+                                +"${libraries.Elements.heat.symbol} = ${core.Stats.elementAmounts[libraries.Elements.heat].core.roundTo(2)}"
                             }
                             div {
-                                +"${Stats.functionalElementUpperBounds[Elements.heat]} ≤ ${Elements.heat.symbol} ≤ ${Stats.functionalElementLowerBounds[Elements.heat]}"
+                                +"${core.Stats.functionalElementUpperBounds[libraries.Elements.heat]} ≤ ${libraries.Elements.heat.symbol} ≤ ${core.Stats.functionalElementLowerBounds[libraries.Elements.heat]}"
                             }
                             div {
-                                +"current ${Elements.heat.symbol} / s = ${Stats.elementRates[Elements.heat]}"
+                                +"current ${libraries.Elements.heat.symbol} / s = ${core.Stats.elementRates[libraries.Elements.heat]}"
                             }
                             div {
-                                +"$prefix${Elements.heat.symbol}$suffix = ${Stats.elementDeltas[Elements.heat]}"
+                                +"$prefix${libraries.Elements.heat.symbol}$suffix = ${core.Stats.elementDeltas[libraries.Elements.heat]}"
                             }
                         }*/
                     } else if (autoclickerId != null) {
@@ -102,7 +122,10 @@ object ContextMenu {
                                 }
                                 val keybind = Input.keybinds["keyclicker-$autoclickerId"]
                                 val k = div("keyclicker-key-change dynamic no-highlight") {
-                                    if (keybind != null) attributes["data-dynamic-id"] = "keybind-${keybind.id}-key"
+                                    if (keybind != null) {
+                                        attributes["data-dynamic-id"] = "keybind-${keybind.id}-key"
+                                        attributes["data-keybind-id"] = keybind.id
+                                    }
                                     else +"—"
                                 }
                                 if (keybind != null) k.addEventListener("click", { _ ->
@@ -128,11 +151,14 @@ object ContextMenu {
                                     }
                                 })
                             }
+                            if (ClickerMode.AUTO == clicker.mode) div("dynamic") {
+                                attributes["data-dynamic-id"] = "$autoclickerId-clicker-cps-display"
+                            }
                         } else div {
-                            +"—"
+                            +"N/A"
                         }
                     } else div {
-                        +"—"
+                        +"N/A"
                     }
                 }
                 div("horizontal-line")
