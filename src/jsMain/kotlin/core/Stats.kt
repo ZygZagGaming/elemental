@@ -1,34 +1,34 @@
 package core
 
-import libraries.Elements
+import libraries.Resources
 import libraries.Flag
 import kotlin.math.pow
 
 object Stats {
-    val elementMultipliers = Elements.values.associateWith { basicMultiplierStack }.toMutableMap().toMutableDefaultedMap(
+    val elementMultipliers = Resources.values.associateWith { basicMultiplierStack }.toMutableMap().toMutableDefaultedMap(
         basicMultiplierStack
     )
     val baseElementUpperBounds =
-        BasicMutableStatMap(Elements.values.associateWith {
+        BasicMutableStatMap(Resources.values.associateWith {
             when (it) {
-                Elements.catalyst, Elements.omega, Elements.alpha -> 100000.0
-                Elements.heat -> 10.0
-                Elements.dualities -> Double.MAX_VALUE
-                else -> if (it.isBasic) 1000.0 else 0.0
+                Resources.catalyst, Resources.omega, Resources.alpha -> 100000.0
+                Resources.heat -> 10.0
+                Resources.dualities -> Double.MAX_VALUE
+                else -> if (it.isElement) 1000.0 else 0.0
             }
         }, 1000.0)
-    val elementUpperBoundMultipliers = BasicMutableStatMap(Elements.values.associateWith { basicMultiplierStack }, basicMultiplierStack)
+    val elementUpperBoundMultipliers = BasicMutableStatMap(Resources.values.associateWith { basicMultiplierStack }, basicMultiplierStack)
     val functionalElementUpperBounds =
         ProductStatMap(baseElementUpperBounds, elementUpperBoundMultipliers) { a, b -> b.appliedTo(a) }
-    val baseElementLowerBounds = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
-    val elementLowerBoundMultipliers = BasicMutableStatMap(Elements.values.associateWith { basicMultiplierStack }, basicMultiplierStack)
+    val baseElementLowerBounds = BasicMutableStatMap<Resource, Double>(emptyMap(), 0.0)
+    val elementLowerBoundMultipliers = BasicMutableStatMap(Resources.values.associateWith { basicMultiplierStack }, basicMultiplierStack)
     val functionalElementLowerBounds =
         ProductStatMap(baseElementLowerBounds, elementLowerBoundMultipliers) { a, b -> b.appliedTo(a) }
     var gameSpeed = 0.0
     val elementAmounts = BasicMutableStatMap(defaultStartingElements, 0.0)
-    var elementAmountsCached: MutableList<Map<ElementType, Double>> = mutableListOf()
-    var elementDeltas = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
-    var elementRates = BasicMutableStatMap<ElementType, Double>(emptyMap(), 0.0)
+    var elementAmountsCached: MutableList<Pair<Map<Resource, Double>, Double>> = mutableListOf()
+    var elementDeltas = BasicMutableStatMap<Resource, Double>(emptyMap(), 0.0)
+    var elementRates = BasicMutableStatMap<Resource, Double>(emptyMap(), 0.0)
     val tutorialsSeen = mutableSetOf<Tutorial>()
     //var elementDeltasUnspent = core.BasicMutableStatMap<core.ElementType, Double>(emptyMap(), 0.0)
     var lastTickDt = 0.0
@@ -38,8 +38,8 @@ object Stats {
     var deltaReactionRespec = false
 
     fun resetDeltas() {
-        Elements.values.forEach {
-            if (it.isBasic) elementAmounts[it.delta] = functionalElementUpperBounds[it]
+        Resources.values.forEach {
+            if (it.isElement) elementAmounts[it.delta] = functionalElementUpperBounds[it]
         }
     }
 
@@ -95,6 +95,19 @@ class MultiplierStack {
         val shift = shifts.values.fold(n) { acc, d -> acc + d() }
         val mult = multipliers.values.fold(shift) { acc, d -> acc * d() }
         return mult.pow(powers.values.fold(1.0) { acc, d -> acc * d() })
+    }
+
+    fun parallel(other: MultiplierStack): MultiplierStack {
+        val stack = MultiplierStack()
+
+        for ((k, v) in shifts) stack.setShift(k, v)
+        for ((k, v) in multipliers) stack.setMultiplier(k, v)
+        for ((k, v) in powers) stack.setPower(k, v)
+
+        for ((k, v) in other.shifts) stack.setShift(k, v)
+        for ((k, v) in other.multipliers) stack.setMultiplier(k, v)
+        for ((k, v) in other.powers) stack.setPower(k, v)
+        return stack
     }
 }
 

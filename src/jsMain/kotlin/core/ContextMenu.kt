@@ -3,7 +3,7 @@ package core
 import kotlinx.browser.document
 import kotlinx.html.dom.append
 import kotlinx.html.js.div
-import libraries.Elements
+import libraries.Resources
 import org.w3c.dom.DocumentFragment
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
@@ -65,6 +65,11 @@ object ContextMenu {
     }
 
     var changingKey: Keybind? = null
+    set(value) {
+        val oldValue = field
+        field = value
+        DynamicHTMLManager.updateKeybindDisplays(oldValue, value)
+    }
 
     private fun getContextMenuContents(target: EventTarget): DocumentFragment {
         val fragment = document.createDocumentFragment().apply {
@@ -74,9 +79,9 @@ object ContextMenu {
                     val autoclickerId = target.dataset["autoclickerId"]?.toIntOrNull()
                     if (actualElementCircle != null) {
                         val symbol = actualElementCircle.dataset["element"]
-                        val element = Elements.symbolMap[symbol]
+                        val element = Resources.symbolMap[symbol]
                         if (element != null) div {
-                            +"$symbol is ${element.name}"
+                            +"$symbol is called ${element.name}"
                         }
                         div("dynamic") {
                             attributes["data-dynamic-id"] = "$symbol-amount-display"
@@ -117,7 +122,10 @@ object ContextMenu {
                                 }
                                 val keybind = Input.keybinds["keyclicker-$autoclickerId"]
                                 val k = div("keyclicker-key-change dynamic no-highlight") {
-                                    if (keybind != null) attributes["data-dynamic-id"] = "keybind-${keybind.id}-key"
+                                    if (keybind != null) {
+                                        attributes["data-dynamic-id"] = "keybind-${keybind.id}-key"
+                                        attributes["data-keybind-id"] = keybind.id
+                                    }
                                     else +"—"
                                 }
                                 if (keybind != null) k.addEventListener("click", { _ ->

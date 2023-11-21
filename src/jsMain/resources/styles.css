@@ -52,12 +52,12 @@ body {
 }
 
 .heat-element {
-    width: 2.2vw;
+    width: 2.5vw;
     height: 1.5vw;
     border-radius: 25%;
     transition: top 0.5s ease-out, background-color 0.15s, border-color 0.15s, color 0.15s;
     top: 14vw;
-    left: 13.65vw;
+    left: 13.52vw;
     padding-bottom: 0px;
 }
 
@@ -504,6 +504,17 @@ canvas {
     background-color: #888;
     color: #4c4c4c;
     height: 100%;
+    transition: all 0.1s;
+}
+
+.keyclicker-key-change.active {
+    background-color: #666;
+    color: #ccc;
+    border-color: #ccc;
+}
+
+.keyclicker-key-change:hover, .keyclicker-mode-change:hover {
+    border-color: #ccc;
 }
 
 #context-menu > div.horizontal-line {
@@ -513,7 +524,7 @@ canvas {
 
 #modal {
   background-color: #44d;
-  height: 85vmin;
+  height: 81vmin;
   width: 100vmin;
   border-radius: 7vmin;
   border-style: solid;
@@ -522,14 +533,15 @@ canvas {
   box-shadow: 0 0 3vmin #99e;
   margin: auto;
   position: absolute;
+  padding-top: 4vmin;
 }
 
 .tutorial-image {
-  position: absolute;
+  position: relative;
   width: 80vmin;
   height: 45vmin;
   left: 9.75vmin;
-  top: 9.75vmin;
+  margin-top: 4.75vmin;
   border-radius: 2vmin;
   border-style: solid;
   border-width: 0.5vmin;
@@ -543,7 +555,7 @@ canvas {
 }
 
 .tutorial-title, .tutorial-subtitle, .tutorial-header {
-  position: absolute;
+  position: relative;
   left: 0;
   width: 100%;
   text-align: center;
@@ -551,36 +563,28 @@ canvas {
 }
 
 .tutorial-subtitle {
-  top: 70vmin;
+  margin-top: 2vmin;
   font-size: 5vmin;
   text-shadow: 0 0 1vmin #88e;
   color: #88e;
 }
 
 .tutorial-title {
-  top: 57.5vmin;
+  margin-top: 4vmin;
   font-size: 7.5vmin;
   text-shadow: 0 0 1.5vmin #bbf;
   color: #bbf;
 }
 
-
-.tutorial-subtitle {
-  top: 70vmin;
-  font-size: 5vmin;
-  text-shadow: 0 0 1vmin #88e;
-  color: #88e;
-}
-
 .tutorial-header {
-  top: 57vmin;
+  margin-top: 1vmin;
   font-size: 5vmin;
   text-shadow: 0 0 1vmin #bbf;
   color: #bbf;
 }
 
 .tutorial-text {
-  top: 65vmin;
+  margin-top: 1.5vmin;
   font-size: 3vmin;
   text-shadow: 0 0 1vmin #88e;
   color: #99e;
@@ -791,4 +795,17 @@ canvas {
     position: absolute;
     left: 0;
     top: 0;
+}
+
+r {
+    color: #a33;
+    font-weight: bold;
+}
+
+strike {
+    color: #999;
+}
+
+.no-border {
+    border-color: rgba(0, 0, 0, 0);
 }

@@ -48,7 +48,7 @@ fun loadGame() {
         val updateAll = GameTimer.timeSex() - lastHtmlUpdate > htmlUpdateInterval
         if (updateAll) lastHtmlUpdate = GameTimer.timeSex()
         DynamicHTMLManager.apply {
-            for ((name, element) in Elements.map) {
+            for ((name, element) in Resources.map) {
                 val symbol = element.symbol
                 if (updateAll || Stats.elementAmounts.changed(element)) {
                     val displayText =
@@ -61,21 +61,21 @@ fun loadGame() {
                         "$symbol-amount-display",
                         "$symbol = $displayText"
                     )
-                    if (element == Elements.catalyst) setClassPresence(
+                    if (element == Resources.catalyst) setClassPresence(
                         "duality-button",
                         "disabled",
-                        Stats.elementAmounts[Elements.catalyst] < Stats.dualityThreshold
+                        !Flags.reachedDuality.isUnlocked()
                     )
-                    if (element == Elements.dualities) {
+                    if (element == Resources.dualities) {
                         idSetClassPresence(
                             "big-duality-button",
                             "hidden",
-                            Stats.elementAmounts[Elements.dualities] > 0
+                            Stats.elementAmounts[Resources.dualities] > 0
                         )
                         idSetClassPresence(
                             "main-duality-page",
                             "hidden",
-                            Stats.elementAmounts[Elements.dualities] <= 0
+                            Stats.elementAmounts[Resources.dualities] <= 0
                         )
                     }
                     Stats.elementAmounts.clearChanged(element)
@@ -125,7 +125,7 @@ fun loadGame() {
                 )
                 setVariable(
                     "$id-clicker-cps-display",
-                    "Click rate = ${clicker.autoCpsModifiers.appliedTo(clicker.autoCps).roundTo(3)} Hz"
+                    "Click rate = ${clicker.cps.roundTo(3)} Hz"
                 )
             }
 
@@ -193,6 +193,8 @@ fun loadGame() {
             }
 
             setVariable("deltaReactionRespecToggleCheckbox", "${if (Stats.deltaReactionRespec) Symbols.xBox else Symbols.box}")
+            setVariable("autosaving", Options.autosaving.toStringOnOff())
+            idSetClassPresence("duality-respec-container", "hidden", !Flags.respecUnlocked.isUnlocked())
         }
 
         doCircleShit()
@@ -342,9 +344,9 @@ fun loadGame() {
         }
     }
     loadLocalStorage()
-    var lastSave = 0.0
+    var lastSave = 1.0
     GameTimer.registerTicker("Saving") {
-        if (GameTimer.timeSex() - lastSave >= Options.saveInterval) {
+        if (Options.autosaving && GameTimer.timeSex() - lastSave >= Options.saveInterval) {
             saveLocalStorage()
             lastSave = GameTimer.timeSex()
         }

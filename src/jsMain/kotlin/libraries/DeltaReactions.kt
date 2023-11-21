@@ -12,20 +12,16 @@ object DeltaReactions: Library<SpecialReaction>() {
             "Overclocking",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.deltaA to 60.0 * 2.0.pow(it),
-                    Elements.deltaB to 15.0 * 2.0.pow(it)
+                    Resources.deltaA to 15.0 * 2.0.pow(it),
+                    Resources.deltaB to 60.0 * 2.0.pow(it)
                 )
             },
             effects = { it, offline ->
                 val multiplier = (it * 0.125 + 1.0).squared()
-                gameState.clickersById.values.forEach {
-                    it.autoCpsModifiers.setMultiplier("overclocking", multiplier)
-                }
+                gameState.autoclickspeedMultiplierStack.setMultiplier("overclocking", multiplier)
             },
             undo = {
-                gameState.clickersById.values.forEach {
-                    it.autoCpsModifiers.removeMultiplier("overclocking")
-                }
+                gameState.autoclickspeedMultiplierStack.removeMultiplier("overclocking")
             },
             stringEffects = {
                 val currentMultiplier = ((it - 1) * 0.125 + 1).squared()
@@ -42,10 +38,10 @@ object DeltaReactions: Library<SpecialReaction>() {
             "Escapism",
             inputsSupplier = {
                 if (it >= 2) elementStackOf(
-                    Elements.deltaCatalyst to 1000.0
+                    Resources.deltaCatalyst to 1000.0
                 )
                 else elementStackOf(
-                    Elements.deltaCatalyst to 250.0 * 2.0.pow(it)
+                    Resources.deltaCatalyst to 100.0 * 2.0.pow(it)
                 )
             },
             effects = { it, offline ->
@@ -76,38 +72,27 @@ object DeltaReactions: Library<SpecialReaction>() {
             inputsSupplier = {
                 when (it) {
                     1 -> elementStackOf(
-                        Elements.deltaA to 200.0,
-                        Elements.deltaC to 30.0
+                        Resources.deltaA to 100.0,
+                        Resources.deltaC to 5.0
                     )
                     else -> elementStackOf(
-                        Elements.deltaA to 200.0,
-                        Elements.deltaC to 30.0
+                        Resources.deltaA to 100.0,
+                        Resources.deltaC to 5.0
                     )
                 }
             },
             effects = { it, offline ->
                 when (it) {
                     1 -> {
-                        DynamicHTMLManager.showTutorial(Tutorials.alteredReactions)
-                        NormalReactions.bBackToA.alterations++
+                        Flags.betterClockworkCostScaling.add()
                     }
                 }
             },
             undo = {
-                NormalReactions.bBackToA.apply {
-                    name = name.substring(0, name.length - 2)
-                    inputs = elementStackOf(
-                        Elements.b to 1.0
-                    )
-                    outputs = elementStackOf(
-                        Elements.catalyst to 3.0,
-                        Elements.a to 2.0,
-                        Elements.heat to 0.5
-                    )
-                }
+                Flags.betterClockworkCostScaling.remove()
             },
             stringEffects = {
-                "Alter reaction \"${NormalReactions.aToB.name}\""
+                "Reduce \"${SpecialReactions.clockwork.name}\" cost scaling"
             },
             usageCap = 1
         )
@@ -119,8 +104,8 @@ object DeltaReactions: Library<SpecialReaction>() {
             "Clicker Overload",
             inputsSupplier = {
                  elementStackOf(
-                     Elements.deltaCatalyst to 1000.0 * it,
-                     Elements.deltaC to 30.0 * it
+                     Resources.deltaCatalyst to 500.0 * it,
+                     Resources.deltaC to 5.0 * it
                  )
             },
             effects = { it, offline ->
@@ -128,12 +113,12 @@ object DeltaReactions: Library<SpecialReaction>() {
                     Clicker(
                         it + 5,
                         Pages.elementsPage,
-                        ClickerMode.MANUAL,
-                        4.0, 6.0
+                        ClickerMode.AUTO,
+                        1.0, 6.0
                     )
                 gameState.addClicker(clicker)
-                clicker.modesUnlocked.add(ClickerMode.MANUAL)
-                clicker.setMode(ClickerMode.MANUAL)
+                clicker.modesUnlocked.addAll(setOf(ClickerMode.MANUAL, ClickerMode.AUTO))
+                clicker.setMode(ClickerMode.AUTO)
             },
             undo = {
                 for (id in 6..it + 5) {
@@ -141,7 +126,7 @@ object DeltaReactions: Library<SpecialReaction>() {
                 }
             },
             stringEffects = {
-                "Unlock Keyclicker ${it + 5}"
+                "Unlock Autoclicker ${it + 5} with x0.25 autoclick speed"
             },
             usageCap = 15
         )

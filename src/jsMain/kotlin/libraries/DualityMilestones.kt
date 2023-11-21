@@ -12,18 +12,18 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "A Beginning",
             {
                 elementStackOf(
-                    Elements.alpha to 1.0,
-                    Elements.omega to 1.0
+                    Resources.alpha to 1.0,
+                    Resources.omega to 1.0
                 )
             },
             effects = { n, offline ->
-                Stats.elementMultipliers[Elements.a].setMultiplier("a_beginning") {
+                Stats.elementMultipliers[Resources.a].setMultiplier("a_beginning") {
                     log(Stats.timeSinceLastDuality / 120.0 + 4, 4.0)
                 }
             },
             stringEffects = {
                 val multiplier = log(Stats.timeSinceLastDuality / 120.0 + 4, 4.0)
-                "Multiplier to \"${Elements.a.symbol}\" gain based on time since last Duality: x${multiplier.toString(3)}"
+                "Multiplier to \"${Resources.a.symbol}\" gain based on time since last Duality: x${multiplier.toString(3)}"
             }
         )
     )
@@ -33,7 +33,7 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Respect",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.alpha to 3.0
+                    Resources.alpha to 3.0
                 )
             },
             effects = { it, offline ->
@@ -56,7 +56,7 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Automagic",
             {
                 elementStackOf(
-                    Elements.omega to 3.0
+                    Resources.omega to 3.0
                 )
             },
             effects = { n, offline ->
@@ -84,18 +84,18 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Escalate",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.alpha to 4.0.pow(it),
-                    Elements.omega to 4.0.pow(it)
+                    Resources.alpha to 4.0.pow(it),
+                    Resources.omega to 4.0.pow(it)
                 )
             },
             effects = { it, offline ->
-                Stats.elementMultipliers[Elements.e].setMultiplier("escalate") { 1.2.pow(it) }
+                Stats.elementMultipliers[Resources.e].setMultiplier("escalate") { 1.2.pow(it) }
             },
             undo = {
-                Stats.elementMultipliers[Elements.e].removeMultiplier("escalate")
+                Stats.elementMultipliers[Resources.e].removeMultiplier("escalate")
             },
             stringEffects = {
-                "+20% \"${Elements.e.symbol}\" gain, currently x${1.2.pow(it - 1)}"
+                "x1.2 \"${Resources.e.symbol}\" gain, currently x${1.2.pow(it - 1)}"
             },
             usageCap = 100
         )
@@ -107,27 +107,27 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Synergy",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.alpha to 30.0 * 40.0.pow(it - 1)
+                    Resources.alpha to 30.0 * 40.0.pow(it - 1)
                 )
             },
             effects = { it, offline ->
-                for ((i, elem) in Elements.basicElements.withIndex()) if (i != 0) {
+                for ((i, elem) in Resources.basicElements.withIndex()) if (i != 0 && i != 8) {
                     Stats.elementMultipliers[elem].setMultiplier("synergy") {
-                        max(1.0, log(Stats.elementAmounts[Elements.basicElements[(i - 2).mod(Elements.basicElements.size - 1) + 1]], 4.0).pow(it * 0.25))
+                        max(1.0, log(Stats.elementAmounts[Resources.basicElements[(i - 2).mod(Resources.basicElements.size - 1) + 1]], 4.0).pow(it * 0.25))
                     }
                     Stats.elementUpperBoundMultipliers[elem].setMultiplier("synergy") {
-                        max(1.0, log(Stats.elementAmounts[Elements.basicElements[(i - 2).mod(Elements.basicElements.size - 1) + 1]], 4.0).pow(it * 0.25))
+                        max(1.0, log(Stats.elementAmounts[Resources.basicElements[(i - 2).mod(Resources.basicElements.size - 1) + 1]], 4.0).pow(it * 0.25))
                     }
                 }
             },
             undo = {
-                for (elem in Elements.basicElements) if (elem != Elements.catalyst) {
+                for (elem in Resources.basicElements) if (elem != Resources.catalyst) {
                     Stats.elementMultipliers[elem].removeMultiplier("synergy")
                     Stats.elementUpperBoundMultipliers[elem].removeMultiplier("synergy")
                 }
             },
             stringEffects = {
-                "Multiplier to \"${Elements.a.symbol}\"-\"${Elements.g.symbol}\" and their caps based on the element anticlockwise"
+                "Multiplier to \"${Resources.a.symbol}\"-\"${Resources.g.symbol}\" and their caps based on the element anticlockwise"
             },
             usageCap = 4
         )
@@ -139,26 +139,28 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Harmony",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.omega to 30.0 * 30.0.pow(it - 1)
+                    Resources.omega to 30.0 * 30.0.pow(it - 1)
                 )
             },
             effects = { it, offline ->
-                for ((i, elem) in Elements.basicElements.withIndex()) if (i != 0) {
+                for ((i, elem) in Resources.basicElements.withIndex()) if (i != 0 && i != 8) {
                     Stats.elementMultipliers[elem].setMultiplier("harmony") {
-                        max(1.0, log(Stats.elementAmounts[Elements.basicElements[(i - 1).mod(Elements.basicElements.size - 1) + 2]], 4.0).pow(it * 0.26))
+                        val n = Stats.elementAmounts[Resources.basicElements[i.mod(Resources.basicElements.size - 2) + 1]]
+                        if (n <= 4.0) 1.0 else log(n, 4.0).pow(it * 0.26)
                     }
                     Stats.elementUpperBoundMultipliers[elem].setMultiplier("harmony") {
-                        max(1.0, log(Stats.elementAmounts[Elements.basicElements[(i - 1).mod(Elements.basicElements.size - 1) + 2]], 4.0).pow(it * 0.26))
+                        val n = Stats.elementAmounts[Resources.basicElements[i.mod(Resources.basicElements.size - 2) + 1]]
+                        if (n <= 4.0) 1.0 else log(n, 4.0).pow(it * 0.26)
                     }
                 }
             },
             undo = {
-                for (elem in Elements.basicElements) if (elem != Elements.catalyst) {
+                for (elem in Resources.basicElements) if (elem != Resources.catalyst) {
                     Stats.elementMultipliers[elem].removeMultiplier("harmony")
                 }
             },
             stringEffects = {
-                "Multiplier to \"${Elements.a.symbol}\"-\"${Elements.g.symbol}\" and their caps based on the element clockwise"
+                "Multiplier to \"${Resources.a.symbol}\"-\"${Resources.g.symbol}\" and their caps based on the element clockwise"
             },
             usageCap = 4
         )
@@ -170,18 +172,42 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Cataclysm",
             inputsSupplier = {
                 elementStackOf(
-                    Elements.omega to 5.0 * it * (if (it < 10) 1.0 else if (it < 50) it - 10.0 else (it - 10) * 2.0.pow(it - 50)),
-                    Elements.alpha to 5.0 * it * (if (it < 10) 1.0 else if (it < 50) it - 10.0 else (it - 10) * 2.0.pow(it - 50))
+                    Resources.omega to 50.0 * it * (if (it < 10) 1.0 else if (it < 50) it - 10.0 else (it - 10) * 2.0.pow(it - 50))
                 )
             },
             effects = { it, offline ->
-                Stats.elementMultipliers[Elements.catalyst].setMultiplier("cataclysm") { 1.05.pow(it) }
+                Stats.elementMultipliers[Resources.catalyst].setMultiplier("cataclysm") { 1.05.pow(it) }
             },
             undo = {
-                Stats.elementMultipliers[Elements.catalyst].removeMultiplier("cataclysm")
+                Stats.elementMultipliers[Resources.catalyst].removeMultiplier("cataclysm")
             },
             stringEffects = {
-                "+5% \"${Elements.catalyst.symbol}\" gain, total: x${1.05.pow(it - 1)}"
+                "x1.05 \"${Resources.catalyst.symbol}\" gain, total: x${1.05.pow(it - 1)}"
+            },
+            usageCap = 100000
+        )
+    )
+
+    val paraAlpha = register(
+        "para_alpha",
+        MilestoneReaction(
+            "Para-Alpha",
+            inputsSupplier = {
+                elementStackOf(
+                    Resources.omega to 50.0 * it * (if (it < 10) 1.0 else if (it < 50) it - 10.0 else (it - 10) * 2.0.pow(it - 50))
+                )
+            },
+            effects = { _, _ ->
+                Flags.paraAlpha.add()
+            },
+            undo = {
+                Flags.paraAlpha.remove()
+            },
+            stringEffects = {
+                when (it) {
+                    1 -> "Obtain 0.2${Symbols.alpha} upon Duality for each Element count above 1000"
+                    else -> "Obtain ${0.2 * (it - 1)}${Symbols.alpha} → ${0.2 * it}${Symbols.alpha} upon Duality for each Element count above 1000"
+                }
             },
             usageCap = 100000
         )

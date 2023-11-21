@@ -2,7 +2,7 @@ package core
 
 import kotlinx.browser.document
 import kotlinx.browser.window
-import libraries.Elements
+import libraries.Resources
 import org.w3c.dom.Storage
 import kotlin.math.*
 
@@ -57,10 +57,14 @@ interface StatMap<K, V>: Indexable<K, V> {
     fun clear()
 }
 
-interface MutableStatMap<K, V>: StatMap<K, V>, MutableIndexable<K, V>
+interface MutableStatMap<K, V>: StatMap<K, V>, MutableIndexable<K, V> {
+    fun addListener(key: K, name: String, listener: (V?, V) -> Unit)
+    fun removeListener(key: K, name: String)
+}
 open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val defaultValue: V): MutableStatMap<K, V> {
     private val backingMap = backingMap.toMutableMap()
     private val changedSet = mutableSetOf<K>()
+    private val listeners = mutableMapOf<K, MutableMap<String, (V?, V) -> Unit>>()
     val asMap get() = backingMap.toMap()
 
     override fun get(key: K): V = backingMap[key] ?: defaultValue
@@ -70,7 +74,17 @@ open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val default
             backingMap[key] = value
             changedSet.add(key)
             //if (this == core.Stats.elementAmounts) console.log("value of $key changed from $old to $value")
+            listeners[key]?.values?.forEach { it(old, value) }
         }
+    }
+
+    override fun addListener(key: K, name: String, listener: (V?, V) -> Unit) {
+        if (key in listeners) listeners[key]!![name] = listener
+        else listeners[key] = mutableMapOf(name to listener)
+    }
+
+    override fun removeListener(key: K, name: String) {
+        listeners[key]?.remove(name)
     }
 
     override fun clearChanged() {
@@ -93,6 +107,12 @@ open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val default
     fun setValues(newValues: Map<K, V>) {
         clear()
         for (key in newValues.keys) set(key, newValues[key]!!)
+    }
+}
+
+fun <K, V: Comparable<V>> MutableStatMap<K, V>.addThresholdListener(key: K, name: String, threshold: V, listener: (V) -> Unit) {
+    addListener(key, name) { old, new ->
+        if (old == null || (old > threshold) != (new > threshold)) listener(new)
     }
 }
 
@@ -139,14 +159,14 @@ data class SimpleMutableIndexable<K, V>(private val getter: (K) -> V, private va
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 fun setElementAmount(elementId: String, amount: Double) {
-    val element = Elements.map[elementId]
+    val element = Resources.map[elementId]
     if (element != null) Stats.elementAmounts[element] = amount
 }
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 fun setElementBaseCap(elementId: String, amount: Double) {
-    val element = Elements.map[elementId]
+    val element = Resources.map[elementId]
     if (element != null) Stats.baseElementUpperBounds[element] = amount
 }
 
@@ -168,6 +188,16 @@ class MutableDefaultedMap<K, V>(private val backingMap: MutableMap<K, V>, defaul
     override val entries: MutableSet<MutableMap.MutableEntry<K, V>> get() = backingMap.entries
     override val keys: MutableSet<K> get() = backingMap.keys
     override val values: MutableCollection<V> get() = backingMap.values
+    private val listeners = mutableMapOf<K, MutableMap<String, (V?, V) -> Unit>>()
+
+    fun addListener(key: K, name: String, listener: (V?, V) -> Unit) {
+        if (key in listeners) listeners[key]!![name] = listener
+        else listeners[key] = mutableMapOf(name to listener)
+    }
+
+    fun removeListener(key: K, name: String) {
+        listeners[key]?.remove(name)
+    }
 
     override fun clear() {
         backingMap.clear()
@@ -184,6 +214,7 @@ class MutableDefaultedMap<K, V>(private val backingMap: MutableMap<K, V>, defaul
     }
 
     override fun put(key: K, value: V): V {
+        listeners[key]?.values?.forEach { it(backingMap[key], value) }
         return backingMap.put(key, value) ?: defaultValue
     }
 
@@ -207,10 +238,10 @@ fun Double.toString(places: Int): String {
 }
 fun <K, V> defaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mapOf(*values).toDefaultedMap(defaultValue)
 fun <K, V> mutableDefaultedMapOf(defaultValue: V, vararg values: Pair<K, V>) = mutableMapOf(*values).toMutableDefaultedMap(defaultValue)
-fun elementStackOf(vararg values: Pair<ElementType, Double>, defaultValue: Double = 0.0): ElementStack =
+fun elementStackOf(vararg values: Pair<Resource, Double>, defaultValue: Double = 0.0): ResourceStack =
     defaultedMapOf(defaultValue, *values)
-operator fun ElementStack.plus(other: ElementStack): ElementStack = entries.associate { (k, v) -> k to (v + other[k]) }.toDefaultedMap(0.0)
-fun Map<ElementType, Double>.toElementStack(): ElementStack = toDefaultedMap(0.0)
+operator fun ResourceStack.plus(other: ResourceStack): ResourceStack = entries.associate { (k, v) -> k to (v + other[k]) }.toDefaultedMap(0.0)
+fun Map<Resource, Double>.toElementStack(): ResourceStack = toDefaultedMap(0.0)
 fun vh(percent: Double): Double {
     val h = max(document.documentElement!!.clientHeight, window.innerHeight)
     return (percent * h) / 100.0
@@ -256,3 +287,5 @@ fun interpolationFunctionForwardsBackwards(f: (Double) -> Double): (Double) -> D
 }
 
 fun <T> List<T>.firstTwo(): Pair<T, T> = this[0] to this[1]
+
+fun Boolean.toStringOnOff(on: String = "On", off: String = "Off") = if (this) on else off

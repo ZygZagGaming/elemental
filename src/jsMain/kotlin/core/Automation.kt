@@ -3,21 +3,18 @@ package core
 import kotlinx.browser.document
 import org.w3c.dom.*
 import kotlin.math.*
+import kotlin.random.Random
 
 class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: Double, val heldCps: Double) {
-    val cps get() = if (mode == ClickerMode.MANUAL) heldCps else autoCpsModifiers.appliedTo(autoCps)
-    val clickPower get() = visualClickBase.toDouble().pow(floor(log(cps, visualClickBase.toDouble()))).roundToInt()
-    val visualCps get() = cps / clickPower
+    val cps get() = if (mode == ClickerMode.MANUAL) heldCps else gameState.autoclickspeedMultiplierStack.parallel(autoCpsModifiers).appliedTo(autoCps)
     var clickPercent = 0.0
     lateinit var htmlElement: HTMLElement
     lateinit var canvas: HTMLCanvasElement
     lateinit var canvasParent: HTMLElement
     lateinit var dock: HTMLElement
     lateinit var dockCanvas: HTMLCanvasElement
-    var timeSinceLastClick = 0.0
-    var timeSinceLastVisualClick = 0.0
-    var clicksSinceLastVisualClick = 0
-    val visualClickBase = 7
+    val randomOffset = Random.nextDouble(0.0, 1.0)
+    val timeSinceLastClick get() = (lifetime + randomOffset).mod(cps)
     var wasDragging = false
     val autoCpsModifiers = basicMultiplierStack
     val dragging get() = htmlElement.dataset["dragging"] == "true"
@@ -27,6 +24,13 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
     }
     lateinit var text: HTMLElement
     val modesUnlocked = defaultModes.toMutableSet()
+
+    var lifetime = 0.0
+
+    init {
+        if (id > 5)
+            autoCpsModifiers.setMultiplier("nerf", 0.25) // TODO: clean this up
+    }
 
     fun deInit() {
         htmlElement.remove()
@@ -81,9 +85,10 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
             id = "clicker-$id-dock"
             classList.apply {
                 add("clicker-dock")
+                add("no-autoclick")
             }
             onclick = {
-                if (!dragging) moveToDock()
+                if (!dragging) moveToDock(source = "dock clicked")
 
                 Unit
             }
@@ -124,6 +129,7 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
 
     val recheckHoveringInterval = 1.0
     fun tick(dt: Double) {
+        lifetime += dt
         if (mode !in modesUnlocked) setMode(ClickerMode.DISABLED)
         if (dragging || (DynamicHTMLManager.shownPage == page && GameTimer.every(
                 recheckHoveringInterval,
@@ -135,17 +141,9 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
         ).firstOrNull { !it.classList.contains("no-autoclick") } as HTMLElement?
         if (!docked && mode == ClickerMode.AUTO) clickPercent += dt * cps
         if (!docked) {
-            timeSinceLastClick += dt
-            timeSinceLastVisualClick += dt
             while (clickPercent > 1) {
                 clickPercent--
                 click()
-                timeSinceLastClick = 0.0
-                clicksSinceLastVisualClick++
-                if (clicksSinceLastVisualClick > clickPower) {
-                    clicksSinceLastVisualClick -= clickPower
-                    timeSinceLastVisualClick = 0.0
-                }
             }
         }
         if (DynamicHTMLManager.shownPage == page) {
@@ -181,13 +179,12 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
             if (!dragging && wasDragging) docked = false
             if (!dragging && !docked
                 && (htmlElement.screenMiddleX - dock.screenMiddleX).squared() + (htmlElement.screenMiddleY - dock.screenMiddleY).squared() <= Options.autoclickerDockSnapDistance.squared()
-            )
-                moveToDock()
+            ) moveToDock(source = "snap to dock position")
             wasDragging = dragging
         }
     }
 
-    fun moveToDock(force: Boolean = false) {
+    fun moveToDock(force: Boolean = false, source: String = "") {
         htmlElement.apply {
             screenMiddleX = dock.screenMiddleX
             screenMiddleY = dock.screenMiddleY

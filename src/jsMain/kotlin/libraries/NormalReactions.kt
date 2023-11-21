@@ -9,11 +9,11 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "A to B",
             elementStackOf(
-                Elements.catalyst to 1.0,
-                Elements.a to 1.0
+                Resources.catalyst to 1.0,
+                Resources.a to 1.0
             ),
             elementStackOf(
-                Elements.b to 3.0
+                Resources.b to 3.0
             )
         )
     )
@@ -23,10 +23,11 @@ object NormalReactions: Library<Reaction>() {
             { alterations ->
                 when (alterations) {
                     0 -> elementStackOf(
-                        Elements.b to 1.0
+                        Resources.b to 1.0
                     )
                     1 -> elementStackOf(
-                        Elements.b to 2.0
+                        Resources.b to 1.0,
+                        Resources.heat to 0.1
                     )
                     else -> elementStackOf()
                 }
@@ -34,14 +35,13 @@ object NormalReactions: Library<Reaction>() {
             { alterations ->
                 when (alterations) {
                     0 -> elementStackOf(
-                        Elements.catalyst to 3.0,
-                        Elements.a to 2.0,
-                        Elements.heat to 0.5
+                        Resources.catalyst to 3.0,
+                        Resources.a to 2.0,
+                        Resources.heat to 0.5
                     )
                     1 -> elementStackOf(
-                        Elements.catalyst to 10.0,
-                        Elements.a to 4.0,
-                        Elements.heat to 1.0
+                        Resources.catalyst to 8.0,
+                        Resources.a to 4.0
                     )
                     else -> elementStackOf()
                 }
@@ -52,12 +52,12 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "ABCs",
             elementStackOf(
-                Elements.catalyst to 2.0,
-                Elements.b to 29.0,
+                Resources.catalyst to 2.0,
+                Resources.b to 29.0,
             ),
             elementStackOf(
-                Elements.c to 1.0,
-                Elements.heat to 3.5
+                Resources.c to 1.0,
+                Resources.heat to 3.5
             )
         )
     )
@@ -65,12 +65,12 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "Cmingly OP",
             elementStackOf(
-                Elements.heat to 8.0,
-                Elements.c to 1.0,
+                Resources.heat to 8.0,
+                Resources.c to 1.0,
             ),
             elementStackOf(
-                Elements.a to 10.0,
-                Elements.b to 1.0
+                Resources.a to 10.0,
+                Resources.b to 1.0
             )
         )
     )
@@ -101,10 +101,10 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "Over 900",
             elementStackOf(
-                Elements.a to 901.0,
+                Resources.a to 901.0,
             ),
             elementStackOf(
-                Elements.d to 1.0
+                Resources.d to 1.0
             )
         )
     )
@@ -112,12 +112,12 @@ object NormalReactions: Library<Reaction>() {
         Reaction(
             "Exotherm",
             elementStackOf(
-                Elements.catalyst to 10000.0,
-                Elements.c to 120.0
+                Resources.catalyst to 10000.0,
+                Resources.c to 120.0
             ),
             elementStackOf(
-                Elements.e to 1.0,
-                Elements.heat to 50.0
+                Resources.e to 1.0,
+                Resources.heat to 50.0
             )
         )
     )

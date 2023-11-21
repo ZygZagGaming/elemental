@@ -19,7 +19,7 @@
         <div id="help-button" class="dynamic no-highlight"><div id="help-button-text">Tutorials</div></div>
         <div id="elements-page" class="page" data-page-id="elements">
             <div class="alchemy-container" id="elements-alchemy-container">
-                <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-0" data-element="ϟ"><div class="alchemy-element-text">ϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-ϟ-amount"></div></div>
+                <div class="alchemy-element grey-bkg-style no-border nonclickable" id="alchemy-element-0" data-element="ϟ"><div class="alchemy-element-text">ϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-ϟ-amount"></div></div>
                 <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-1" data-element="a"><div class="alchemy-element-text">a</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-a-amount"></div></div>
                 <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-2" data-element="b"><div class="alchemy-element-text">b</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-b-amount"></div></div>
                 <div class="alchemy-element grey-bkg-style nonclickable" id="alchemy-element-3" data-element="c"><div class="alchemy-element-text">c</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-c-amount"></div></div>
@@ -42,7 +42,7 @@
         </div>
         <div id="duality-page" class="page hidden" data-page-id="duality">
             <div id="big-duality-button" class="duality-button yellow-bkg-style no-highlight dynamic">Duality<div class="duality-button-line">Requirement: 100000ϟ</div></div>
-            <div id="main-duality-page" class="dynamic hidden">
+            <div id="main-duality-page" class="dynamic hidden" style="width: 0;">
                 <div class="alchemy-container" id="delta-alchemy-container">
                     <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-0" data-element="Δϟ"><div class="alchemy-element-text">Δϟ</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δϟ-amount"></div></div>
                     <div class="alchemy-element grey-bkg-style nonclickable" id="delta-element-1" data-element="Δa"><div class="alchemy-element-text">Δa</div><div class="alchemy-element-amount dynamic" data-dynamic-id="element-Δa-amount"></div></div>
@@ -79,7 +79,9 @@
                 <div class="options-column-content">
                     <div class="options-column-element">
                         <div class="options-text">Autosaving</div>
-                        <div class="on-off-switch"></div>
+                        <div class="options-button grey-bkg-style dynamic" onclick="elemental.core.toggleAutosaving()">
+                            <div class="dynamic" data-dynamic-id="autosaving"></div>
+                        </div>
                     </div>
                     <div class="options-column-element">
                         <div class="options-text">Reset save (FOR DEBUG ONLY)</div>
@@ -98,10 +100,26 @@
                         </div>
                     </div>
                     <div class="options-column-element">
-                        <div class="options-text">Save file from clipboard</div>
+                        <div class="options-text">Import file from clipboard</div>
                         <div class="options-button grey-bkg-style" onclick="elemental.core.loadSaveFromClipboard()">
                             <div>
+                                Import
+                            </div>
+                        </div>
+                    </div>
+                    <div class="options-column-element">
+                        <div class="options-text">Save file</div>
+                        <div class="options-button grey-bkg-style" onclick="elemental.core.save()">
+                            <div>
                                 Save
+                            </div>
+                        </div>
+                    </div>
+                    <div class="options-column-element">
+                        <div class="options-text">Load file</div>
+                        <div class="options-button grey-bkg-style" onclick="elemental.core.load()">
+                            <div>
+                                Load
                             </div>
                         </div>
                     </div>

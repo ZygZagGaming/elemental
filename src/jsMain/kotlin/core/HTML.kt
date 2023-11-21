@@ -98,7 +98,7 @@ object DynamicHTMLManager {
             val dataId = dyn.dataset["dynamicId"]
             val data = variables[dataId]
             if (data != null) {
-                dyn.textContent = data
+                dyn.innerHTML = data
             }
             if (dyn.classList.contains("draggable")) {
                 var dx: Int
@@ -246,6 +246,13 @@ object DynamicHTMLManager {
                 Unit
             })
         }
+        document.getElementById("big-duality-button")?.let {
+            it.addEventListener("click", {
+                duality()
+
+                Unit
+            })
+        }
         document.getElementById("help-button")?.let {
             it.addEventListener("click", {
                 showTutorialListModal()
@@ -277,6 +284,23 @@ object DynamicHTMLManager {
             }
         }
     }
+
+    fun updateKeybindDisplays(oldValue: Keybind?, newValue: Keybind?) {
+        for (dynamic in dynamix) {
+            val keybindId = dynamic.dataset["keybindId"]
+            if (keybindId != null) {
+                if (keybindId == oldValue?.id) dynamic.classList.remove("active")
+                if (keybindId == newValue?.id) dynamic.classList.add("active")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+fun viewTutorial(s: String) {
+    val tutorial = Tutorials.map[s]
+    if (tutorial != null) DynamicHTMLManager.showTutorial(tutorial)
 }
 
 val Int.px get() = "${this}px"

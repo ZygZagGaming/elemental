@@ -1,10 +1,7 @@
 package core
 
 import kotlinx.browser.document
-import libraries.DeltaReactions
-import libraries.Elements
-import libraries.Flags
-import libraries.SpecialReactions
+import libraries.*
 import org.w3c.dom.get
 import kotlin.math.abs
 import kotlin.math.max
@@ -17,6 +14,7 @@ class GameState {
     var timeSpent: Double = 0.0
     var timeSpentOnPage: Double = 0.0
     val clickersById = mutableMapOf<Int, Clicker>()
+    val autoclickspeedMultiplierStack = MultiplierStack()
     val clickersByPage get() = clickersById.values.groupBy { it.page }
     val timeBetweenRateTicks = 0.25
 
@@ -31,7 +29,8 @@ class GameState {
 
         clickersById.values.forEach { /*if (core.DynamicHTMLManager.shownPage == libraries.Pages.id(it.page))*/ it.tick(dt) }
 
-        Stats.elementAmounts[Elements.heat] = max(0.0, Stats.elementAmounts[Elements.heat] * (1 - 0.1 * dt * Stats.gameSpeed))
+        Stats.elementAmounts[Resources.heat] = max(0.0, Stats.elementAmounts[Resources.heat] * (1 - 0.1 * dt * Stats.gameSpeed))
+        if (Stats.elementAmounts[Resources.catalyst] >= Stats.dualityThreshold && !Flags.reachedDuality.isUnlocked() && Stats.timeSinceLastDuality > 1.0) Flags.reachedDuality.add()
         if (!offline) {
             for ((key, value) in incoming) {
                 //if (key.name.contains("Delta") && core.Stats.functionalElementUpperBounds[key] < core.Stats.elementAmounts[key]) console.log(core.Stats.functionalElementUpperBounds[key])
@@ -44,33 +43,25 @@ class GameState {
                 )
             }
         }
-        if (GameTimer.every(timeBetweenRateTicks, dt) || offline) {
-            if (!offline && timeSpentOnPage >= 5.0) Elements.values.forEach {
-                Stats.elementRates[it] = (Stats.elementAmounts[it] - (Stats.elementAmountsCached.firstOrNull()?.get(it) ?: 0.0)) / (timeBetweenRateTicks * 16)
-                /*if (it.isBasic) {
-                    val old = core.Stats.elementDeltas[it]
-                    val oldDelta = core.Stats.elementAmounts[it.libraries.getDelta]
-                    core.Stats.elementDeltas[it] = max(
-                        core.Stats.elementDeltas[it],
-                        core.Stats.elementRates[it]
-                    )
-                    core.Stats.baseElementUpperBounds[it.libraries.getDelta] = core.Stats.elementDeltas[it]
-                    core.Stats.elementAmounts[it.libraries.getDelta] += core.Stats.elementDeltas[it] - oldDelta
-                } else {*/
+        if (dt < timeBetweenRateTicks && (GameTimer.every(timeBetweenRateTicks, dt) || offline)) {
+            if (!offline && timeSpentOnPage >= 5.0 && Stats.elementAmountsCached.isNotEmpty()) {
+                val (elements, timestamp) = Stats.elementAmountsCached.first()
+                Resources.values.forEach {
+                    Stats.elementRates[it] = (Stats.elementAmounts[it] - (elements[it] ?: 0.0)) / (timeSpent - timestamp)
                     val old = Stats.elementDeltas[it]
                     Stats.elementDeltas[it] = max(
                         Stats.elementDeltas[it],
                         Stats.elementRates[it]
                     )
-                    if (it.isBasic) {
+                    if (it.isElement) {
                         Stats.baseElementUpperBounds[it.delta] = max(Stats.elementDeltas[it], Stats.baseElementUpperBounds[it.delta])
                         Stats.elementAmounts[it.delta] += Stats.elementDeltas[it] - old
                     }
-                //}
+                }
             }
-            Stats.elementAmountsCached.add(Stats.elementAmounts.asMap)
-            if (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()
-        }
+            Stats.elementAmountsCached.add(Stats.elementAmounts.asMap to timeSpent)
+            while (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()
+        } else if (dt > timeBetweenRateTicks) Stats.elementAmountsCached
         incoming = emptyMutableStack
         Stats.lastTickDt = dt
     }
@@ -78,11 +69,11 @@ class GameState {
     fun canDoReaction(reaction: Reaction) =
         ((reaction !is NullReaction)
                 && reaction.inputs.all { (k, v) -> v <= Stats.elementAmounts[k] }
-                && reaction.multipliedOutputs.none { (k, v) -> if (k == Elements.heat) v + Stats.elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementUpperBounds[k] else v != 0.0 && Stats.elementAmounts[k] >= Stats.functionalElementUpperBounds[k] })
+                && reaction.multipliedOutputs.none { (k, v) -> if (k == Resources.heat) v + Stats.elementAmounts[k] - reaction.inputs[k] > Stats.functionalElementUpperBounds[k] else v != 0.0 && Stats.elementAmounts[k] >= Stats.functionalElementUpperBounds[k] })
 
     fun attemptReaction(reaction: Reaction) {
         if (canDoReaction(reaction)) {
-            if (reaction.consumesElements) Elements.values.forEach {
+            if (reaction.consumesElements) Resources.values.forEach {
                 Stats.elementAmounts[it] -= reaction.multipliedInputs[it]
             }
             incoming.add(reaction.multipliedOutputs)
@@ -120,21 +111,33 @@ class GameState {
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
-fun duality() {
-    val omega = Elements.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementLowerBounds[it]) <= epsilon }
-    val alpha = Elements.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementUpperBounds[it]) <= epsilon }
-    Elements.basicElements.forEach { Stats.elementAmounts[it] = defaultStartingElements[it] }
-    SpecialReactions.values.forEach { if (!((it == SpecialReactions.massiveClock || it == SpecialReactions.infoNerd) && Flags.escapism1.isUnlocked())) {
-        it.undoEffects()
-    } }
-    if (Stats.deltaReactionRespec) {
-        Stats.deltaReactionRespec = false
-        DeltaReactions.values.forEach { it.undoEffects(refund = true) }
+fun duality(force: Boolean = false) {
+    if (force || Flags.reachedDuality.isUnlocked()) {
+        val omega =
+            Resources.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementLowerBounds[it]) <= epsilon }
+        var alpha =
+            Resources.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementUpperBounds[it]) <= epsilon }
+        if (Flags.paraAlpha.isUnlocked()) {
+            alpha += Resources.basicElements.count { Stats.elementAmounts[it] > 1000 }
+        }
+        Resources.basicElements.forEach { Stats.elementAmounts[it] = defaultStartingElements[it] }
+        SpecialReactions.values.forEach {
+            if (!((it == SpecialReactions.massiveClock || it == SpecialReactions.infoNerd) && Flags.escapism1.isUnlocked())) {
+                it.undoEffects()
+            }
+        }
+        if (Stats.deltaReactionRespec) {
+            Stats.deltaReactionRespec = false
+            DeltaReactions.values.forEach { it.undoEffects(refund = true) }
+        }
+        Stats.elementAmounts[Resources.omega] += omega.toDouble()
+        Stats.elementAmounts[Resources.alpha] += alpha.toDouble()
+        Stats.timeSinceLastDuality = 0.0
+        Stats.elementAmounts[Resources.dualities]++
+        Flags.reachedDuality.remove()
+
+        DynamicHTMLManager.showTutorial(Tutorials.duality)
     }
-    Stats.elementAmounts[Elements.omega] += omega.toDouble()
-    Stats.elementAmounts[Elements.alpha] += alpha.toDouble()
-    Stats.timeSinceLastDuality = 0.0
-    Stats.elementAmounts[Elements.dualities]++
 }
 
 val epsilon = 1e-7

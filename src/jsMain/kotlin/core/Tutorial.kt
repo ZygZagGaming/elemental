@@ -4,9 +4,14 @@ import kotlinx.browser.document
 import kotlinx.html.dom.append
 import kotlinx.html.js.div
 import kotlinx.html.js.img
+import kotlinx.html.style
 import org.w3c.dom.DocumentFragment
 
-data class Tutorial(val pages: List<TutorialPage>, val name: String)
+class Tutorial(val pages: List<TutorialPage>, val name: String, unlockedByDefault: Boolean = false) {
+    init {
+        if (unlockedByDefault) Stats.tutorialsSeen.add(this)
+    }
+}
 
 fun Tutorial.getAsHTML(pageIndex: Int, onClose: () -> Unit = DynamicHTMLManager::clearModal, force: Boolean = false): DocumentFragment {
     if (pageIndex in pages.indices) {
@@ -85,10 +90,27 @@ class ImageTextTutorialPage(private val image: String, private val imageAlt: Str
                 div("tutorial-header") {
                     +headerText
                 }
-                div("tutorial-text") {
-                    +text
+                div("tutorial-text").apply {
+                    innerHTML = text
                 }
             }
         }
     }
 }// TODO: merge core.ImageTextTutorialPage and core.ImageTitleTutorialPage
+
+class TextTutorialPage(private val headerText: String, val text: String): TutorialPage() {
+    override fun getAsHTML(): DocumentFragment {
+        return document.createDocumentFragment().apply {
+            append {
+                div("tutorial-header") {
+                    +headerText
+                    style = "font-size: 6vmin;"
+                }
+                val div = div("tutorial-text") {
+                    style = "line-height: 5vmin; font-size: 3.5vmin;"
+                }
+                div.innerHTML = text
+            }
+        }
+    }
+}

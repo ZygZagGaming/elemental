@@ -62,4 +62,38 @@ object Tutorials: Library<Tutorial>() {
             "Delta Reaction Respec"
         )
     )
+    val fractionalElements = register(
+        "fractional_elements",
+        Tutorial(
+            listOf(
+                TutorialPages.fractionalElementsPage
+            ),
+            "Fractional Elements",
+            unlockedByDefault = true
+        )
+    )
+    val formulas = register(
+        "secret_formulas",
+        Tutorial(
+            listOf(
+                TutorialPages.formulaIntroPage,
+                TutorialPages.heatDissipationFormulaPage,
+                TutorialPages.specialReactionScalingPage
+            ),
+            "Formulas",
+            unlockedByDefault = true
+        )
+    )
+    val duality = register(
+        "duality",
+        Tutorial(
+            listOf(
+                TutorialPages.dualityWelcomePage,
+                TutorialPages.dualityResetExplanationPage,
+                TutorialPages.dualityMilestonePage,
+                TutorialPages.deltaElementsPage
+            ),
+            "Duality",
+        )
+    )
 }
