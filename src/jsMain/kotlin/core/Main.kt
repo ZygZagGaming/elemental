@@ -48,8 +48,8 @@ fun loadGame() {
         val updateAll = GameTimer.timeSex() - lastHtmlUpdate > htmlUpdateInterval
         if (updateAll) lastHtmlUpdate = GameTimer.timeSex()
         DynamicHTMLManager.apply {
-            var n = 0
             for ((name, element) in Resources.map) {
+                val n = if (element == Resources.catalyst) 0 else (element.symbol[0] - 'a' + 1)
                 val symbol = element.symbol
                 if (updateAll || Stats.elementAmounts.changed(element)) {
                     val displayText =
@@ -99,7 +99,6 @@ fun loadGame() {
                                 }
                         (document.getElementById("alchemy-element-$n") as HTMLElement).style.backgroundImage = gradient
                     }
-                    n++
                     Stats.elementAmounts.clearChanged(element)
                 }
                 if (updateAll || Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(
