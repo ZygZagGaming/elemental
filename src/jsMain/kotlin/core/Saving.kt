@@ -108,7 +108,8 @@ fun saveToMindexable(mutableIndexable: MutableIndexable<String, String>) {
 fun loadIndexable(indexable: Indexable<String, String>) {
     document.apply {
         val timestamp = indexable["timestamp"]
-        if (timestamp != "") {
+        val savedGameVersion = indexable["game_version"]
+        if (savedGameVersion == gameVersion && timestamp != "") {
             Stats.flags.addAll(indexable["flags"].split(',').mapNotNull { Flags.map[it] })
             indexable["tutorialsSeen"].split(',').map { Tutorials.map[it] }.forEach {
                 if (it != null) Stats.tutorialsSeen.add(it)
