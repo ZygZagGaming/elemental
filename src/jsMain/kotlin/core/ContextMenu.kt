@@ -80,21 +80,14 @@ object ContextMenu {
                     if (actualElementCircle != null) {
                         val symbol = actualElementCircle.dataset["element"]
                         val element = Resources.symbolMap[symbol]
-                        if (element != null) div {
-                            +"$symbol is called ${element.name}"
+                        if (element != null) div("element-name") {
+                            +element.name
                         }
-                        div("dynamic") {
-                            attributes["data-dynamic-id"] = "$symbol-amount-display"
-                        }
-                        div("dynamic") {
-                            attributes["data-dynamic-id"] = "$symbol-bounds-display"
-                        }
-                        div("dynamic") {
-                            attributes["data-dynamic-id"] = "$symbol-rate-display"
-                        }
-                        div("dynamic") {
-                            attributes["data-dynamic-id"] = "$symbol-max-rate-display"
-                        }
+                        div("horizontal-line")
+                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-amount-display") }
+                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-bounds-display") }
+                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-rate-display") }
+                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-max-rate-display") }
                         /*if (element == libraries.Elements.catalyst) {
                             div("horizontal-line")
                             div {
@@ -121,39 +114,38 @@ object ContextMenu {
                                     +"Key: "
                                 }
                                 val keybind = Input.keybinds["keyclicker-$autoclickerId"]
-                                val k = div("keyclicker-key-change dynamic no-highlight") {
-                                    if (keybind != null) {
-                                        attributes["data-dynamic-id"] = "keybind-${keybind.id}-key"
-                                        attributes["data-keybind-id"] = keybind.id
-                                    }
+                                div("keyclicker-key-change dynamic no-highlight") {
+                                    if (keybind != null) attributes["data-keybind-id"] = keybind.id
                                     else +"—"
+                                }.let {
+                                    if (keybind != null) {
+                                        it.addEventListener("click", { _ -> changingKey = keybind })
+                                        DynamicHTMLManager.makeAwareOf(it, "keybind-${keybind.id}-key")
+                                    }
                                 }
-                                if (keybind != null) k.addEventListener("click", { _ ->
-                                    changingKey = keybind
-                                })
                             }
                             div {
                                 div {
                                     +"Mode: "
                                 }
-                                div("keyclicker-mode-change dynamic no-highlight") {
-                                    attributes["data-dynamic-id"] = "clicker-${clicker.id}-mode"
-                                }.addEventListener("click", { _ ->
-                                    val root = clicker.mode.ordinal
-                                    var amt = 0
-                                    while (amt <= ClickerMode.values().size) {
-                                        amt++
-                                        val mode = ClickerMode.values()[(root + amt) % ClickerMode.values().size]
-                                        if (mode in clicker.modesUnlocked) {
-                                            clicker.setMode(mode)
-                                            break
+                                div("keyclicker-mode-change dynamic no-highlight").let {
+                                    it.addEventListener("click", { _ ->
+                                        val root = clicker.mode.ordinal
+                                        var amt = 0
+                                        while (amt <= ClickerMode.entries.size) {
+                                            amt++
+                                            val mode = ClickerMode.entries[(root + amt) % ClickerMode.entries.size]
+                                            if (mode in clicker.modesUnlocked) {
+                                                clicker.setMode(mode)
+                                                break
+                                            }
                                         }
-                                    }
-                                })
+                                    })
+                                    DynamicHTMLManager.makeAwareOf(it, "clicker-${clicker.id}-mode")
+                                }
                             }
-                            if (ClickerMode.AUTO == clicker.mode) div("dynamic") {
-                                attributes["data-dynamic-id"] = "$autoclickerId-clicker-cps-display"
-                            }
+                            if (ClickerMode.AUTO == clicker.mode) div("dynamic")
+                                .let { DynamicHTMLManager.makeAwareOf(it, "$autoclickerId-clicker-cps-display") }
                         } else div {
                             +"N/A"
                         }

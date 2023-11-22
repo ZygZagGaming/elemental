@@ -139,7 +139,7 @@ object DualityMilestones: Library<MilestoneReaction>() {
             "Harmony",
             inputsSupplier = {
                 elementStackOf(
-                    Resources.omega to 30.0 * 30.0.pow(it - 1)
+                    Resources.omega to 8.0 * 30.0.pow(it - 1)
                 )
             },
             effects = { it, offline ->

@@ -24,8 +24,8 @@ fun MutableResourceStack.add(other: ResourceStack) {
 val emptyStack get() = Resources.values.associateWith { 0.0 }.toDefaultedMap(0.0)
 val emptyMutableStack get() = emptyStack.toMutableMap().toMutableDefaultedMap(0.0)
 
-data class Resource(val name: String, val symbol: String, val isDecimal: Boolean = false, val isElement: Boolean = false) {
-    constructor(name: String, symbol: Char, isDecimal: Boolean = false, isElement: Boolean = false): this(name, symbol.toString(), isDecimal, isElement)
+data class Resource(val name: String, val symbol: String, val isDecimal: Boolean = false, val isElement: Boolean = false, val color: String = "#fff") {
+    constructor(name: String, symbol: Char, isDecimal: Boolean = false, isElement: Boolean = false, color: String = "#fff"): this(name, symbol.toString(), isDecimal, isElement, color)
     fun withCount(n: Double): ResourceStack = mapOf(this to n).toDefaultedMap(0.0)
     val capText = "<u>$symbol</u>"
 }

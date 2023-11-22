@@ -10,14 +10,14 @@ object Resources: Library<Resource>() {
         values.filter { it.isElement }
     }
 
-    val catalyst = register("catalyst", Resource("Catalyst", Symbols.catalyst, isElement = true))
-    val a = register("element_a", Resource("A", Symbols.a, isElement = true))
-    val b = register("element_b", Resource("B", Symbols.b, isElement = true))
-    val c = register("element_c", Resource("C", Symbols.c, isElement = true))
-    val d = register("element_d", Resource("D", Symbols.d, isElement = true))
-    val e = register("element_e", Resource("E", Symbols.e, isElement = true))
-    val f = register("element_f", Resource("F", Symbols.f, isElement = true))
-    val g = register("element_g", Resource("G", Symbols.g, isElement = true))
+    val catalyst = register("catalyst", Resource("Catalyst", Symbols.catalyst, isElement = true, color = "#f2ef33"))
+    val a = register("element_a", Resource("A", Symbols.a, isElement = true, color = "#b0743c"))
+    val b = register("element_b", Resource("B", Symbols.b, isElement = true, color = "#b0c73c"))
+    val c = register("element_c", Resource("C", Symbols.c, isElement = true, color = "#38961b"))
+    val d = register("element_d", Resource("D", Symbols.d, isElement = true, color = "#1b9673"))
+    val e = register("element_e", Resource("E", Symbols.e, isElement = true, color = "#325269"))
+    val f = register("element_f", Resource("F", Symbols.f, isElement = true, color = "#8b2c94"))
+    val g = register("element_g", Resource("G", Symbols.g, isElement = true, color = "#7d134a"))
     val heat = register("heat", Resource("Heat", Symbols.heat, isDecimal = true, isElement = true))
 
     val deltaCatalyst = register("delta_catalyst", Resource("Delta Catalyst", "${Symbols.delta}${Symbols.catalyst}"))

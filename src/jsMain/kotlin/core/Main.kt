@@ -81,20 +81,25 @@ fun loadGame() {
                     }
 
                     if (element.isElement && element != Resources.heat) {
+                        val color = element.color
                         var cutoff = (Stats.elementAmounts[element] - Stats.functionalElementLowerBounds[element]) * 100 / (Stats.functionalElementUpperBounds[element] - Stats.functionalElementLowerBounds[element])
                         cutoff += 50
                         cutoff %= 100
                         cutoff = cutoff.clamp(0.0..99.99)
                         val gradient = "linear-gradient(#909090, #909090), " +
-                                if (cutoff <= 0.01) "conic-gradient(white 0%, white 50%, red 50.01%, red 100%)"
-                                else if (abs(cutoff - 50.0) < 0.01) {
-                                    if (Stats.elementAmounts[element] * 2 < Stats.functionalElementUpperBounds[element] + Stats.functionalElementLowerBounds[element]) "conic-gradient(white 0%, white 0%)" else "conic-gradient(red 0%, red 0%)"
+                                if (cutoff <= 0.01) {
+                                    "conic-gradient(white 0%, white 50%, $color 50.01%, $color 100%)"
+                                } else if (abs(cutoff - 50.0) < 0.01) {
+                                    if (Stats.elementAmounts[element] * 2 < Stats.functionalElementUpperBounds[element] + Stats.functionalElementLowerBounds[element]) "conic-gradient(white 0%, white 100%)"
+                                    else "conic-gradient($color 0%, $color 100%)"
+                                } else if (cutoff < 50) {
+                                    "conic-gradient($color 0%, $color $cutoff%, white ${cutoff + 0.01}%, white 50%, $color 50.01%, $color 100%)"
+                                } else {
+                                    "conic-gradient(white 0%, white 50%, $color 50.01%, $color $cutoff%, white ${cutoff + 0.01}%, white 100%)"
                                 }
-                                else if (cutoff < 50) "conic-gradient(red 0%, red $cutoff%, white ${cutoff + 0.01}%, white 50%, red 50.01%, red 100%)"
-                                else "conic-gradient(white 0%, white 50%, red 50.01%, red $cutoff%, white ${cutoff + 0.01}%, white 100%)"
                         (document.getElementById("alchemy-element-$n") as HTMLElement).style.backgroundImage = gradient
-                        n++
                     }
+                    n++
                     Stats.elementAmounts.clearChanged(element)
                 }
                 if (updateAll || Stats.functionalElementLowerBounds.changed(element) || Stats.functionalElementUpperBounds.changed(

@@ -63,7 +63,7 @@ object NormalReactions: Library<Reaction>() {
     )
     val cminglyOp = register("cmingly_op",
         Reaction(
-            "Cmingly OP",
+            "C-mingly OP",
             elementStackOf(
                 Resources.heat to 8.0,
                 Resources.c to 1.0,

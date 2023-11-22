@@ -42,8 +42,29 @@ object DynamicHTMLManager {
             }
         }
     }
+
     fun setVariable(id: String, value: String) {
-        variables[id] = value
+        val old = variables.put(id, value)
+        if (old != value) {
+            if (id !in dynamixByDataId) {
+                val list = mutableListOf<HTMLElement>()
+                for (dyn in dynamix) if (dyn.dataset["dynamicId"] == id) list.add(dyn)
+                dynamixByDataId[id] = list
+            }
+            dynamixByDataId[id]!!.forEach {
+                it.innerHTML = value
+            }
+        }
+    }
+
+    fun makeAwareOf(htmlElement: HTMLElement, dataId: String = htmlElement.dataset["dynamicId"]!!) {
+        if (dataId !in dynamixByDataId) dynamixByDataId[dataId] = mutableListOf()
+        dynamixByDataId[dataId]!!.add(htmlElement)
+        if (variables[dataId] != null) htmlElement.innerHTML = variables[dataId]!!
+    }
+
+    fun forget(htmlElement: HTMLElement, dataId: String = htmlElement.dataset["dynamicId"]!!) {
+        dynamixByDataId[dataId]?.remove(htmlElement)
     }
 
     fun getPageElement(page: Page): HTMLElement? {
@@ -51,7 +72,7 @@ object DynamicHTMLManager {
     }
 
     fun setDataVariable(classToSelect: String, variable: String, value: String) {
-        for (dyn in dynamix) if (dyn.classList.contains(classToSelect)) dyn.dataset[variable] = value
+        for (dyn in document.getElementsByClassName(classToSelect)) dyn.dataset[variable] = value
     }
 
     fun idSetDataVariable(id: String, variable: String, value: String) {
@@ -62,17 +83,18 @@ object DynamicHTMLManager {
     val dynamix get() = document.getElementsByClassName("dynamic")
     val pages get() = document.getElementsByClassName("page")
     val pageButtons get() = document.getElementsByClassName("page-button")
+    val dynamixByDataId = mutableMapOf<String, MutableList<HTMLElement>>()
 
     fun setElementClass(selectedClass: String, classToSet: String) {
-        for (dyn in dynamix) if (dyn.classList.contains(selectedClass)) dyn.className = classToSet
+        for (dyn in document.getElementsByClassName("$selectedClass dynamic")) dyn.className = classToSet
     }
 
     fun addElementClass(selectedClass: String, classToAdd: String) {
-        for (dyn in dynamix) if (dyn.classList.contains(selectedClass) && !dyn.classList.contains(classToAdd)) dyn.className += " $classToAdd"
+        for (dyn in document.getElementsByClassName("$selectedClass dynamic")) dyn.classList.add(classToAdd)
     }
 
     fun removeElementClass(selectedClass: String, classToRemove: String) {
-        for (dyn in dynamix) if (dyn.classList.contains(selectedClass) && dyn.classList.contains(classToRemove)) dyn.classList.remove(classToRemove)
+        for (dyn in document.getElementsByClassName("$selectedClass dynamic")) if (dyn.classList.contains(classToRemove)) dyn.classList.remove(classToRemove)
     }
 
     fun idAddElementClass(id: String, classToAdd: String) {
@@ -95,11 +117,6 @@ object DynamicHTMLManager {
 
     fun tick() {
         for (dyn in dynamix) {
-            val dataId = dyn.dataset["dynamicId"]
-            val data = variables[dataId]
-            if (data != null) {
-                dyn.innerHTML = data
-            }
             if (dyn.classList.contains("draggable")) {
                 var dx: Int
                 var dy: Int

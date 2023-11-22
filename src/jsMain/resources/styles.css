@@ -49,24 +49,27 @@ body {
 
 .alchemy-element:not(.heat-element) {
     z-index: 1;
+}
+
+.alchemy-element.no-border:not(.heat-element) {
     border: double 0.25vw transparent;
-    background-image: linear-gradient(#909090, #909090), conic-gradient(red 0%, red 39.9%, black 40%, black 100%);
     background-origin: border-box;
     background-clip: content-box, border-box;
 }
 
 .heat-element {
     width: 2.5vw;
-    height: 1.5vw;
+    height: 2.5vw;
     border-radius: 25%;
     transition: top 0.5s ease-out, background-color 0.15s, border-color 0.15s, color 0.15s;
     top: 14vw;
     left: 13.52vw;
     padding-bottom: 0px;
+    display: flex;
 }
 
 .heat-element.shown {
-    top: 16vw;
+    top: 15.5vw;
 }
 
 .heat-element:not(.shown) {
@@ -96,8 +99,8 @@ body {
     text-align: center;
     font-size: 0.7vw;
     width: 100%;
-    height: 70%;
-    position: absolute;
+    height: 50%;
+    align-self: flex-end;
 }
 
 .grey-bkg-style {
@@ -812,4 +815,8 @@ strike {
 
 .no-border {
     border-color: rgba(0, 0, 0, 0);
+}
+
+.element-name {
+    font-weight: bold;
 }
