@@ -15,6 +15,7 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
     lateinit var dockCanvas: HTMLCanvasElement
     val randomOffset = Random.nextDouble(0.0, 1.0)
     val timeSinceLastClick get() = (lifetime + randomOffset).mod(cps)
+    var maintainedTSLC = 0.0
     var wasDragging = false
     val autoCpsModifiers = basicMultiplierStack
     val dragging get() = htmlElement.dataset["dragging"] == "true"
@@ -130,6 +131,7 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
     val recheckHoveringInterval = 1.0
     fun tick(dt: Double) {
         lifetime += dt
+        maintainedTSLC += dt
         if (mode !in modesUnlocked) setMode(ClickerMode.DISABLED)
         if (dragging || (DynamicHTMLManager.shownPage == page && GameTimer.every(
                 recheckHoveringInterval,
@@ -144,6 +146,7 @@ class Clicker(val id: Int, val page: Page, var mode: ClickerMode, val autoCps: D
             while (clickPercent > 1) {
                 clickPercent--
                 click()
+                maintainedTSLC = 0.0
             }
         }
         if (DynamicHTMLManager.shownPage == page) {

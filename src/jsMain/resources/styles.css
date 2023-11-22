@@ -49,6 +49,10 @@ body {
 
 .alchemy-element:not(.heat-element) {
     z-index: 1;
+    border: double 0.25vw transparent;
+    background-image: linear-gradient(#909090, #909090), conic-gradient(red 0%, red 39.9%, black 40%, black 100%);
+    background-origin: border-box;
+    background-clip: content-box, border-box;
 }
 
 .heat-element {
@@ -798,7 +802,7 @@ canvas {
 }
 
 r {
-    color: #a33;
+    color: #855;
     font-weight: bold;
 }
 

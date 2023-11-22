@@ -326,7 +326,7 @@ object SpecialReactions: Library<SpecialReaction>() {
             stringEffects = {
                 val heat = max(0.0, Stats.elementAmounts[Resources.heat])
                 val multiplier = log(heat + 1.0, 4.0) / 3.0 + 1 + if (heat > 50) log(heat - 49, 4.0) else 0.0
-                "Multiplier to \"${Resources.catalyst.symbol}\" gain based on \"${Resources.heat.symbol}\" amount, currently x${multiplier.roundTo(3)}"
+                "Multiplier to \"${Resources.catalyst.symbol}\" gain based on heat amount, currently x${multiplier.roundTo(3)}"
             }
         )
     )

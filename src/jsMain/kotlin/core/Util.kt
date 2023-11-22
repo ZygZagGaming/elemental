@@ -63,7 +63,7 @@ interface MutableStatMap<K, V>: StatMap<K, V>, MutableIndexable<K, V> {
 }
 open class BasicMutableStatMap<K, V>(backingMap: Map<K, V>, override val defaultValue: V): MutableStatMap<K, V> {
     private val backingMap = backingMap.toMutableMap()
-    private val changedSet = mutableSetOf<K>()
+    private val changedSet = backingMap.keys.toMutableSet()
     private val listeners = mutableMapOf<K, MutableMap<String, (V?, V) -> Unit>>()
     val asMap get() = backingMap.toMap()
 

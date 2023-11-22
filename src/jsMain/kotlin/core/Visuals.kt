@@ -9,6 +9,7 @@ import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
 import kotlin.math.*
+import kotlin.time.times
 
 fun visuals(gameState: GameState) {
     when (DynamicHTMLManager.shownPage) {
@@ -70,7 +71,7 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
                     half,
                     elementRadius + hotStrokeWidth
                 ).apply {
-                    val cutoff = (elementRadius) / (elementRadius + hotStrokeWidth)
+                    val cutoff = (1 / (1 + graphicalHeatAmount)).clamp(0.01..0.98)
                     addColorStop(0.0, "rgba(255, 0, 0, 1)")
                     addColorStop(cutoff, "rgba(255, 0, 0, 1)")
                     addColorStop(cutoff + 0.01, "rgba(255, 0, 0, 0.5)")
@@ -87,35 +88,72 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
                     arc(half, half, elementRadius + strokeWidth / 2, seam + heatAngle, seam + 2 * PI)
                 }
 
-                val border = 12.5
-                styled(
-                    strokeStyle = createRadialGradient(
-                        middle,
-                        elementRadius,
-                        elementRadius + border,
-                        0.0 to "rgba(255, 0, 0, 1)",
-                        0.4 to "rgba(255, 0, 0, 1)",
-                        0.41 to "rgba(255, 0, 0, 0.33)",
-                        1.0 to "rgba(255, 0, 0, 0)"
-                    ), lineWidth = border) {
-                    stroke {
-                        arc(half, half, elementRadius + border / 2, seam, seam + catalystAngle)
-                    }
-                }
-                styled(
-                    strokeStyle = createRadialGradient(
-                        middle,
-                        elementRadius,
-                        elementRadius + border,
-                        0.0 to "rgba(255, 255, 255, 1)",
-                        0.4 to "rgba(255, 255, 255, 1)",
-                        0.41 to "rgba(255, 255, 255, 0.33)",
-                        1.0 to "rgba(255, 255, 255, 0)"
-                    ), lineWidth = border) {
-                    stroke {
-                        arc(half, half, elementRadius + border / 2, seam + catalystAngle, seam + 2 * PI)
-                    }
-                }
+//                val border = 13.5
+//                styled(
+//                    strokeStyle = createRadialGradient(
+//                        middle,
+//                        elementRadius,
+//                        elementRadius + border,
+//                        0.0 to "rgba(255, 0, 0, 1)",
+//                        0.4 to "rgba(255, 0, 0, 1)",
+//                        0.41 to "rgba(255, 0, 0, 0.33)",
+//                        1.0 to "rgba(255, 0, 0, 0)"
+//                    ), lineWidth = border) {
+//                    stroke {
+//                        arc(half, half, elementRadius + border / 2, seam, seam + catalystAngle)
+//                    }
+//                }
+//                styled(
+//                    strokeStyle = createRadialGradient(
+//                        middle,
+//                        elementRadius,
+//                        elementRadius + border,
+//                        0.0 to "rgba(255, 255, 255, 1)",
+//                        0.4 to "rgba(255, 255, 255, 1)",
+//                        0.41 to "rgba(255, 255, 255, 0.33)",
+//                        1.0 to "rgba(255, 255, 255, 0)"
+//                    ), lineWidth = border) {
+//                    stroke {
+//                        arc(half, half, elementRadius + border / 2, seam + catalystAngle, seam + 2 * PI)
+//                    }
+//                }
+
+//                val distance = polygonRadius * 0.8875
+//                for (element in Resources.basicElements) if (element != Resources.heat && element != Resources.catalyst) {
+//                    val pos = middle + getAlchemyElementPos(element.symbol[0]) * distance
+//                    val (x, y) = pos
+//                    val angle = graphicalAmounts[element] * 2 * PI
+//                    styled(
+//                        strokeStyle = createRadialGradient(
+//                            pos,
+//                            elementRadius,
+//                            elementRadius + border,
+//                            0.0 to "rgba(255, 0, 0, 1)",
+//                            0.4 to "rgba(255, 0, 0, 1)",
+//                            0.41 to "rgba(255, 0, 0, 0.33)",
+//                            1.0 to "rgba(255, 0, 0, 0)"
+//                        ), lineWidth = border
+//                    ) {
+//                        stroke {
+//                            arc(x, y, elementRadius + border / 2, seam, seam + angle)
+//                        }
+//                    }
+//                    styled(
+//                        strokeStyle = createRadialGradient(
+//                            pos,
+//                            elementRadius,
+//                            elementRadius + border,
+//                            0.0 to "rgba(255, 255, 255, 1)",
+//                            0.4 to "rgba(255, 255, 255, 1)",
+//                            0.41 to "rgba(255, 255, 255, 0)",
+//                            1.0 to "rgba(255, 255, 255, 0)"
+//                        ), lineWidth = border
+//                    ) {
+//                        stroke {
+//                            arc(x, y, elementRadius + border / 2, seam + angle, seam + 2 * PI)
+//                        }
+//                    }
+//                }
             }
 
             val reaction = gameState.hoveredReaction
@@ -196,7 +234,7 @@ val clearStyle = StyleHolder(fillStyle = "rgba(255, 255, 255, 0)")
 
 fun drawClickerToCanvas(clicker: Clicker, canvas: HTMLCanvasElement = clicker.canvas, color: String = clicker.color, blurry: Boolean = false) {
     val size = clicker.htmlElement.screenWidth
-    val cps = clicker.cps
+    val cps = if (clicker.mode == ClickerMode.MANUAL) 6.0 else clicker.cps
     val (r, g, b) = (1..3).map { color[it].uppercase().toInt(16) * 17 }
     val opaqueClickerStyle = StyleHolder(lineWidth = 3.0, fillStyle = color, strokeStyle = color)
     val transparentClickerStyle = StyleHolder(lineWidth = 3.0, fillStyle = "rgba($r, $g, $b, 0.5)", strokeStyle = "rgba($r, $g, $b, 0.5)")
@@ -209,8 +247,8 @@ fun drawClickerToCanvas(clicker: Clicker, canvas: HTMLCanvasElement = clicker.ca
         var workingCps = cps
         while (workingCps > 7) workingCps /= 7
         while (workingCps <= cps) {
-            val tslc = if (clicker.mode == ClickerMode.MANUAL) clicker.timeSinceLastClick else (clicker.lifetime + clicker.randomOffset).mod(1 / workingCps)
-            val arrowHeightAmount = (2 * workingCps * tslc - 1).squared()//1 - 4 * workingCps * tslc * min(workingCps * tslc, 1 - workingCps * tslc)
+            val tslc = if (clicker.mode == ClickerMode.MANUAL) clicker.maintainedTSLC else (clicker.lifetime + clicker.randomOffset).mod(1 / workingCps)
+            val arrowHeightAmount = (2 * workingCps * tslc - 1).squared().clamp(0.0..1.0)//1 - 4 * workingCps * tslc * min(workingCps * tslc, 1 - workingCps * tslc)
             val arrowHeight = if (clicker.mode == ClickerMode.DISABLED) 1.0 else size * 0.2 * arrowHeightAmount
             styled(if (workingCps > 7) transparentClickerStyle else opaqueClickerStyle) {
                 fill { // arrow

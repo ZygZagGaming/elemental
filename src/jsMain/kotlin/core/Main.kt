@@ -48,6 +48,7 @@ fun loadGame() {
         val updateAll = GameTimer.timeSex() - lastHtmlUpdate > htmlUpdateInterval
         if (updateAll) lastHtmlUpdate = GameTimer.timeSex()
         DynamicHTMLManager.apply {
+            var n = 0
             for ((name, element) in Resources.map) {
                 val symbol = element.symbol
                 if (updateAll || Stats.elementAmounts.changed(element)) {
@@ -77,6 +78,22 @@ fun loadGame() {
                             "hidden",
                             Stats.elementAmounts[Resources.dualities] <= 0
                         )
+                    }
+
+                    if (element.isElement && element != Resources.heat) {
+                        var cutoff = (Stats.elementAmounts[element] - Stats.functionalElementLowerBounds[element]) * 100 / (Stats.functionalElementUpperBounds[element] - Stats.functionalElementLowerBounds[element])
+                        cutoff += 50
+                        cutoff %= 100
+                        cutoff = cutoff.clamp(0.0..99.99)
+                        val gradient = "linear-gradient(#909090, #909090), " +
+                                if (cutoff <= 0.01) "conic-gradient(white 0%, white 50%, red 50.01%, red 100%)"
+                                else if (abs(cutoff - 50.0) < 0.01) {
+                                    if (Stats.elementAmounts[element] * 2 < Stats.functionalElementUpperBounds[element] + Stats.functionalElementLowerBounds[element]) "conic-gradient(white 0%, white 0%)" else "conic-gradient(red 0%, red 0%)"
+                                }
+                                else if (cutoff < 50) "conic-gradient(red 0%, red $cutoff%, white ${cutoff + 0.01}%, white 50%, red 50.01%, red 100%)"
+                                else "conic-gradient(white 0%, white 50%, red 50.01%, red $cutoff%, white ${cutoff + 0.01}%, white 100%)"
+                        (document.getElementById("alchemy-element-$n") as HTMLElement).style.backgroundImage = gradient
+                        n++
                     }
                     Stats.elementAmounts.clearChanged(element)
                 }
