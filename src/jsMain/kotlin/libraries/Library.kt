@@ -1,4 +1,4 @@
-@file:Suppress("unused", "UNUSED_ANONYMOUS_PARAMETER")
+@file:Suppress("unused")
 
 package libraries
 import kotlin.collections.set

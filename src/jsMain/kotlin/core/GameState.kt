@@ -100,23 +100,20 @@ class GameState {
         document.getElementsByClassName("clicker-dock-container")[0]!!.appendChild(fragment)
     }
 
-    fun removeClicker(clicker: Clicker) {
-        clickersById.remove(clicker.id)
-        clicker.deInit()
-    }
     fun removeClickerById(id: Int) {
         clickersById.remove(id)?.deInit()
     }
 }
+
 
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 fun duality(force: Boolean = false) {
     if (force || Flags.reachedDuality.isUnlocked()) {
         val omega =
-            Resources.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementLowerBounds[it]) <= epsilon }
+            Resources.basicElements.count { Stats.elementPercentages[it] >= Stats.alphaThreshold }
         var alpha =
-            Resources.basicElements.count { abs(Stats.elementAmounts[it] - Stats.functionalElementUpperBounds[it]) <= epsilon }
+            Resources.basicElements.count { Stats.elementPercentages[it] <= Stats.omegaThreshold }
         if (Flags.paraAlpha.isUnlocked()) {
             alpha += Resources.basicElements.count { Stats.elementAmounts[it] > 1000 }
         }

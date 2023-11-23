@@ -62,7 +62,7 @@ fun Tutorial.getAsHTML(pageIndex: Int, onClose: () -> Unit = DynamicHTMLManager:
     return document.createDocumentFragment()
 }
 
-abstract class TutorialPage() {
+abstract class TutorialPage {
     abstract fun getAsHTML(): DocumentFragment
 }
 

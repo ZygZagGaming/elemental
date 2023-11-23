@@ -5,6 +5,7 @@ package libraries
 import core.*
 import kotlin.math.pow
 
+@Suppress("unused")
 object DeltaReactions: Library<SpecialReaction>() {
     val overclocking = register(
         "overclocking",

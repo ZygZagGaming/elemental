@@ -82,7 +82,7 @@ fun loadGame() {
 
                     if (element.isElement && element != Resources.heat) {
                         val color = element.color
-                        var cutoff = (Stats.elementAmounts[element] - Stats.functionalElementLowerBounds[element]) * 100 / (Stats.functionalElementUpperBounds[element] - Stats.functionalElementLowerBounds[element])
+                        var cutoff = Stats.elementPercentages[element] * 100
                         cutoff += 50
                         cutoff %= 100
                         cutoff = cutoff.clamp(0.0..99.99)

@@ -1,15 +1,14 @@
 package core
 
 import kotlinx.browser.document
-import libraries.Resources
 import libraries.Pages
+import libraries.Resources
 import libraries.Symbols
 import org.w3c.dom.CanvasGradient
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
 import kotlin.math.*
-import kotlin.time.times
 
 fun visuals(gameState: GameState) {
     when (DynamicHTMLManager.shownPage) {
@@ -247,7 +246,7 @@ fun drawClickerToCanvas(clicker: Clicker, canvas: HTMLCanvasElement = clicker.ca
         var workingCps = cps
         while (workingCps > 7) workingCps /= 7
         while (workingCps <= cps) {
-            val tslc = if (clicker.mode == ClickerMode.MANUAL) clicker.maintainedTSLC else (clicker.lifetime + clicker.randomOffset).mod(1 / workingCps)
+            val tslc = if (clicker.mode == ClickerMode.MANUAL) clicker.timeSinceLastClick else (clicker.lifetime + clicker.randomOffset).mod(1 / workingCps)
             val arrowHeightAmount = (2 * workingCps * tslc - 1).squared().clamp(0.0..1.0)//1 - 4 * workingCps * tslc * min(workingCps * tslc, 1 - workingCps * tslc)
             val arrowHeight = if (clicker.mode == ClickerMode.DISABLED) 1.0 else size * 0.2 * arrowHeightAmount
             styled(if (workingCps > 7) transparentClickerStyle else opaqueClickerStyle) {

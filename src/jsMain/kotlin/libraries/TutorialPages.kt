@@ -157,8 +157,8 @@ object TutorialPages: Library<TutorialPage>() {
         ImageTextTutorialPage(
             headerText = "Welcome to Duality!",
             text = "Duality is now always available after reaching 1000000${Symbols.catalyst}. Upon Duality, everything on the Elements " +
-                    "page is reset. You will receive one ${Symbols.alpha} for each Element that was at its upper bound, and one ${Symbols.omega} for each " +
-                    "Element at its lower bound.",
+                    "page is reset. You will receive one ${Symbols.alpha} for each Element that within 1% of its upper bound, and one ${Symbols.omega} for each " +
+                    "Element within 1% of its lower bound.",
             image = "images/tutorial/goober.png",
             imageAlt = ""
         )

@@ -3,8 +3,7 @@ package core
 import libraries.Resources
 import kotlin.properties.Delegates
 
-open class Reaction(name: String, val consumesElements: Boolean = true) {
-    open var name = name
+open class Reaction(open var name: String, val consumesElements: Boolean = true) {
     open var inputs = emptyStack.toDefaultedMap(0.0)
         set(value) {
             for ((key, _) in field) {

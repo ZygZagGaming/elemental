@@ -133,7 +133,7 @@ fun loadIndexable(indexable: Indexable<String, String>) {
                 }
 
             }
-            gameState.timeSpent = indexable["timeSpent"].toDouble() ?: 0.0
+            gameState.timeSpent = indexable["timeSpent"].toDouble()
             //simulateTime((Date().getUTCMilliseconds() - Date(timestamp ?: "").getUTCMilliseconds()) / 1000.0)
 //            val positions = indexable["autoclickerPositions"].split(";").filter { it != "" }.associate {
 //                val pair = it.split(":")

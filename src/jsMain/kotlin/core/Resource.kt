@@ -6,8 +6,8 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 val defaultStartingElements: MutableResourceStack
-    get() = _defaultStartingElements.toMutableDefaultedMap()
-private val _defaultStartingElements = mapOf(
+    get() = defaultStartingElementsBacking.toMutableDefaultedMap()
+private val defaultStartingElementsBacking = mapOf(
     Resources.catalyst to 1.0,
     Resources.a to 1.0
 ).toMutableMap().toMutableDefaultedMap(0.0)

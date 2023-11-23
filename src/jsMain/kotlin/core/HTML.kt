@@ -1,3 +1,5 @@
+@file:Suppress("RedundantUnitExpression")
+
 package core
 
 import kotlinx.browser.document
@@ -382,4 +384,4 @@ var HTMLElement.screenHeight
     set(value) {
         style.height = value.pxToVh
     }
-val Document.contextMenu get() = document.getElementById("context-menu") as HTMLElement
+val contextMenu get() = document.getElementById("context-menu") as HTMLElement

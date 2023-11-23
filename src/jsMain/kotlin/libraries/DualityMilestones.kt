@@ -5,6 +5,7 @@ import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.pow
 
+@Suppress("unused")
 object DualityMilestones: Library<MilestoneReaction>() {
     val aBeginning = register(
         "a_beginning",

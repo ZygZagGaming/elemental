@@ -26,6 +26,10 @@ object Stats {
         ProductStatMap(baseElementLowerBounds, elementLowerBoundMultipliers) { a, b -> b.appliedTo(a) }
     var gameSpeed = 0.0
     val elementAmounts = BasicMutableStatMap(defaultStartingElements, 0.0)
+    val elementPercentages = ProductStatMap(
+        ProductStatMap(elementAmounts, functionalElementLowerBounds) { a, b -> a - b },
+        ProductStatMap(functionalElementUpperBounds, functionalElementLowerBounds) { a, b -> a - b }
+    ) { a, b -> a / b }
     var elementAmountsCached: MutableList<Pair<Map<Resource, Double>, Double>> = mutableListOf()
     var elementDeltas = BasicMutableStatMap<Resource, Double>(emptyMap(), 0.0)
     var elementRates = BasicMutableStatMap<Resource, Double>(emptyMap(), 0.0)
@@ -36,6 +40,8 @@ object Stats {
     val dualityThreshold = 100000
     var timeSinceLastDuality = 0.0
     var deltaReactionRespec = false
+    val alphaThreshold = 0.99
+    val omegaThreshold = 0.01
 
     fun resetDeltas() {
         Resources.values.forEach {

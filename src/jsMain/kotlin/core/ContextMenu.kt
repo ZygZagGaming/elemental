@@ -28,7 +28,7 @@ object ContextMenu {
     }
 
     val openContextMenu: (Event) -> dynamic = { e ->
-        val ctx = document.contextMenu
+        val ctx = contextMenu
         ctx.style.display = "flex"
         isContextMenuOpen = true
         e.preventDefault()
@@ -52,11 +52,18 @@ object ContextMenu {
 
     var isContextMenuOpen = false
 
+    fun track(element: HTMLElement, id: String) {
+        trackedHTML.add(id to element)
+        DynamicHTMLManager.makeAwareOf(element, id)
+    }
+
+    val trackedHTML = mutableSetOf<Pair<String, HTMLElement>>()
     val removeContextMenu: (Event) -> dynamic = { e ->
         val target = e.target
-        val ctx = document.contextMenu
+        val ctx = contextMenu
         if (isContextMenuOpen && e is MouseEvent && e.button == 0.toShort() && target is HTMLElement && !ctx.contains(target)) {
             ctx.style.display = "none"
+            trackedHTML.forEach { (id, elem) -> DynamicHTMLManager.forget(elem, id) }
             js("ctx.replaceChildren()")
             isContextMenuOpen = false
         }
@@ -84,10 +91,10 @@ object ContextMenu {
                             +element.name
                         }
                         div("horizontal-line")
-                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-amount-display") }
-                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-bounds-display") }
-                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-rate-display") }
-                        div("dynamic").let { DynamicHTMLManager.makeAwareOf(it, "$symbol-max-rate-display") }
+                        div("dynamic").let { track(it, "$symbol-amount-display") }
+                        div("dynamic").let { track(it, "$symbol-bounds-display") }
+                        div("dynamic").let { track(it, "$symbol-rate-display") }
+                        div("dynamic").let { track(it, "$symbol-max-rate-display") }
                         /*if (element == libraries.Elements.catalyst) {
                             div("horizontal-line")
                             div {
@@ -120,7 +127,7 @@ object ContextMenu {
                                 }.let {
                                     if (keybind != null) {
                                         it.addEventListener("click", { _ -> changingKey = keybind })
-                                        DynamicHTMLManager.makeAwareOf(it, "keybind-${keybind.id}-key")
+                                        track(it, "keybind-${keybind.id}-key")
                                     }
                                 }
                             }
@@ -141,11 +148,11 @@ object ContextMenu {
                                             }
                                         }
                                     })
-                                    DynamicHTMLManager.makeAwareOf(it, "clicker-${clicker.id}-mode")
+                                    track(it, "clicker-${clicker.id}-mode")
                                 }
                             }
                             if (ClickerMode.AUTO == clicker.mode) div("dynamic")
-                                .let { DynamicHTMLManager.makeAwareOf(it, "$autoclickerId-clicker-cps-display") }
+                                .let { track(it, "$autoclickerId-clicker-cps-display") }
                         } else div {
                             +"N/A"
                         }
