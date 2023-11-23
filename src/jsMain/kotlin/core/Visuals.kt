@@ -78,82 +78,21 @@ fun alchemyContainerVisuals(gameState: GameState, alchemyContainer: HTMLElement)
                     addColorStop(1.0, "rgba(255, 0, 0, 0)")
                 }
 
-                stroke {
-                    arc(half, half, elementRadius + hotStrokeWidth / 2, seam, seam + heatAngle)
+                if (graphicalHeatAmount == 1.0) {
+                    stroke {
+                        arc(half, half, elementRadius + hotStrokeWidth / 2, 0.0, 2 * PI)
+                    }
+                } else {
+                    stroke {
+                        arc(half, half, elementRadius + hotStrokeWidth / 2, seam, seam + heatAngle)
+                    }
+
+                    lineWidth = strokeWidth
+                    strokeStyle = "#cccccc"
+                    stroke {
+                        arc(half, half, elementRadius + strokeWidth / 2, seam + heatAngle, seam + 2 * PI)
+                    }
                 }
-
-                lineWidth = strokeWidth
-                strokeStyle = "#cccccc"
-                stroke {
-                    arc(half, half, elementRadius + strokeWidth / 2, seam + heatAngle, seam + 2 * PI)
-                }
-
-//                val border = 13.5
-//                styled(
-//                    strokeStyle = createRadialGradient(
-//                        middle,
-//                        elementRadius,
-//                        elementRadius + border,
-//                        0.0 to "rgba(255, 0, 0, 1)",
-//                        0.4 to "rgba(255, 0, 0, 1)",
-//                        0.41 to "rgba(255, 0, 0, 0.33)",
-//                        1.0 to "rgba(255, 0, 0, 0)"
-//                    ), lineWidth = border) {
-//                    stroke {
-//                        arc(half, half, elementRadius + border / 2, seam, seam + catalystAngle)
-//                    }
-//                }
-//                styled(
-//                    strokeStyle = createRadialGradient(
-//                        middle,
-//                        elementRadius,
-//                        elementRadius + border,
-//                        0.0 to "rgba(255, 255, 255, 1)",
-//                        0.4 to "rgba(255, 255, 255, 1)",
-//                        0.41 to "rgba(255, 255, 255, 0.33)",
-//                        1.0 to "rgba(255, 255, 255, 0)"
-//                    ), lineWidth = border) {
-//                    stroke {
-//                        arc(half, half, elementRadius + border / 2, seam + catalystAngle, seam + 2 * PI)
-//                    }
-//                }
-
-//                val distance = polygonRadius * 0.8875
-//                for (element in Resources.basicElements) if (element != Resources.heat && element != Resources.catalyst) {
-//                    val pos = middle + getAlchemyElementPos(element.symbol[0]) * distance
-//                    val (x, y) = pos
-//                    val angle = graphicalAmounts[element] * 2 * PI
-//                    styled(
-//                        strokeStyle = createRadialGradient(
-//                            pos,
-//                            elementRadius,
-//                            elementRadius + border,
-//                            0.0 to "rgba(255, 0, 0, 1)",
-//                            0.4 to "rgba(255, 0, 0, 1)",
-//                            0.41 to "rgba(255, 0, 0, 0.33)",
-//                            1.0 to "rgba(255, 0, 0, 0)"
-//                        ), lineWidth = border
-//                    ) {
-//                        stroke {
-//                            arc(x, y, elementRadius + border / 2, seam, seam + angle)
-//                        }
-//                    }
-//                    styled(
-//                        strokeStyle = createRadialGradient(
-//                            pos,
-//                            elementRadius,
-//                            elementRadius + border,
-//                            0.0 to "rgba(255, 255, 255, 1)",
-//                            0.4 to "rgba(255, 255, 255, 1)",
-//                            0.41 to "rgba(255, 255, 255, 0)",
-//                            1.0 to "rgba(255, 255, 255, 0)"
-//                        ), lineWidth = border
-//                    ) {
-//                        stroke {
-//                            arc(x, y, elementRadius + border / 2, seam + angle, seam + 2 * PI)
-//                        }
-//                    }
-//                }
             }
 
             val reaction = gameState.hoveredReaction
