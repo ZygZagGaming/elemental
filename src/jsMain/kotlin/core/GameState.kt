@@ -63,6 +63,14 @@ class GameState {
             while (Stats.elementAmountsCached.size >= 16) Stats.elementAmountsCached.removeFirst()
         } else if (dt > timeBetweenRateTicks) Stats.elementAmountsCached
         incoming = emptyMutableStack
+
+        //Softlock detection
+        if (Stats.elementAmounts[Resources.heat] < NormalReactions.cminglyOp.multipliedInputs[Resources.heat] && NormalReactions.map.values.all { !canDoReaction(it) }) {
+            Stats.elementAmounts[Resources.heat] = Stats.functionalElementUpperBounds[Resources.heat]
+            Stats.elementAmounts[Resources.a] += 1.0
+            DynamicHTMLManager.showTutorial(Tutorials.softlocks)
+        }
+
         Stats.lastTickDt = dt
     }
 

@@ -96,4 +96,13 @@ object Tutorials: Library<Tutorial>() {
             "Duality",
         )
     )
+    val softlocks = register(
+        "softlocks",
+        Tutorial(
+            listOf(
+                TutorialPages.softlockPage
+            ),
+            "Softlocks"
+        )
+    )
 }

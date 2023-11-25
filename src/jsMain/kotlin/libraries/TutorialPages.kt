@@ -183,4 +183,11 @@ object TutorialPages: Library<TutorialPage>() {
             imageAlt = ""
         )
     )
+    val softlockPage = register(
+        "softlock_page",
+        TextTutorialPage(
+            headerText = "Softlocks",
+            text = "Congratulations! You just softlocked yourself!<br />Whenever you manage to softlock yourself, your heat will be set to its current cap, and you will be given 1a."
+        )
+    )
 }
