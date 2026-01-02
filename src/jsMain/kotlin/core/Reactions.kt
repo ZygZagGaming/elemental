@@ -227,7 +227,7 @@ open class SpecialReaction(
             val inputs = inputsSupplier(nTimesUsed)
             val outputs = outputsSupplier(nTimesUsed)
             for (element in Resources.values) {
-                Stats.elementAmounts[element] += outputs[element] - inputs[element]
+                Stats.elementAmounts[element] += inputs[element] - outputs[element]
             }
             nTimesUsed--
         } else {
