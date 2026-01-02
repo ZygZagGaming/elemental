@@ -287,5 +287,6 @@ fun interpolationFunctionForwardsBackwards(f: (Double) -> Double): (Double) -> D
 }
 
 fun <T> List<T>.firstTwo(): Pair<T, T> = this[0] to this[1]
+fun <T> List<T>.firstTwoOrNull(): Pair<T, T>? = if (size >= 2) this[0] to this[1] else null
 
 fun Boolean.toStringOnOff(on: String = "On", off: String = "Off") = if (this) on else off

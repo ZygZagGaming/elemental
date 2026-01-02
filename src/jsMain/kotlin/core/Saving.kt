@@ -80,7 +80,7 @@ fun loadSaveFromClipboard() {
 
 fun loadSaveFromText(text: String) {
     val entryList = text.trim().split("\\\\").map { it.trim() }
-    val map = entryList.associate { it.split("|").firstTwo() }
+    val map = entryList.mapNotNull { it.split("|").firstTwoOrNull() }.toMap()
     loadIndexable(SimpleIndexable { map[it] ?: "" })
 }
 
