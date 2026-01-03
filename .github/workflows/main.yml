@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout project sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v6.0.1
     - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2    
+      uses: gradle/actions/setup-gradle@v5
     - name: Make gradlew executable
       run: chmod +x ./gradlew
     - name: Run build with Gradle Wrapper
@@ -21,7 +21,7 @@ jobs:
         name: build-reports
         path: build/dist/js/productionExecutable
     - name: Upload GitHub Pages artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v4
       with:
         path: build/dist/js/productionExecutable
   deploy:
@@ -42,4 +42,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2 # or the latest "vX.X.X" version tag for this action
+        uses: actions/deploy-pages@v4.0.5 # or the latest "vX.X.X" version tag for this action
