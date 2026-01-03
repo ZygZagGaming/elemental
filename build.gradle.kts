@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.9.0"
+    kotlin("multiplatform") version "2.3.0"
 }
 
 group = "com.zygzag"
@@ -25,18 +25,18 @@ kotlin {
                 output?.libraryTarget = "umd"
             } )
         }
+    }
 
-        sourceSets {
-            val jsTest by getting {
-                dependencies {
-                    implementation(kotlin("test"))
-                }
+    sourceSets {
+        val jsTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
             }
-            val jsMain by getting {
-                dependencies {
-                    val kotlinxHtmlVersion = "0.9.0"
-                    implementation("org.jetbrains.kotlinx:kotlinx-html-js:$kotlinxHtmlVersion")
-                }
+        }
+        val jsMain by getting {
+            dependencies {
+                val kotlinxHtmlVersion = "0.12.0"
+                implementation("org.jetbrains.kotlinx:kotlinx-html-js:$kotlinxHtmlVersion")
             }
         }
     }
